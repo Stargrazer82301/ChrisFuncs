@@ -808,7 +808,7 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, variable=False, outfile=F
 
     # Fail if coords not in map
     if i_centre<0 or i_centre>(fits_bigger.shape)[0] or j_centre<0 or j_centre>(fits_bigger.shape)[1]:
-        pdb.set_trace()
+        raise ValueError('Coordinates not located within bounds of map')#pdb.set_trace()
 
     # Cut out a small section of the map centred upon the source in question
     i_cutout_min = max([0, i_centre-rad_pix])

@@ -970,6 +970,105 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
 
 
 
+# Keflavich function to downsample an array
+# Input: Array to downsample, downsampling factor, and estiamtor
+# Output: Downsampled array
+def Downsample(myarr, factor, estimator=np.nanmean):
+    ys,xs = myarr.shape
+    crarr = myarr[:ys-(ys % int(factor)),:xs-(xs % int(factor))]
+    dsarr = estimator( np.concatenate([[crarr[i::factor,j::factor]
+        for i in range(factor)]
+        for j in range(factor)]), axis=0)
+    return dsarr
+
+
+
+# Mortcanty function that replicates IDL's congrid
+def Congrid(a, newdims, method='linear', centre=False, minusone=False):
+    import Congrid
+    newa = Congrid.Congrid(a, newdims, method=method, centre=centre, minusone=minusone)
+    return newa
+
+
+
+# Function that produces polynomial background-removing filter for input image
+# Input: Image to be processed, diamter (in pixels) of target source, order of 2-dimensional polynomial that will be fitted to background, downsampling factor (improves runtime), sigma above which bright pixels (ie, bright backgroun dsources) are masked, i-coord of target source (otherwise assumed central), j-coord of target source (otherwise assumed central)
+# Output: Best-fit polynomial filter
+def PolyFilter(image_in, d25, poly_order=5, downsample_factor=5, cutoff_sigma=2.0, i_centre=False, j_centre=False):
+
+    # Downsample image to improve processing time
+    downsample_factor = 5
+    image_ds = Downsample(image_in, downsample_factor)
+    d25 = d25 / np.float(downsample_factor)
+    half_arcmin = 30.0 / np.float(downsample_factor)
+    if i_centre==False:
+        i_centre = np.int( np.round( ( 0.5 * ( np.float(image_ds.shape[0]) - 1.0 ) ) ) )
+    if j_centre==False:
+        j_centre = np.int( np.round( ( 0.5 * ( np.float(image_ds.shape[1]) - 1.0 ) ) ) )
+
+    # Make preliminary noise measurement by sigma-clipping cutout
+    clip_value = ChrisFuncs.SigmaClip(image_ds, sigma_thresh=5.0, median=True)
+    noise_value = clip_value[0]
+    field_value = clip_value[1]
+
+    # Find contiguous significant pixels associated with target galaxy
+    cutoff = field_value + ( cutoff_sigma * noise_value )
+    cont_array = ChrisFuncs.ContiguousPixels(image_ds, half_arcmin, i_centre, j_centre, cutoff)
+
+    # Find ellipse that best fits outline of contiguous region
+    cont_x = ((np.where(cont_array == 1))[1])
+    cont_y = ((np.where(cont_array == 1))[0])
+    if cont_x.shape[0] > 10:
+        try:
+            cont_ellipse = ChrisFuncs.EllipseFit(cont_x, cont_y)
+            opt_semimaj, opt_semimin = max(cont_ellipse[1]), min(cont_ellipse[1])
+            opt_axial_ratio = opt_semimaj / opt_semimin
+            opt_angle = cont_ellipse[2]
+            opt_i_centre, opt_j_centre = cont_ellipse[0][0], cont_ellipse[0][1]
+        except:
+            pdb.set_trace()
+    else:
+        opt_semimaj, opt_semimin = half_arcmin, half_arcmin
+        opt_axial_ratio = 1.0
+        opt_angle = 0.0
+        opt_i_centre, opt_j_centre = i_centre, j_centre
+
+
+    # Mask all image pixels that lie within 2 semi-major axes (or within D25) of ellipse fitted to source
+    mask_semimaj = max([ d25, 2.0*opt_semimaj ])
+    image_masked = image_ds.copy()
+    ellipse_mask = ChrisFuncs.EllipseMask(image_ds, mask_semimaj, opt_axial_ratio, opt_angle, opt_i_centre, opt_j_centre)
+    image_masked[ np.where( ellipse_mask==1 ) ] = np.nan
+
+    # Mask all image pixels that lie within 1 arcmin of target coords
+    arcmin_mask = ChrisFuncs.EllipseMask(image_ds, half_arcmin, 1.0, 0.0, i_centre, j_centre)
+    image_masked[ np.where( arcmin_mask==1 ) ] = np.nan
+
+    # Mask all image pixels previously identified as being high SNR
+    image_masked[ np.where( image_masked>cutoff ) ] = np.nan
+
+    # Use astropy to fit 5th-order 2-dimensional polynomial to the image
+    image_masked[ np.where( np.isnan(image_masked)==True ) ] = field_value
+    poly_model = astropy.modeling.models.Polynomial2D(degree=poly_order)
+    i_coords, j_coords = np.mgrid[:image_masked.shape[0], :image_masked.shape[1]]
+    fitter = astropy.modeling.fitting.LevMarLSQFitter()
+    i_coords = i_coords.flatten()
+    j_coords = j_coords.flatten()
+    image_flattened = image_masked.flatten()
+    good = np.where(np.isnan(image_flattened)==False)
+    i_coords = i_coords[good]
+    j_coords = j_coords[good]
+    image_flattened = image_flattened[good]
+    fit = fitter(poly_model, i_coords, j_coords, image_flattened)
+
+    # Create final polynomial filter, and return
+    i_coords, j_coords = np.mgrid[:image_ds.shape[0], :image_ds.shape[1]]
+    poly_fit = fit(i_coords, j_coords)
+    poly_full = ChrisFuncs.Congrid(poly_fit, (image_in.shape[0], image_in.shape[1]), minusone=True)
+    return poly_full
+
+
+
 # Function to find uncertainty in an array, in terms of distance from given value, out to a certain percentile limit
 # Input: Array of numbers to find uncertainty of, percentile range to find uncertainty out to, boolean of whether to return up-and-down bound values
 # Output: Percentile uncertainty

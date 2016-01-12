@@ -25,6 +25,7 @@ import pickle
 import pip
 import aplpy
 import ChrisFuncs
+#sys.path.append(os.path.join(dropbox,'Work','Scripts','ChrisFuncs'))
 
 
 

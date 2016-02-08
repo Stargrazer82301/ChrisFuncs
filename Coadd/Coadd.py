@@ -3,39 +3,25 @@ import sys
 import os
 import pdb
 current_module = sys.modules[__name__]
-from numpy import *
 import numpy as np
-from numpy.linalg import eig, inv
 import scipy.stats
-import scipy.ndimage
-import scipy.ndimage.measurements
-import scipy.spatial
-from cStringIO import StringIO
-from subprocess import call
 import matplotlib.pyplot as plt
-import matplotlib.cm
-import matplotlib.patches
 import astropy.io.fits
 import astropy.wcs
 import astropy.convolution
-#import cutout as ag_cutout
+import lmfit
 import FITS_tools
-import random
-import pickle
-import pip
-import aplpy
 import ChrisFuncs
-#sys.path.append(os.path.join(dropbox,'Work','Scripts','ChrisFuncs'))
 
 
 
 # Function to set a set of maps to the same level but least-squares fitting a plane to their levels to estimate and remove their backgrounds
 # Input: Directory of files to be levelled, suffix identifying files to be levelled, optioal directory if a set of smoothed files is to be used to determine the level
 # Output: None
-def FITS_Level(fitsfile_dir, target_suffix, convfile_dir=False):
+def LevelFITS(fitsfile_dir, target_suffix, convfile_dir=False):
 
     # Define sill ysubfunction that fits flat plane to image, to find level
-    def FITS_Level_Chisq(level_params, image):
+    def ChisqLevelFITS(level_params, image):
         level = level_params['level'].value
         chi = image - level
         chisq = chi**2.0
@@ -57,7 +43,7 @@ def FITS_Level(fitsfile_dir, target_suffix, convfile_dir=False):
         print 'Matching backgorund of map '+fitsfile_list[i]
 
         # Read in corresponding map from directory containing convolved images
-        fitsdata_conv = astropy.io.fits.open(convfile_dir+'/'+fitsfile_list[i])
+        fitsdata_conv = astropy.io.fits.open( os.path.join(convfile_dir,fitsfile_list[i]) )
         image_conv = fitsdata_conv[0].data
         fitsdata_conv.close()
 
@@ -65,7 +51,7 @@ def FITS_Level(fitsfile_dir, target_suffix, convfile_dir=False):
         level_params = lmfit.Parameters()
         level_params.add('level', value=np.nanmedian(image_conv), vary=True)
         image_conv_clipped = ChrisFuncs.SigmaClip(image_conv, tolerance=0.005, median=False, sigma_thresh=3.0)[2]
-        level_result = lmfit.minimize(GALEX_Level_Chisq, level_params, args=(image_conv_clipped.flatten(),))
+        level_result = lmfit.minimize(FITS_Level_Chisq, level_params, args=(image_conv_clipped.flatten(),))
         level = level_result.params['level'].value
         if i==0:
             level_ref = level
@@ -91,7 +77,7 @@ def FITS_Level(fitsfile_dir, target_suffix, convfile_dir=False):
         """
 
         # Read in unconvolved file, and apply offset
-        fitsdata_in = astropy.io.fits.open(fitsfile_dir+'/'+fitsfile_list[i])
+        fitsdata_in = astropy.io.fits.open( os.path.join(fitsfile_dir,fitsfile_list[i]) )
         image_in = fitsdata_in[0].data
         header_in = fitsdata_in[0].header
         fitsdata_in.close()
@@ -101,4 +87,4 @@ def FITS_Level(fitsfile_dir, target_suffix, convfile_dir=False):
         # Save corrected file
         image_out_hdu = astropy.io.fits.PrimaryHDU(data=image_out, header=header_in)
         image_out_hdulist = astropy.io.fits.HDUList([image_out_hdu])
-        image_out_hdulist.writeto(fitsfile_dir+'/'+fitsfile_list[i], clobber=True)
+        image_out_hdulist.writeto( os.path.join(fitsfile_dir,fitsfile_list[i]), clobber=True )

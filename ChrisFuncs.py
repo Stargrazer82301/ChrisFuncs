@@ -51,9 +51,10 @@ def EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre):
     ellipse_check = (j_trans**2 / semi_maj**2) + (i_trans**2 / semi_min**2 )
 
     # Calculate flux & pixels in aperture, and store pixel values
-    ellipse_tot = sum( array[ np.where( (ellipse_check<=1) & (np.isnan(array)==False) ) ] )
-    ellipse_count = np.where( (ellipse_check<=1) & (np.isnan(array)==False) )[0].shape[0]
-    ellipse_pix = array[ np.where( (ellipse_check<=1) & (np.isnan(array)==False) ) ]
+    ellipse_where = np.where( (ellipse_check<=1) & (np.isnan(array)==False) )
+    ellipse_tot = sum( array[ ellipse_where ] )
+    ellipse_count = ellipse_where[0].shape[0]
+    ellipse_pix = array[ ellipse_where ]
 
     # Return results
     return [ellipse_tot, ellipse_count, ellipse_pix]
@@ -88,9 +89,10 @@ def AnnulusSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre):
     ellipse_check_outer = (j_trans**2 / semi_maj_outer**2) + (i_trans**2 / semi_min_outer**2 )
 
     # Calculate flux & pixels in aperture, and store pixel values
-    annulus_tot = sum( array[ np.where( (ellipse_check_outer<=1) & (ellipse_check_inner>1) & (np.isnan(array)==False) ) ] )
-    annulus_count = np.where( (ellipse_check_outer<=1) & (ellipse_check_inner>1) & (np.isnan(array)==False) )[0].shape[0]
-    annulus_pix = array[ np.where( (ellipse_check_outer<=1) & (ellipse_check_inner>1) & (np.isnan(array)==False) ) ]
+    annulus_where = np.where( (ellipse_check_outer<=1) & (ellipse_check_inner>1) & (np.isnan(array)==False) )
+    annulus_tot = sum( array[ annulus_where ] )
+    annulus_count = annulus_where[0].shape[0]
+    annulus_pix = array[ annulus_where ]
 
     # Return results
     return [annulus_tot, annulus_count, annulus_pix]
@@ -138,9 +140,10 @@ def AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_cen
     ellipse_check_outer = (j_trans**2 / semi_maj_outer**2) + (i_trans**2 / semi_min_outer**2 )
 
     # Calculate flux & pixels in aperture, and store pixel values
-    annulus_tot = sum( array[ np.where( (ellipse_check_outer<=1) & (ellipse_check_inner>1) & (np.isnan(array)==False) ) ] )
-    annulus_count = np.where( (ellipse_check_outer<=1) & (ellipse_check_inner>1) & (np.isnan(array)==False) )[0].shape[0]
-    annulus_pix = array[ np.where( (ellipse_check_outer<=1) & (ellipse_check_inner>1) & (np.isnan(array)==False) ) ]
+    annulus_where = np.where( (ellipse_check_outer<=1) & (ellipse_check_inner>1) & (np.isnan(array)==False) )
+    annulus_tot = sum( array[ annulus_where ] )
+    annulus_count = annulus_where[0].shape[0]
+    annulus_pix = array[ annulus_where ]
 
     # Return results
     return [annulus_tot, annulus_count, annulus_pix]
@@ -161,9 +164,10 @@ def EllipseQuickSum(array, rad, axial_ratio, angle, i_centre, j_centre, i_trans,
     ellipse_check = (j_trans**2 / semi_maj**2) + (i_trans**2 / semi_min**2 )
 
     # Calculate flux & pixels in aperture, and store pixel values
-    ellipse_tot = sum( array[ np.where( (ellipse_check<=1) & (np.isnan(array)==False) ) ] )
-    ellipse_count = np.where( (ellipse_check<=1) & (np.isnan(array)==False) )[0].shape[0]
-    ellipse_pix = array[ np.where( (ellipse_check<=1) & (np.isnan(array)==False) ) ]
+    ellipse_where = np.where( (ellipse_check<=1) & (np.isnan(array)==False) )
+    ellipse_tot = sum( array[ ellipse_where ] )
+    ellipse_count = ellipse_where[0].shape[0]
+    ellipse_pix = array[ ellipse_where ]
 
     # Return results
     return [ellipse_tot, ellipse_count, ellipse_pix]
@@ -270,9 +274,10 @@ def EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upsca
     ellipse_check = (j_trans**2 / semi_maj**2) + (i_trans**2 / semi_min**2 )
 
     # Calculate flux & pixels in aperture, and store pixel values
-    ellipse_tot = sum( cutout[ np.where( (ellipse_check<=1) & (np.isnan(cutout)==False) ) ] )
-    ellipse_count = np.where( (ellipse_check<=1) & (np.isnan(cutout)==False) )[0].shape[0]
-    ellipse_pix = cutout[ np.where( (ellipse_check<=1) & (np.isnan(cutout)==False) ) ]
+    ellipse_where = np.where( (ellipse_check<=1) & (np.isnan(cutout)==False) )
+    ellipse_tot = sum( cutout[ ellipse_where ] )
+    ellipse_count = ellipse_where[0].shape[0]
+    ellipse_pix = cutout[ ellipse_where ]
 
     # Scale output values down to what they would've been for original array
     ellipse_count *= float(upscale)**-2.0
@@ -318,9 +323,10 @@ def AnnulusSumUpscale(cutout, rad_inner, width, axial_ratio, angle, i_centre, j_
     ellipse_check_outer = (j_trans**2 / semi_maj_outer**2) + (i_trans**2 / semi_min_outer**2 )
 
     # Calculate flux & pixels in aperture, and store pixel values
-    annulus_tot = sum( cutout[ np.where( (ellipse_check_outer<=1) & (ellipse_check_inner>1) & (np.isnan(cutout)==False) ) ] )
-    annulus_count = np.where( (ellipse_check_outer<=1) & (ellipse_check_inner>1) & (np.isnan(cutout)==False) )[0].shape[0]
-    annulus_pix = cutout[ np.where( (ellipse_check_outer<=1) & (ellipse_check_inner>1) & (np.isnan(cutout)==False) ) ]
+    annulus_where = np.where( (ellipse_check_outer<=1) & (ellipse_check_inner>1) & (np.isnan(cutout)==False) )
+    annulus_tot = sum( cutout[ annulus_where ] )
+    annulus_count = annulus_where[0].shape[0]
+    annulus_pix = cutout[ annulus_where ]
 
     # Scale output values down to what they would've been for original array
     annulus_count *= float(upscale)**-2.0

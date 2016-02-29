@@ -447,6 +447,7 @@ def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff):
     # Create version of cutout where significant pixels have value 1, insignificant pixels have value 0
     cont_array_binary = np.zeros([(cutout.shape)[0], (cutout.shape)[1]])
     cont_array_binary[np.where(cutout>=cutoff)[0], np.where(cutout>=cutoff)[1]] = 1
+    #ChrisFuncs.Cutout(cont_array_binary, '/home/saruman/spx7cjc/DustPedia/Cont.fits')
 
     # Use SciPy's label function to identify contiguous features in binary map
     cont_structure = np.array([[1,1,1], [1,1,1], [1,1,1]])

@@ -299,10 +299,10 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, variable=False, outfile=F
     j_centre = (int(round(float(cutout_inviolate.shape[1])/2.0))) + ( (j_centre-rad_pix) - (int(round(j_cutout_min))) )
     i_centre_inviolate, j_centre_inviolate = i_centre, j_centre
 
-    # Construct FITS HDU
-    cutout_hdu = astropy.io.fits.PrimaryHDU(cutout_inviolate)
-    cutout_hdulist = astropy.io.fits.HDUList([cutout_hdu])
-    cutout_header = cutout_hdulist[0].header
+#    # Construct FITS HDU
+#    cutout_hdu = astropy.io.fits.PrimaryHDU(cutout_inviolate)
+#    cutout_hdulist = astropy.io.fits.HDUList([cutout_hdu])
+#    cutout_header = cutout_hdulist[0].header
 
     # Populate header
     cutout_wcs = astropy.wcs.WCS(naxis=2)
@@ -311,10 +311,12 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, variable=False, outfile=F
     cutout_wcs.wcs.crval = [float(ra), float(dec)]
     cutout_wcs.wcs.ctype = ['RA---TAN', 'DEC--TAN']
     cutout_header = cutout_wcs.to_header()
-    cutout_header.set('ORIGIN', 'This FITS cutout created using Chris Clark\'s \"ChrisFuncs\" library')
+    cutout_header.set('ORIGIN', 'This FITS cutout created using \"ChrisFuncs\" module (https://github.com/Stargrazer82301/ChrisFuncs)')
 
     # Save, tidy, and return; all to taste
     if outfile!=False:
+        cutout_hdu = astropy.io.fits.PrimaryHDU(data=cutout_inviolate, header=cutout_header)
+        cutout_hdulist = astropy.io.fits.HDUList([cutout_hdu])
         cutout_hdulist.writeto(outfile, clobber=True)
     if isinstance(pathname,str):
         fitsdata_in.close()

@@ -22,6 +22,7 @@ import astropy.convolution
 import FITS_tools
 import random
 import pickle
+import time
 import pip
 import importlib
 import aplpy
@@ -299,11 +300,6 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, variable=False, outfile=F
     j_centre = (int(round(float(cutout_inviolate.shape[1])/2.0))) + ( (j_centre-rad_pix) - (int(round(j_cutout_min))) )
     i_centre_inviolate, j_centre_inviolate = i_centre, j_centre
 
-#    # Construct FITS HDU
-#    cutout_hdu = astropy.io.fits.PrimaryHDU(cutout_inviolate)
-#    cutout_hdulist = astropy.io.fits.HDUList([cutout_hdu])
-#    cutout_header = cutout_hdulist[0].header
-
     # Populate header
     cutout_wcs = astropy.wcs.WCS(naxis=2)
     cutout_wcs.wcs.crpix = [float(j_centre_inviolate), float(i_centre_inviolate)]
@@ -321,6 +317,9 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, variable=False, outfile=F
     if isinstance(pathname,str):
         fitsdata_in.close()
     if variable==True:
+        cutout_hdu = astropy.io.fits.PrimaryHDU(cutout_inviolate)
+        cutout_hdulist = astropy.io.fits.HDUList([cutout_hdu])
+        cutout_header = cutout_hdulist[0].header
         return cutout_hdulist
 
 
@@ -1033,6 +1032,33 @@ def PanAppend(arr_list):
 def NanlessKS(array1,array2):
     output = scipy.stats.ks_2samp(ChrisFuncs.Nanless(array1), ChrisFuncs.Nanless(array2))
     return output[1]
+
+
+
+# Function to wget a file from a given URL to a given directory
+# Input: String of target url, string of output filepath, boolean for clobbering, boolean for auto-retrying, boolean for verbosity
+# Output: None
+def wgetURL(url, filename, clobber=True, auto_retry=False):
+    if os.path.exists(filename):
+        if clobber:
+            os.remove(filename)
+        else:
+            raise ValueError('Output file already exists; if you\'re happy to overwrite it, re-run wgetURL with clobber=True.')
+    success = False
+    while success==False:
+        try:
+            try:
+                wget.download(url, out=filename)
+            except:
+                os.system('wget \"'+url+'\" -O '+filename)
+            print 'Successful acquisition of '+url
+            success = True
+        except:
+            print 'Failure! Retrying acquistion of '+url
+            time.sleep(0.1)
+            success = False
+            if not auto_retry:
+                raise ValueError('Unsuccessful wget attempt.')
 
 
 

@@ -440,9 +440,9 @@ def CircularApertureStandardDeviationFinder(fits, area, ann=True, ann_inner=1.5,
 
 
 # Function to find all contiguous pixels that lie above a given flux limit
-# Input: Array, radius of guess region (pix), i & j coords of centre of guess region, cutoff value for pixel selection
+# Input: Array, radius of guess region (pix), i & j coords of centre of guess region, cutoff value for pixel selection, optional custom structure
 # Returns: Array of ones and zeros indicating contiguous region
-def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff):
+def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff, custom_structure=False):
 
     # Create version of cutout where significant pixels have value 1, insignificant pixels have value 0
     cont_array_binary = np.zeros([(cutout.shape)[0], (cutout.shape)[1]])
@@ -450,7 +450,10 @@ def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff):
     #ChrisFuncs.Cutout(cont_array_binary, '/home/saruman/spx7cjc/DustPedia/Cont.fits')
 
     # Use SciPy's label function to identify contiguous features in binary map
-    cont_structure = np.array([[1,1,1], [1,1,1], [1,1,1]])
+    if custom_structure==False:
+        cont_structure = np.array([[0,1,0], [1,1,1], [0,1,0]])
+    else:
+        cont_structure = custom_structure
     cont_array = np.zeros([(cutout.shape)[0], (cutout.shape)[1]])
     scipy.ndimage.measurements.label(cont_array_binary, structure=cont_structure, output=cont_array)
 

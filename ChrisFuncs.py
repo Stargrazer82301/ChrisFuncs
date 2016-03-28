@@ -327,7 +327,7 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, variable=False, outfile=F
 # Wrapper of keflavich function to rebin a fits file the coordinate grid of another fits file
 # Input: Input fits, comparison fits, imput fits image extension, comparison fits image extension, boolean for if surface brightness instead of flux should be preserved, boolean stating if an output variable is desired, output fits pathname
 # Output: HDU of new file
-def FitsRebin(pathname_in, pathname_comp, exten_in=0, exten_comp=0, preserve_sb=False, variable=False, outfile=False):
+def FitsRebin(pathname_in, pathname_comp, exten_in=0, exten_comp=0, preserve_sb=False, variable=False, outfile=False, txt_header=False):
     #ChrisFuncs.FitsRebin('E:\\Work\\H-ATLAS\\HAPLESS_Cutouts\\Photometry_Cutouts\\2000_Arcsec\\GALEX_AIS\\HAPLESS_10_FUV_Temp.fits', 'E:\\Work\H-ATLAS\\HAPLESS_Cutouts\\Photometry_Cutouts\\2000_Arcsec\\HAPLESS_10_w4.fits', outfile='E:\\Work\\H-ATLAS\\HAPLESS_Cutouts\\Photometry_Cutouts\\2000_Arcsec\\GALEX_AIS\\HAPLESS_10_FUV.fits')
 
     # Open input fits and extract data
@@ -340,12 +340,17 @@ def FitsRebin(pathname_in, pathname_comp, exten_in=0, exten_comp=0, preserve_sb=
     wcs_in = astropy.wcs.WCS(header_in)
 
     # Open comparison fits and extract data
-    if isinstance(pathname_comp,str):
-        fitsdata_comp = astropy.io.fits.open(pathname_comp)
-    elif isinstance(pathname_comp,astropy.io.fits.HDUList):
-        fitsdata_comp = pathname_comp
-    header_comp = fitsdata_comp[exten_comp].header
-    wcs_comp = astropy.wcs.WCS(header_comp)
+    if not txt_header:
+        if isinstance(pathname_comp,str):
+            fitsdata_comp = astropy.io.fits.open(pathname_comp)
+        elif isinstance(pathname_comp,astropy.io.fits.HDUList):
+            fitsdata_comp = pathname_comp
+        header_comp = fitsdata_comp[exten_comp].header
+        wcs_comp = astropy.wcs.WCS(header_comp)
+
+    # Or, if only a text header is being provided as the reference, process accordinly (assuming it behaves as like an IRSA template service header)
+    elif txt_header:
+        header_comp = astropy.io.fits.Header.fromfile( pathname_comp, sep='\n', endcard=False, padding=False)
 
     # Use keflavich hcongrid to regrid input fits to header of comparison fits
     fits_new = FITS_tools.hcongrid.hcongrid(fits_in, header_in, header_comp)

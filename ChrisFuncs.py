@@ -31,6 +31,7 @@ import aplpy
 # Import ChrisFuncs and sub-modules
 import ChrisFuncs
 import Photom
+import FromGitHub
 
 
 
@@ -883,7 +884,7 @@ def LogError(value, error):
     error_down = value / frac
     log_error_up = np.abs( np.log10(error_up) - np.log10(value) )
     log_error_down = np.abs( np.log10(value) - np.log10(error_down) )
-    return np.mean([log_error_up, log_error_down])
+    return 0.5*(log_error_up+log_error_down)
 
 
 

@@ -38,9 +38,10 @@ def EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre):
     ellipse_tot = sum( array[ ellipse_where ] )
     ellipse_count = ellipse_where[0].shape[0]
     ellipse_pix = array[ ellipse_where ]
+    ellipse_nan = np.where( (ellipse_check<=1) & (np.isnan(array)==True) )
 
     # Return results
-    return [ellipse_tot, ellipse_count, ellipse_pix]
+    return [ellipse_tot, ellipse_count, ellipse_pix, ellipse_nan]
 
 
 
@@ -76,9 +77,10 @@ def AnnulusSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre):
     annulus_tot = sum( array[ annulus_where ] )
     annulus_count = annulus_where[0].shape[0]
     annulus_pix = array[ annulus_where ]
+    annulus_nan = np.where( (ellipse_check_outer<=1) & (ellipse_check_inner>1) & (np.isnan(array)==True) )
 
     # Return results
-    return [annulus_tot, annulus_count, annulus_pix]
+    return [annulus_tot, annulus_count, annulus_pix, annulus_nan]
 
 
 

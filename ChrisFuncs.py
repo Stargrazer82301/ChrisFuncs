@@ -12,6 +12,8 @@ import scipy.ndimage.measurements
 import scipy.spatial
 from cStringIO import StringIO
 from subprocess import call
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.cm
 import matplotlib.patches
@@ -1065,6 +1067,17 @@ def wgetURL(url, filename, clobber=True, auto_retry=False):
             success = False
             if not auto_retry:
                 raise ValueError('Unsuccessful wget attempt.')
+                
+                
+                
+# Function to estimate time until a task completes
+# Input: List of time taken by each iteration in units of seconds since Unix epoch, total number of iterations
+# Output: Python time string of estimated time/date of completion
+def TimeEst(time_list, total):
+    iter_list = range(0, len(time_list))
+    time_fit = np.polyfit(iter_list, time_list, 1)
+    time_end = ( time_fit[0] * total ) + time_fit[1]
+    return time.ctime(time_end)
 
 
 

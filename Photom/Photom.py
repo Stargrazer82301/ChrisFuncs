@@ -5,6 +5,8 @@ import pdb
 current_module = sys.modules[__name__]
 import numpy as np
 import scipy.stats
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import astropy.io.fits
 import astropy.wcs

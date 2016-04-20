@@ -1067,17 +1067,65 @@ def wgetURL(url, filename, clobber=True, auto_retry=False):
             success = False
             if not auto_retry:
                 raise ValueError('Unsuccessful wget attempt.')
-                
-                
-                
+
+
+
 # Function to estimate time until a task completes
 # Input: List of time taken by each iteration in units of seconds since Unix epoch, total number of iterations
 # Output: Python time string of estimated time/date of completion
-def TimeEst(time_list, total):
-    iter_list = range(0, len(time_list))
-    time_fit = np.polyfit(iter_list, time_list, 1)
-    time_end = ( time_fit[0] * total ) + time_fit[1]
-    return time.ctime(time_end)
+def TimeEst(time_list, total, plot=False):
+
+    # Convert times into log space, fit trend, project, and un-log
+    time_list_log = np.log10(np.array(time_list))
+    iter_list = np.arange( 0.0, float(len(time_list)) )
+    time_fit_log = np.polyfit(iter_list, time_list_log, 1)
+
+    # Find offset between most recent time value, and fit at that point
+    time_latest_actual = time_list[-1:][0]
+    time_latest_predicted_log = ( time_fit_log[0] * (float(np.array(time_list).shape[0])-1.0) ) + time_fit_log[1]
+    time_latest_offset_log = np.log10(time_latest_actual) - time_latest_predicted_log
+    time_fit_log[1] += time_latest_offset_log
+
+    # Predict time of completion
+    time_end_log = ( time_fit_log[0] * total ) + time_fit_log[1]
+    time_end = 10.0**time_end_log
+
+    # If requested, create plot
+    if plot:
+        fig = plt.figure(figsize=(8,6))
+        ax_dims = [0.125, 0.125, 0.825, 0.825]
+        ax = fig.add_axes(ax_dims)
+
+        # Create plotting arrays
+        time_list_hours = ( np.array(time_list) - time_list[0] ) / 3600.0
+        time_end_hours = ( time_end - time_list[0] ) / 3600.0
+        line_x = np.linspace(0, total, 10000)
+        line_y_log = ( time_fit_log[0] * line_x ) + time_fit_log[1]
+        line_y = ( 10.0**( line_y_log ) - time_list[0] ) / 3600.0
+
+        # Plot points, and line of best fit
+        ax.scatter(iter_list, time_list_hours, c='#4D78C9', marker='o', s=25, linewidths=0)
+        ax.scatter(total, time_end_hours, c='#C03030', marker='H', s=100, linewidths=0)
+        ax.plot(line_x, line_y, ls='--', lw=1.0, c='#C03030')
+
+        # Format axis limts and labels
+        ax.set_xlabel(r'Iteration', fontsize=15)
+        ax.set_ylabel(r'Time Since Start (hrs)', fontsize=15)
+        ax.set_xlim(0.0,1.1*line_x.max())
+        ax.set_ylim(0.0,1.1*line_y.max())
+        for xlabel in ax.get_xticklabels():
+            xlabel.set_fontproperties(matplotlib.font_manager.FontProperties(size=15))
+        for ylabel in ax.get_yticklabels():
+            ylabel.set_fontproperties(matplotlib.font_manager.FontProperties(size=15))
+        ax.grid()
+        ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+        ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+
+    # Return estimate (and plot, if requested)
+    if plot:
+        return time.ctime(time_end), fig
+    elif not plot:
+        return time.ctime(time_end)
 
 
 

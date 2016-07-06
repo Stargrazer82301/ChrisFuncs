@@ -6,7 +6,7 @@ current_module = sys.modules[__name__]
 import numpy as np
 import scipy.stats
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import astropy.io.fits
 import astropy.wcs
@@ -681,3 +681,25 @@ def PurgeStar(fits, star_i, star_j, beam_pix):
                     except:
                         continue
     return fits
+
+
+
+
+
+"""
+# IDIUT'S GUIDE TO ELLIPTICAL APERTURES
+I assume you also know the location of the ellipse's center. Call that (x0,y0).
+Let t be the counterclockwise angle the major axis makes with respect to the
+x-axis. Let a and b be the semi-major and semi-minor axes, respectively. If
+P = (x,y) is an arbitrary point then do this:
+
+X = (x-x0)*cos(t)+(y-y0)*sin(t); % Translate and rotate coords.
+Y = -(x-x0)*sin(t)+(y-y0)*cos(t); % to align with ellipse
+
+If
+
+X^2/a^2+Y^2/b^2
+
+is less than 1, the point P lies inside the ellipse. If it equals 1, it is right on
+the ellipse. If it is greater than 1, P is outside.
+"""

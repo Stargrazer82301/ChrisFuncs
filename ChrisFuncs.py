@@ -13,7 +13,7 @@ import scipy.spatial
 from cStringIO import StringIO
 from subprocess import call
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.cm
 import matplotlib.patches
@@ -283,7 +283,7 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, variable=False, outfile=F
     fits_bigger[margin:fits_bigger.shape[0]-margin, margin:fits_bigger.shape[1]-margin] = fits_in
 
     # Identify coordinates of central pixel
-    wcs_centre = wcs_in.wcs_world2pix(np.array([[float(ra), float(dec)]]), 0)
+    wcs_centre = wcs_in.all_world2pix(np.array([[float(ra), float(dec)]]), 0)
     i_centre = wcs_centre[0][1] + float(margin)
     j_centre = wcs_centre[0][0] + float(margin)
 
@@ -306,7 +306,7 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, variable=False, outfile=F
     # Populate header
     cutout_wcs = astropy.wcs.WCS(naxis=2)
     cutout_wcs.wcs.crpix = [float(j_centre_inviolate), float(i_centre_inviolate)]
-    cutout_wcs.wcs.cdelt = [float(pixsize_in/-3600.0) , float(pixsize_in/-3600.0) ]
+    cutout_wcs.wcs.cdelt = [float(pixsize_in/-3600.0) , float(pixsize_in/3600.0) ]
     cutout_wcs.wcs.crval = [float(ra), float(dec)]
     cutout_wcs.wcs.ctype = ['RA---TAN', 'DEC--TAN']
     cutout_header = cutout_wcs.to_header()
@@ -405,15 +405,6 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
     fits_old = fitsdata[exten].data
     wcs_old = astropy.wcs.WCS(fitsdata[exten].header)
 
-    # Identify wcs coords of central pixel
-    ref_coords = wcs_old.wcs_pix2world(np.array([[fits_old.shape[0]/2, fits_old.shape[1]/2]]), 0)
-
-    # Determine pixel width by really fucking crudely exctracting cdelt or cd
-    try:
-        cdelt = np.max(np.abs(wcs_old.wcs.cd))
-    except:
-        cdelt = np.max(np.abs(wcs_old.wcs.cdelt))
-
     # Create larger array
     fits_new = np.zeros([ fits_old.shape[0]+(2*int(margin)), fits_old.shape[1]+(2*int(margin)) ])
     fits_new[:] = np.NaN
@@ -424,20 +415,17 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
     elif margin<0:
         fits_new = fits_old[-margin:margin+fits_old.shape[0], -margin:margin+fits_old.shape[1]]
 
-    # Construct fits HDU
-    new_hdu = astropy.io.fits.PrimaryHDU(fits_new)
-    new_hdulist = astropy.io.fits.HDUList([new_hdu])
-    new_header = new_hdulist[0].header
-
     # Populate header
-    new_header.set('CTYPE1', 'RA---TAN')
-    new_header.set('CRPIX1', margin+(fits_old.shape[0]/2)+1)
-    new_header.set('CRVAL1', ref_coords[0][0])
-    new_header.set('CDELT1', -cdelt)
-    new_header.set('CTYPE2', 'DEC--TAN')
-    new_header.set('CRPIX2', margin+(fits_old.shape[1]/2)+1)
-    new_header.set('CRVAL2', ref_coords[0][1])
-    new_header.set('CDELT2', cdelt)
+    new_wcs = astropy.wcs.WCS(naxis=2)
+    new_wcs.wcs.crpix = [margin+wcs_old.wcs.crpix[0], margin+wcs_old.wcs.crpix[1]]
+    new_wcs.wcs.cdelt = [np.max(np.abs(wcs_in.wcs.cd)), np.max(np.abs(wcs_in.wcs.cd))]
+    new_wcs.wcs.crval = [margin+wcs_old.wcs.crval[0], margin+wcs_old.wcs.crval[1]]
+    new_wcs.wcs.ctype = [margin+wcs_old.wcs.ctype[0], margin+wcs_old.wcs.ctype[1]]
+    new_header = new_wcs.to_header()
+
+    # Construct fits HDU
+    new_hdu = astropy.io.fits.PrimaryHDU(data=fits_new, header=new_header)
+    new_hdulist = astropy.io.fits.HDUList([new_hdu])
 
     # Save new fits
     if outfile!=False:

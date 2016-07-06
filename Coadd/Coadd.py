@@ -53,7 +53,7 @@ def LevelFITS(fitsfile_dir, target_suffix, convfile_dir=False):
         level_params = lmfit.Parameters()
         level_params.add('level', value=np.nanmedian(image_conv), vary=True)
         image_conv_clipped = ChrisFuncs.SigmaClip(image_conv, tolerance=0.005, median=False, sigma_thresh=3.0)[2]
-        level_result = lmfit.minimize(FITS_Level_Chisq, level_params, args=(image_conv_clipped.flatten(),))
+        level_result = lmfit.minimize(ChisqLevelFITS, level_params, args=(image_conv_clipped.flatten(),))
         level = level_result.params['level'].value
         if i==0:
             level_ref = level

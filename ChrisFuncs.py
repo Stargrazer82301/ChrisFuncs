@@ -404,6 +404,7 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
         fitsdata = pathname
     fits_old = fitsdata[exten].data
     wcs_old = astropy.wcs.WCS(fitsdata[exten].header)
+    fitsdata.close()
 
     # Create larger array
     fits_new = np.zeros([ fits_old.shape[0]+(2*int(margin)), fits_old.shape[1]+(2*int(margin)) ])
@@ -418,9 +419,9 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
     # Populate header
     new_wcs = astropy.wcs.WCS(naxis=2)
     new_wcs.wcs.crpix = [margin+wcs_old.wcs.crpix[0], margin+wcs_old.wcs.crpix[1]]
-    new_wcs.wcs.cdelt = [np.max(np.abs(wcs_in.wcs.cd)), np.max(np.abs(wcs_in.wcs.cd))]
-    new_wcs.wcs.crval = [margin+wcs_old.wcs.crval[0], margin+wcs_old.wcs.crval[1]]
-    new_wcs.wcs.ctype = [margin+wcs_old.wcs.ctype[0], margin+wcs_old.wcs.ctype[1]]
+    new_wcs.wcs.cdelt = wcs_old.wcs.cdelt
+    new_wcs.wcs.crval = wcs_old.wcs.crval
+    new_wcs.wcs.ctype = wcs_old.wcs.ctype
     new_header = new_wcs.to_header()
 
     # Construct fits HDU
@@ -439,8 +440,7 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
     if variable==True:
         return new_hdulist
 
-    # Close original file
-    fitsdata.close()
+
 
 
 

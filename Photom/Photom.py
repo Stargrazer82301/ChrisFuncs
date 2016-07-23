@@ -454,7 +454,7 @@ def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff, custom_str
     #ChrisFuncs.Cutout(cont_array_binary, '/home/saruman/spx7cjc/DustPedia/Cont.fits')
 
     # Use SciPy's label function to identify contiguous features in binary map
-    if custom_structure==False:
+    if isinstance(custom_structure, bool) and custom_structure==False:
         cont_structure = np.array([[0,1,0], [1,1,1], [0,1,0]])
     else:
         cont_structure = custom_structure

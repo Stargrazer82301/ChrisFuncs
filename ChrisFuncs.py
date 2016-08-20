@@ -577,6 +577,16 @@ def Trim(data, i_centre, j_centre, width):
 
 
 
+# Function that normalises an array so that its values range from 0 to 1
+# Input: Array to be normalised, optional percentile for max normalisation, optional percentile for min normalisation
+# Output: Normalised array
+def Normalise(data, percentile_max=100, percentile_min=0):
+    data -= np.percentile(data, percentile_min)
+    data /= np.percentile(data, percentile_max)
+    return data
+
+
+
 # Function to calculate dust mass
 # Input: Flux (Jy), distance (pc), wavelength (m), temperature (K), kappa at 850um (m^2 kg^-1), dust emissivity index
 # Output: Dust mass (Msol)

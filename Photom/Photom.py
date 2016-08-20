@@ -20,6 +20,23 @@ import ChrisFuncs
 # Returns: Numpy array containing the sum of the pixel values in the ellipse, total number of pixels counted, and an array containing the pixel values
 def EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre):
 
+    # Create slice of input array, containing only the region of interest
+    i_cutout_min = np.floor(max([0, i_centre-rad]))
+    i_cutout_max = np.ceil(min([(array.shape)[0], i_centre+rad]))
+    j_cutout_min = np.floor(max([0, j_centre-rad]))
+    j_cutout_max = np.ceil(min([(array.shape)[1], j_centre+rad]))
+    array_slice = array[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
+    i_centre_slice = i_centre - i_cutout_min
+    j_centre_slice = j_centre - j_cutout_min
+    if array[i_centre,j_centre]!=array_slice[i_centre_slice,j_centre_slice]:
+        if np.isnan(array[i_centre,j_centre]==False) and np.isnan(array_slice[i_centre_slice,j_centre_slice]==False):
+            print 'SEVERE ERROR: EllipseSum check failed.'
+            pdb.set_trace()
+    else:
+        array = array_slice
+        i_centre = i_centre_slice
+        j_centre = j_centre_slice
+
     # Define semi-major & semi-minor axes, then convert input angle to radians
     semi_maj = float(rad)
     semi_min = float(rad) / float(axial_ratio)
@@ -51,6 +68,23 @@ def EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre):
 # Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Returns: Numpy array containing the sum of the pixel values in the annulus, the total number of pixels counted, and an array containing the pixel values
 def AnnulusSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre):
+
+    # Create slice of input array, containing only the region of interest
+    i_cutout_min = np.floor(max([0, i_centre-(rad_inner+width)]))
+    i_cutout_max = np.ceil(min([(array.shape)[0], i_centre+(rad_inner+width)]))
+    j_cutout_min = np.floor(max([0, j_centre-(rad_inner+width)]))
+    j_cutout_max = np.ceil(min([(array.shape)[1], j_centre+(rad_inner+width)]))
+    array_slice = array[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
+    i_centre_slice = i_centre - i_cutout_min
+    j_centre_slice = j_centre - j_cutout_min
+    if array[i_centre,j_centre]!=array_slice[i_centre_slice,j_centre_slice]:
+        if np.isnan(array[i_centre,j_centre]==False) and np.isnan(array_slice[i_centre_slice,j_centre_slice]==False):
+            print 'SEVERE ERROR: AnnulusSum check failed.'
+            pdb.set_trace()
+    else:
+        array = array_slice
+        i_centre = i_centre_slice
+        j_centre = j_centre_slice
 
     # Define semi-major & semi-minor axes, then convert input angle to radians
     semi_maj_inner = float(rad_inner)
@@ -113,6 +147,27 @@ def AnnulusQuickPrepare(array, angle, i_centre, j_centre):
 # Returns: Numpy array containing the sum of the pixel values in the annulus, the total number of pixels counted, and an array containing the pixel values
 def AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans):
 
+    # Create slice of input array, containing only the region of interest
+    i_cutout_min = np.floor(max([0, i_centre-(rad_inner+width)]))
+    i_cutout_max = np.ceil(min([(array.shape)[0], i_centre+(rad_inner+width)]))
+    j_cutout_min = np.floor(max([0, j_centre-(rad_inner+width)]))
+    j_cutout_max = np.ceil(min([(array.shape)[1], j_centre+(rad_inner+width)]))
+    array_slice = array[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
+    i_centre_slice = i_centre - i_cutout_min
+    j_centre_slice = j_centre - j_cutout_min
+    if array[i_centre,j_centre]!=array_slice[i_centre_slice,j_centre_slice]:
+        if np.isnan(array[i_centre,j_centre]==False) and np.isnan(array_slice[i_centre_slice,j_centre_slice]==False):
+            print 'SEVERE ERROR: AnnulusQuickSum check failed.'
+            pdb.set_trace()
+    else:
+        array = array_slice
+        i_centre = i_centre_slice
+        j_centre = j_centre_slice
+
+    # Make corresponding slices of transposed coord arrays
+    i_trans = i_trans[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
+    j_trans = j_trans[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
+
     # Define semi-major & semi-minor axes, then convert input angle to radians
     semi_maj_inner = float(rad_inner)
     semi_min_inner = float(semi_maj_inner) / float(axial_ratio)
@@ -141,6 +196,27 @@ def AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_cen
 # Input: Array, semi-major axis of ellipse (pix), position angle (deg), i & j coords of centre of ellipse, i & j transposed coord arrays
 # Returns: Numpy array containing the sum of the pixel values in the ellipse, the total number of pixels counted, and an array containing the pixel values
 def EllipseQuickSum(array, rad, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans):
+
+    # Create slice of input array, containing only the region of interest
+    i_cutout_min = np.floor(max([0, i_centre-rad]))
+    i_cutout_max = np.ceil(min([(array.shape)[0], i_centre+rad]))
+    j_cutout_min = np.floor(max([0, j_centre-rad]))
+    j_cutout_max = np.ceil(min([(array.shape)[1], j_centre+rad]))
+    array_slice = array[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
+    i_centre_slice = i_centre - i_cutout_min
+    j_centre_slice = j_centre - j_cutout_min
+    if array[i_centre,j_centre]!=array_slice[i_centre_slice,j_centre_slice]:
+        if np.isnan(array[i_centre,j_centre]==False) and np.isnan(array_slice[i_centre_slice,j_centre_slice]==False):
+            print 'SEVERE ERROR: EllipseQuickSum check failed.'
+            pdb.set_trace()
+    else:
+        array = array_slice
+        i_centre = i_centre_slice
+        j_centre = j_centre_slice
+
+    # Make corresponding slices of transposed coord arrays
+    i_trans = i_trans[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
+    j_trans = j_trans[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
 
     # Define semi-major & semi-minor axes, then convert input angle to radians
     semi_maj = float(rad)
@@ -237,6 +313,23 @@ def CircleAnnulusSum(fits, i_centre, j_centre, r, width):
 # Returns: Numpy array containing the sum of the pixel values in the ellipse, the total number of pixels counted, and an array containing the pixel values
 def EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upscale=1):
 
+    # Create slice of input array, containing only the region of interest
+    i_cutout_min = np.floor(max([0, i_centre-rad]))
+    i_cutout_max = np.ceil(min([(cutout.shape)[0], i_centre+rad]))
+    j_cutout_min = np.floor(max([0, j_centre-rad]))
+    j_cutout_max = np.ceil(min([(cutout.shape)[1], j_centre+rad]))
+    cutout_slice = cutout[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
+    i_centre_slice = i_centre - i_cutout_min
+    j_centre_slice = j_centre - j_cutout_min
+    if cutout[i_centre,j_centre]!=cutout[i_centre_slice,j_centre_slice]:
+        if np.isnan(cutout[i_centre,j_centre]==False) and np.isnan(cutout_slice[i_centre_slice,j_centre_slice]==False):
+            print 'SEVERE ERROR: EllipseSumUpscale check failed.'
+            pdb.set_trace()
+    else:
+        cutout = cutout_slice
+        i_centre = i_centre_slice
+        j_centre = j_centre_slice
+
     # Resize array to increase pixel sampling, cupdate centre coords, and downscale pixel values accordinly to preserve flux
     cutout_inviolate = np.copy(cutout)
     cutout = np.zeros([cutout_inviolate.shape[0]*upscale, cutout_inviolate.shape[1]*upscale])
@@ -278,6 +371,23 @@ def EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upsca
 # Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, upscaling factor
 # Returns: Numpy array containing the sum of the pixel values in the annulus, the total number of pixels counted, and an array containing the pixel values
 def AnnulusSumUpscale(cutout, rad_inner, width, axial_ratio, angle, i_centre, j_centre, upscale=1):
+
+    # Create slice of input array, containing only the region of interest
+    i_cutout_min = np.floor(max([0, i_centre-(rad_inner+width)]))
+    i_cutout_max = np.ceil(min([(cutout.shape)[0], i_centre+(rad_inner+width)]))
+    j_cutout_min = np.floor(max([0, j_centre-(rad_inner+width)]))
+    j_cutout_max = np.ceil(min([(cutout.shape)[1], j_centre+(rad_inner+width)]))
+    cutout_slice = cutout[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
+    i_centre_slice = i_centre - i_cutout_min
+    j_centre_slice = j_centre - j_cutout_min
+    if cutout[i_centre,j_centre]!=cutout_slice[i_centre_slice,j_centre_slice]:
+        if np.isnan(cutout[i_centre,j_centre]==False) and np.isnan(cutout_slice[i_centre_slice,j_centre_slice]==False):
+            print 'SEVERE ERROR: AnnulusQuickSum check failed.'
+            pdb.set_trace()
+    else:
+        cutout = cutout_slice
+        i_centre = i_centre_slice
+        j_centre = j_centre_slice
 
     # Resize array to increase pixel sampling, update centre coords, and downscale pixel values accordinly to preserve flux
     cutout_inviolate = np.copy(cutout)
@@ -451,7 +561,6 @@ def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff, custom_str
     # Create version of cutout where significant pixels have value 1, insignificant pixels have value 0
     cont_array_binary = np.zeros([(cutout.shape)[0], (cutout.shape)[1]])
     cont_array_binary[np.where(cutout>=cutoff)[0], np.where(cutout>=cutoff)[1]] = 1
-    #ChrisFuncs.Cutout(cont_array_binary, '/home/saruman/spx7cjc/DustPedia/Cont.fits')
 
     # Use SciPy's label function to identify contiguous features in binary map
     if isinstance(custom_structure, bool) and custom_structure==False:

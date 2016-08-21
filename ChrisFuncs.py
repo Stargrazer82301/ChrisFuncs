@@ -292,16 +292,19 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, variable=False, outfile=F
         raise ValueError('Coordinates not located within bounds of map')#pdb.set_trace()
 
     # Cut out a small section of the map centred upon the source in question
-    i_cutout_min = max([0, i_centre-rad_pix])
-    i_cutout_max = min([(fits_bigger.shape)[0], i_centre+rad_pix])
-    j_cutout_min = max([0, j_centre-rad_pix])
-    j_cutout_max = min([(fits_bigger.shape)[1], j_centre+rad_pix])
+    i_cutout_min = np.floor(max([0, i_centre-rad_pix]))
+    i_cutout_max = np.ceil(min([(fits_bigger.shape)[0], i_centre+rad_pix]))
+    j_cutout_min = np.floor(max([0, j_centre-rad_pix]))
+    j_cutout_max = np.ceil(min([(fits_bigger.shape)[1], j_centre+rad_pix]))
     cutout_inviolate = fits_bigger[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
 
     # Re-calibrate centre coords to account for discrete pixel size
-    i_centre = (int(round(float(cutout_inviolate.shape[0])/2.0))) + ( (i_centre-rad_pix) - (int(round(i_cutout_min))) )
-    j_centre = (int(round(float(cutout_inviolate.shape[1])/2.0))) + ( (j_centre-rad_pix) - (int(round(j_cutout_min))) )
-    i_centre_inviolate, j_centre_inviolate = i_centre, j_centre
+    i_centre_new = i_centre - i_cutout_min
+    j_centre_new = j_centre - j_cutout_min
+    if fits_bigger[i_centre,j_centre]!=cutout_inviolate[i_centre_new,j_centre_new]:
+        pdb.set_trace()
+    else:
+        i_centre_inviolate, j_centre_inviolate = i_centre_new, j_centre_new
 
     # Populate header
     cutout_wcs = astropy.wcs.WCS(naxis=2)

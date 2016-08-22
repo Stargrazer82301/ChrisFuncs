@@ -20,7 +20,9 @@ import matplotlib.patches
 import astropy.io.fits
 import astropy.wcs
 import astropy.convolution
-#import cutout as ag_cutout
+import astropy.nddata.utils
+import astropy.coordinates
+import astropy.units
 import FITS_tools
 import random
 import pickle
@@ -232,101 +234,42 @@ def SigmaClip(values, tolerance=0.001, median=False, sigma_thresh=3.0, no_zeros=
 
 
 
-# Function to create on-the-fly PSF by stacking point sources
-# Input: Map to be used, size of output map desired, array of i-coordinates of point soucres, array of j-coordinates of point soucres
-# Output: Constructed PSF for current image
-def PSF(fits, dim, stars_i, stars_j):
-    stack = np.zeros([stars_i.shape[0], dim, dim])
-    for s in range(0, stars_i.shape[0]):
-        tile = fits[ stars_i[s]-100:stars_i[s]+(dim/2), stars_j[s]-100:stars_j[s]+(dim/2) ]
-        if tile.shape[0] * tile.shape[1] == dim**2:
-            tile *= tile.max()**-1
-            tile = np.rot90(tile, int(np.round(random.uniform(-0.5,3.5))))
-            stack[s, :, :] = tile
-    psf = np.zeros([dim, dim])
-    for i in range(0, dim):
-        for j in range(0, dim):
-            psf[i,j] = np.mean(stack[:, i, j])
-    psf -= psf.min()
-    psf *= (sum(psf))**-1
-    return psf
-
-
-
-# Function to create a cutout of a fits file
+# Function to create a cutout of a fits file - NOW JUST A WRAPPER OF AN ASTROPY FUNCTION
 # Input: Input fits, cutout central ra (deg), cutout central dec (deg), cutout radius (arcsec), fits image extension, boolean stating if an output variable is desired, output fits pathname if required
 # Output: HDU of new file
 def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, variable=False, outfile=False):
-    #ChrisFuncs.FitsCutout('E:\\Work\\H-ATLAS\\HAPLESS_Cutouts\\Photometry_Cutouts\\2000_Arcsec\\GALEX_AIS\\10_f.fits', 221.10186, 1.6797723, 1000.0, exten=0, outfile='E:\\Work\\H-ATLAS\\HAPLESS_Cutouts\\Photometry_Cutouts\\2000_Arcsec\\GALEX_AIS\\HAPLESS_10_FUV_Temp.fits')
 
     # Open input fits and extract data
     if isinstance(pathname,str):
-        fitsdata_in = astropy.io.fits.open(pathname)
+        in_fitsdata = astropy.io.fits.open(pathname)
     elif isinstance(pathname,astropy.io.fits.HDUList):
-        fitsdata_in = pathname
-    fits_in = fitsdata_in[exten].data
-    header_in = fitsdata_in[exten].header
-    wcs_in = astropy.wcs.WCS(header_in)
+        in_fitsdata = pathname
+    in_map = in_fitsdata[exten].data
+    in_header = in_fitsdata[exten].header
+    in_wcs = astropy.wcs.WCS(in_header)
 
-    # Determine pixel width by really fucking crudely exctracting cdelt or cd
-    try:
-        pixsize_in = np.max(np.abs(wcs_in.wcs.cd)) * 3600.0
-    except:
-        pixsize_in = np.max(np.abs(wcs_in.wcs.cdelt)) * 3600.0
-    rad_pix = int( round( float(rad_arcsec) / float(pixsize_in) ) )
+    # Pass input parameters to astropy cutout function
+    pos = astropy.coordinates.SkyCoord(ra, dec, unit='deg')
+    size = astropy.units.Quantity(2.0*rad_arcsec, astropy.units.arcsec)
+    cutout_obj = astropy.nddata.utils.Cutout2D(in_map, pos, size, wcs=in_wcs, mode='partial', fill_value=np.NaN)
 
-    # Embed map in larger array to deal with edge effects
-    fits_bigger = np.copy(fits_in)
-    margin = int(round(float(rad_pix)))
-    fits_bigger = np.zeros([fits_in.shape[0]+(2.0*margin), fits_in.shape[1]+(2.0*margin)])
-    fits_bigger[:] = np.NaN
-    fits_bigger[margin:fits_bigger.shape[0]-margin, margin:fits_bigger.shape[1]-margin] = fits_in
-
-    # Identify coordinates of central pixel
-    wcs_centre = wcs_in.all_world2pix(np.array([[float(ra), float(dec)]]), 0)
-    i_centre = wcs_centre[0][1] + float(margin)
-    j_centre = wcs_centre[0][0] + float(margin)
-
-    # Fail if coords not in map
-    if i_centre<0 or i_centre>(fits_bigger.shape)[0] or j_centre<0 or j_centre>(fits_bigger.shape)[1]:
-        raise ValueError('Coordinates not located within bounds of map')#pdb.set_trace()
-
-    # Cut out a small section of the map centred upon the source in question
-    i_cutout_min = np.floor(max([0, i_centre-rad_pix]))
-    i_cutout_max = np.ceil(min([(fits_bigger.shape)[0], i_centre+rad_pix]))
-    j_cutout_min = np.floor(max([0, j_centre-rad_pix]))
-    j_cutout_max = np.ceil(min([(fits_bigger.shape)[1], j_centre+rad_pix]))
-    cutout_inviolate = fits_bigger[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
-
-    # Re-calibrate centre coords to account for discrete pixel size
-    i_centre_new = i_centre - i_cutout_min
-    j_centre_new = j_centre - j_cutout_min
-    if fits_bigger[i_centre,j_centre]!=cutout_inviolate[i_centre_new,j_centre_new]:
-        pdb.set_trace()
-    else:
-        i_centre_inviolate, j_centre_inviolate = i_centre_new, j_centre_new
-
-    # Populate header
-    cutout_wcs = astropy.wcs.WCS(naxis=2)
-    cutout_wcs.wcs.crpix = [float(j_centre_inviolate), float(i_centre_inviolate)]
-    cutout_wcs.wcs.cdelt = [float(pixsize_in/-3600.0) , float(pixsize_in/3600.0) ]
-    cutout_wcs.wcs.crval = [float(ra), float(dec)]
-    cutout_wcs.wcs.ctype = ['RA---TAN', 'DEC--TAN']
-    cutout_header = cutout_wcs.to_header()
-    cutout_header.set('ORIGIN', 'This FITS cutout created using \"ChrisFuncs\" module (https://github.com/Stargrazer82301/ChrisFuncs)')
+    # Extract outputs of interest
+    out_map = cutout_obj.data
+    out_wcs = cutout_obj.wcs
+    out_header = out_wcs.to_header()
 
     # Save, tidy, and return; all to taste
     if outfile!=False:
-        cutout_hdu = astropy.io.fits.PrimaryHDU(data=cutout_inviolate, header=cutout_header)
-        cutout_hdulist = astropy.io.fits.HDUList([cutout_hdu])
-        cutout_hdulist.writeto(outfile, clobber=True)
+        out_hdu = astropy.io.fits.PrimaryHDU(data=out_map, header=out_header)
+        out_hdulist = astropy.io.fits.HDUList([out_hdu])
+        out_hdulist.writeto(outfile, clobber=True)
     if isinstance(pathname,str):
-        fitsdata_in.close()
+        in_fitsdata.close()
     if variable==True:
-        cutout_hdu = astropy.io.fits.PrimaryHDU(cutout_inviolate)
-        cutout_hdulist = astropy.io.fits.HDUList([cutout_hdu])
-        cutout_header = cutout_hdulist[0].header
-        return cutout_hdulist
+        out_hdu = astropy.io.fits.PrimaryHDU(out_map)
+        out_hdulist = astropy.io.fits.HDUList([out_hdu])
+        out_header = out_hdulist[0].header
+        return out_hdulist
 
 
 

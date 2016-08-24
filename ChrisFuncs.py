@@ -23,6 +23,7 @@ import astropy.convolution
 import astropy.nddata.utils
 import astropy.coordinates
 import astropy.units
+import reproject
 import FITS_tools
 import random
 import pickle
@@ -235,9 +236,9 @@ def SigmaClip(values, tolerance=0.001, median=False, sigma_thresh=3.0, no_zeros=
 
 
 # Function to create a cutout of a fits file - NOW JUST A WRAPPER OF AN ASTROPY FUNCTION
-# Input: Input fits, cutout central ra (deg), cutout central dec (deg), cutout radius (arcsec), fits image extension, boolean stating if an output variable is desired, output fits pathname if required
+# Input: Input fits, cutout central ra (deg), cutout central dec (deg), cutout radius (arcsec), fits image extension, boolean of whether to reproject, boolean stating if an output variable is desired, output fits pathname if required
 # Output: HDU of new file
-def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, variable=False, outfile=False):
+def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=False, outfile=False):
 
     # Open input fits and extract data
     if isinstance(pathname,str):
@@ -247,16 +248,33 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, variable=False, outfile=F
     in_map = in_fitsdata[exten].data
     in_header = in_fitsdata[exten].header
     in_wcs = astropy.wcs.WCS(in_header)
+    
+    
 
-    # Pass input parameters to astropy cutout function
-    pos = astropy.coordinates.SkyCoord(ra, dec, unit='deg')
-    size = astropy.units.Quantity(2.0*rad_arcsec, astropy.units.arcsec)
-    cutout_obj = astropy.nddata.utils.Cutout2D(in_map, pos, size, wcs=in_wcs, mode='partial', fill_value=np.NaN)
+    # If reprojection not requesed, pass input parameters to astropy cutout function
+    if reproj==False:
+        pos = astropy.coordinates.SkyCoord(ra, dec, unit='deg')
+        size = astropy.units.Quantity(2.0*rad_arcsec, astropy.units.arcsec)
+        cutout_obj = astropy.nddata.utils.Cutout2D(in_map, pos, size, wcs=in_wcs, mode='partial', fill_value=np.NaN)
 
-    # Extract outputs of interest
-    out_map = cutout_obj.data
-    out_wcs = cutout_obj.wcs
-    out_header = out_wcs.to_header()
+        # Extract outputs of interest
+        out_map = cutout_obj.data
+        out_wcs = cutout_obj.wcs
+        out_header = out_wcs.to_header()
+        
+    # If reporjection requested, pass input parameters to reprojection function
+    if reproj==True:
+        width_deg = ( 2.0 * float(rad_arcsec) ) / 3600.0
+        cutout_header = FitsHeader(ra, dec, width_deg, 3600.0*np.mean(np.abs(in_wcs.wcs.cdelt)))
+        cutout_shape = ( cutout_header['NAXIS1'],  cutout_header['NAXIS1'] )
+        cutout_tuple = reproject.reproject_exact(in_fitsdata, cutout_header, shape_out=cutout_shape, hdu_in=exten)
+        
+        # Extract outputs of interest
+        out_map = cutout_tuple[0]
+        out_wcs = astropy.wcs.WCS(cutout_header)
+        out_header = cutout_header
+        
+        
 
     # Save, tidy, and return; all to taste
     if outfile!=False:

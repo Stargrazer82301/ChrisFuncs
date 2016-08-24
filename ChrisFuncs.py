@@ -295,7 +295,6 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=Fa
 # Input: Input fits, comparison fits, imput fits image extension, comparison fits image extension, boolean for if surface brightness instead of flux should be preserved, boolean stating if an output variable is desired, output fits pathname
 # Output: HDU of new file
 def FitsRebin(pathname_in, pathname_comp, exten_in=0, exten_comp=0, preserve_sb=False, variable=False, outfile=False, txt_header=False):
-    #ChrisFuncs.FitsRebin('E:\\Work\\H-ATLAS\\HAPLESS_Cutouts\\Photometry_Cutouts\\2000_Arcsec\\GALEX_AIS\\HAPLESS_10_FUV_Temp.fits', 'E:\\Work\H-ATLAS\\HAPLESS_Cutouts\\Photometry_Cutouts\\2000_Arcsec\\HAPLESS_10_w4.fits', outfile='E:\\Work\\H-ATLAS\\HAPLESS_Cutouts\\Photometry_Cutouts\\2000_Arcsec\\GALEX_AIS\\HAPLESS_10_FUV.fits')
 
     # Open input fits and extract data
     if isinstance(pathname_in,str):
@@ -359,7 +358,6 @@ def FitsRebin(pathname_in, pathname_comp, exten_in=0, exten_comp=0, preserve_sb=
 # Input: Input fits pathname, margin to place around array, fits extension of interest, boolean stating if margin is in arcseconds, no pixelsboolean stating if an output variable is desired, output fits pathname
 # Output: HDU of new file
 def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
-    # ChrisFuncs.FitsEmbed('E:\\Work\\Supernovae\\Kepler\\Postgrad\\Kepler_JCMT_CO(2-1)_1.3mm.fits', 0, 200, outfile='E:\\Work\\Supernovae\\Kepler\\Postgrad\\New.fits')
 
     # Open fits file and extract data
     if isinstance(pathname,str):
@@ -403,6 +401,46 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
     # Return new HDU
     if variable==True:
         return new_hdulist
+        
+        
+        
+        
+        
+# Define function to generate a generic FITS header for a given projection
+# Input: Central right ascension (deg), central declination (deg), image width (deg), pixel size (arcsec)
+# Output: FITS header
+def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
+    
+    # Calculate map dimensions
+    map_width_arcsec = float(map_width_deg) * 3600.0
+    map_width_pix = int( np.ceil( map_width_arcsec / float(pix_width_arcsec) ) )
+    map_centre_pix = map_width_pix / 2.0
+    pix_width_deg = float(pix_width_arcsec) / 3600.0
+
+    # Set up WCS object
+    wcs = astropy.wcs.WCS(naxis=2)
+    wcs.wcs.crval = [ float(ra), float(dec) ]
+    wcs.wcs.crpix = [ map_centre_pix, map_centre_pix ]    
+    wcs.wcs.cdelt = np.array([ -float(pix_width_deg), float(pix_width_deg) ])    
+    wcs.wcs.ctype = [ 'RA---TAN', 'DEC--TAN' ]
+    
+    # Create empty header, and set map dimensions in it
+    header = astropy.io.fits.Header()
+    header.set('NAXIS1', map_width_pix)
+    header.set('NAXIS2', map_width_pix)
+    
+    # Add WCS parameters to header
+    header.set('CRVAL1', wcs.wcs.crval[0])
+    header.set('CRVAL2', wcs.wcs.crval[1])
+    header.set('CRPIX1', wcs.wcs.crpix[0])
+    header.set('CRPIX2', wcs.wcs.crpix[1])
+    header.set('CDELT1', wcs.wcs.cdelt[0])
+    header.set('CDELT2', wcs.wcs.cdelt[1])
+    header.set('CTYPE1', wcs.wcs.ctype[0])
+    header.set('CTYPE2', wcs.wcs.ctype[1])
+    
+    # Return header
+    return header
 
 
 

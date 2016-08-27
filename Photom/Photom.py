@@ -21,15 +21,15 @@ import ChrisFuncs
 def EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre):
 
     # Create slice of input array, containing only the region of interest
-    i_cutout_min = np.floor(max([0, i_centre-rad]))
-    i_cutout_max = np.ceil(min([(array.shape)[0], i_centre+rad]))
-    j_cutout_min = np.floor(max([0, j_centre-rad]))
-    j_cutout_max = np.ceil(min([(array.shape)[1], j_centre+rad]))
+    i_cutout_min = int(np.floor(max([0, i_centre-rad])))
+    i_cutout_max = int(np.ceil(min([(array.shape)[0], i_centre+rad])))
+    j_cutout_min = int(np.floor(max([0, j_centre-rad])))
+    j_cutout_max = int(np.ceil(min([(array.shape)[1], j_centre+rad])))
     array_slice = array[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
     i_centre_slice = i_centre - i_cutout_min
     j_centre_slice = j_centre - j_cutout_min
-    if array[i_centre,j_centre]!=array_slice[i_centre_slice,j_centre_slice]:
-        if np.isnan(array[i_centre,j_centre]==False) and np.isnan(array_slice[i_centre_slice,j_centre_slice]==False):
+    if array[int(i_centre),int(j_centre)]!=array_slice[int(i_centre_slice),int(j_centre_slice)]:
+        if np.isnan(array[int(i_centre),int(j_centre)]==False) and np.isnan(array_slice[int(i_centre_slice),int(j_centre_slice)]==False):
             print 'SEVERE ERROR: EllipseSum check failed.'
             pdb.set_trace()
     else:
@@ -70,15 +70,15 @@ def EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre):
 def AnnulusSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre):
 
     # Create slice of input array, containing only the region of interest
-    i_cutout_min = np.floor(max([0, i_centre-(rad_inner+width)]))
-    i_cutout_max = np.ceil(min([(array.shape)[0], i_centre+(rad_inner+width)]))
-    j_cutout_min = np.floor(max([0, j_centre-(rad_inner+width)]))
-    j_cutout_max = np.ceil(min([(array.shape)[1], j_centre+(rad_inner+width)]))
+    i_cutout_min = int(np.floor(max([0, i_centre-(rad_inner+width)])))
+    i_cutout_max = int(np.ceil(min([(array.shape)[0], i_centre+(rad_inner+width)])))
+    j_cutout_min = int(np.floor(max([0, j_centre-(rad_inner+width)])))
+    j_cutout_max = int(np.ceil(min([(array.shape)[1], j_centre+(rad_inner+width)])))
     array_slice = array[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
     i_centre_slice = i_centre - i_cutout_min
     j_centre_slice = j_centre - j_cutout_min
-    if array[i_centre,j_centre]!=array_slice[i_centre_slice,j_centre_slice]:
-        if np.isnan(array[i_centre,j_centre]==False) and np.isnan(array_slice[i_centre_slice,j_centre_slice]==False):
+    if array[int(i_centre),int(j_centre)]!=array_slice[int(i_centre_slice),int(j_centre_slice)]:
+        if np.isnan(array[int(i_centre),int(j_centre)]==False) and np.isnan(array_slice[int(i_centre_slice),int(j_centre_slice)]==False):
             print 'SEVERE ERROR: AnnulusSum check failed.'
             pdb.set_trace()
     else:
@@ -148,15 +148,15 @@ def AnnulusQuickPrepare(array, angle, i_centre, j_centre):
 def AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans):
 
     # Create slice of input array, containing only the region of interest
-    i_cutout_min = np.floor(max([0, i_centre-(rad_inner+width)]))
-    i_cutout_max = np.ceil(min([(array.shape)[0], i_centre+(rad_inner+width)]))
-    j_cutout_min = np.floor(max([0, j_centre-(rad_inner+width)]))
-    j_cutout_max = np.ceil(min([(array.shape)[1], j_centre+(rad_inner+width)]))
+    i_cutout_min = int(np.floor(max([0, i_centre-(rad_inner+width)])))
+    i_cutout_max = int(np.ceil(min([(array.shape)[0], i_centre+(rad_inner+width)])))
+    j_cutout_min = int(np.floor(max([0, j_centre-(rad_inner+width)])))
+    j_cutout_max = int(np.ceil(min([(array.shape)[1], j_centre+(rad_inner+width)])))
     array_slice = array[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
     i_centre_slice = i_centre - i_cutout_min
     j_centre_slice = j_centre - j_cutout_min
-    if array[i_centre,j_centre]!=array_slice[i_centre_slice,j_centre_slice]:
-        if np.isnan(array[i_centre,j_centre]==False) and np.isnan(array_slice[i_centre_slice,j_centre_slice]==False):
+    if array[int(i_centre),int(j_centre)]!=array_slice[int(i_centre_slice),int(j_centre_slice)]:
+        if np.isnan(array[int(i_centre),int(j_centre)]==False) and np.isnan(array_slice[int(i_centre_slice),int(j_centre_slice)]==False):
             print 'SEVERE ERROR: AnnulusQuickSum check failed.'
             pdb.set_trace()
     else:
@@ -198,15 +198,15 @@ def AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_cen
 def EllipseQuickSum(array, rad, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans):
 
     # Create slice of input array, containing only the region of interest
-    i_cutout_min = np.floor(max([0, i_centre-rad]))
-    i_cutout_max = np.ceil(min([(array.shape)[0], i_centre+rad]))
-    j_cutout_min = np.floor(max([0, j_centre-rad]))
-    j_cutout_max = np.ceil(min([(array.shape)[1], j_centre+rad]))
+    i_cutout_min = int(np.floor(max([0, i_centre-rad])))
+    i_cutout_max = int(np.ceil(min([(array.shape)[0], i_centre+rad])))
+    j_cutout_min = int(np.floor(max([0, j_centre-rad])))
+    j_cutout_max = int(np.ceil(min([(array.shape)[1], j_centre+rad])))
     array_slice = array[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
     i_centre_slice = i_centre - i_cutout_min
     j_centre_slice = j_centre - j_cutout_min
-    if array[i_centre,j_centre]!=array_slice[i_centre_slice,j_centre_slice]:
-        if np.isnan(array[i_centre,j_centre]==False) and np.isnan(array_slice[i_centre_slice,j_centre_slice]==False):
+    if array[int(i_centre),int(j_centre)]!=array_slice[int(i_centre_slice),int(j_centre_slice)]:
+        if np.isnan(array[int(i_centre),int(j_centre)]==False) and np.isnan(array_slice[int(i_centre_slice),int(j_centre_slice)]==False):
             print 'SEVERE ERROR: EllipseQuickSum check failed.'
             pdb.set_trace()
     else:
@@ -314,10 +314,10 @@ def CircleAnnulusSum(fits, i_centre, j_centre, r, width):
 def EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upscale=1):
 
     # Create slice of input array, containing only the region of interest
-    i_cutout_min = np.floor(max([0, i_centre-rad]))
-    i_cutout_max = np.ceil(min([(cutout.shape)[0], i_centre+rad]))
-    j_cutout_min = np.floor(max([0, j_centre-rad]))
-    j_cutout_max = np.ceil(min([(cutout.shape)[1], j_centre+rad]))
+    i_cutout_min = int(np.floor(max([0, i_centre-rad])))
+    i_cutout_max = int(np.ceil(min([(cutout.shape)[0], i_centre+rad])))
+    j_cutout_min = int(np.floor(max([0, j_centre-rad])))
+    j_cutout_max = int(np.ceil(min([(cutout.shape)[1], j_centre+rad])))
     cutout_slice = cutout[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
     i_centre_slice = i_centre - i_cutout_min
     j_centre_slice = j_centre - j_cutout_min
@@ -373,10 +373,10 @@ def EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upsca
 def AnnulusSumUpscale(cutout, rad_inner, width, axial_ratio, angle, i_centre, j_centre, upscale=1):
 
     # Create slice of input array, containing only the region of interest
-    i_cutout_min = np.floor(max([0, i_centre-(rad_inner+width)]))
-    i_cutout_max = np.ceil(min([(cutout.shape)[0], i_centre+(rad_inner+width)]))
-    j_cutout_min = np.floor(max([0, j_centre-(rad_inner+width)]))
-    j_cutout_max = np.ceil(min([(cutout.shape)[1], j_centre+(rad_inner+width)]))
+    i_cutout_min = int(np.floor(max([0, i_centre-(rad_inner+width)])))
+    i_cutout_max = int(np.ceil(min([(cutout.shape)[0], i_centre+(rad_inner+width)])))
+    j_cutout_min = int(np.floor(max([0, j_centre-(rad_inner+width)])))
+    j_cutout_max = int(np.ceil(min([(cutout.shape)[1], j_centre+(rad_inner+width)])))
     cutout_slice = cutout[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
     i_centre_slice = i_centre - i_cutout_min
     j_centre_slice = j_centre - j_cutout_min

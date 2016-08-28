@@ -238,7 +238,7 @@ def SigmaClip(values, tolerance=0.001, median=False, sigma_thresh=3.0, no_zeros=
 # Function to create a cutout of a fits file - NOW JUST A WRAPPER OF AN ASTROPY FUNCTION
 # Input: Input fits, cutout central ra (deg), cutout central dec (deg), cutout radius (arcsec), fits image extension, boolean of whether to reproject, boolean stating if an output variable is desired, output fits pathname if required
 # Output: HDU of new file
-def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=False, outfile=False):
+def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=False):
 
     # Open input fits and extract data
     if isinstance(pathname,str):
@@ -248,8 +248,8 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=Fa
     in_map = in_fitsdata[exten].data
     in_header = in_fitsdata[exten].header
     in_wcs = astropy.wcs.WCS(in_header)
-    
-    
+
+
 
     # If reprojection not requesed, pass input parameters to astropy cutout function
     if reproj==False:
@@ -261,20 +261,26 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=Fa
         out_map = cutout_obj.data
         out_wcs = cutout_obj.wcs
         out_header = out_wcs.to_header()
-        
-    # If reporjection requested, pass input parameters to reprojection function
+
+    # If reporjection requested, pass input parameters to reprojection function (fast or thorough, as specified)
     if reproj==True:
         width_deg = ( 2.0 * float(rad_arcsec) ) / 3600.0
         cutout_header = FitsHeader(ra, dec, width_deg, 3600.0*np.mean(np.abs(in_wcs.wcs.cdelt)))
         cutout_shape = ( cutout_header['NAXIS1'],  cutout_header['NAXIS1'] )
-        cutout_tuple = reproject.reproject_exact(in_fitsdata, cutout_header, shape_out=cutout_shape, hdu_in=exten)
-        
+        try:
+            if fast==False:
+                cutout_tuple = reproject.reproject_exact(in_fitsdata, cutout_header, shape_out=cutout_shape, hdu_in=exten, parallel=parallel)
+            elif fast==True:
+                cutout_tuple = reproject.reproject_exact(in_fitsdata, cutout_header, shape_out=cutout_shape, hdu_in=exten, parallel=parallel)
+        except Exception as exception:
+            print exception.message
+
         # Extract outputs of interest
         out_map = cutout_tuple[0]
         out_wcs = astropy.wcs.WCS(cutout_header)
         out_header = cutout_header
-        
-        
+
+
 
     # Save, tidy, and return; all to taste
     if outfile!=False:
@@ -284,9 +290,8 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=Fa
     if isinstance(pathname,str):
         in_fitsdata.close()
     if variable==True:
-        out_hdu = astropy.io.fits.PrimaryHDU(out_map)
+        out_hdu = astropy.io.fits.PrimaryHDU(data=out_map, header=out_header)
         out_hdulist = astropy.io.fits.HDUList([out_hdu])
-        out_header = out_hdulist[0].header
         return out_hdulist
 
 
@@ -401,16 +406,16 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
     # Return new HDU
     if variable==True:
         return new_hdulist
-        
-        
-        
-        
-        
+
+
+
+
+
 # Define function to generate a generic FITS header for a given projection
 # Input: Central right ascension (deg), central declination (deg), image width (deg), pixel size (arcsec)
 # Output: FITS header
 def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
-    
+
     # Calculate map dimensions
     map_width_arcsec = float(map_width_deg) * 3600.0
     map_width_pix = int( np.ceil( map_width_arcsec / float(pix_width_arcsec) ) )
@@ -420,15 +425,15 @@ def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
     # Set up WCS object
     wcs = astropy.wcs.WCS(naxis=2)
     wcs.wcs.crval = [ float(ra), float(dec) ]
-    wcs.wcs.crpix = [ map_centre_pix, map_centre_pix ]    
-    wcs.wcs.cdelt = np.array([ -float(pix_width_deg), float(pix_width_deg) ])    
+    wcs.wcs.crpix = [ map_centre_pix, map_centre_pix ]
+    wcs.wcs.cdelt = np.array([ -float(pix_width_deg), float(pix_width_deg) ])
     wcs.wcs.ctype = [ 'RA---TAN', 'DEC--TAN' ]
-    
+
     # Create empty header, and set map dimensions in it
     header = astropy.io.fits.Header()
     header.set('NAXIS1', map_width_pix)
     header.set('NAXIS2', map_width_pix)
-    
+
     # Add WCS parameters to header
     header.set('CRVAL1', wcs.wcs.crval[0])
     header.set('CRVAL2', wcs.wcs.crval[1])
@@ -438,7 +443,7 @@ def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
     header.set('CDELT2', wcs.wcs.cdelt[1])
     header.set('CTYPE1', wcs.wcs.ctype[0])
     header.set('CTYPE2', wcs.wcs.ctype[1])
-    
+
     # Return header
     return header
 

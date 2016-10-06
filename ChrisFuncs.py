@@ -862,32 +862,6 @@ def GridPos(n_plot, plot_tot, img_dim, axis='y', nonstandard=False, gaps=False):
 
 
 
-# Function to do a two-tailed chi-square test to calculate the liklihood that the null hypothesis holds true
-# Input: Chi-square value of fit, degrees of freedom in model
-# Output: Liklihood that nulll hypothesis holds true (where p>0.95 would be grounds for >2-sigma acceptance of the null hypothesis)
-def NullHyp(chisq, DoF):
-
-    # Do single-tailed chi-squared test
-    single = scipy.stats.chi2.cdf(chisq, int(DoF))
-
-    # If DoF is 1 or 2, chi-squared distribution is single tailed, to nothing further to do
-    if DoF<=2:
-        null_prob = single
-
-    # If DoF>2, also check for over-fitting
-    elif DoF>=3:
-#        lower_split = (1.0 - single) / 2.0
-#        upper_split = single + lower_split
-#        null_prob = np.max(np.array([lower_split, upper_split]))
-        chisq_red = chisq / float(DoF)
-        if chisq_red<0.0:
-            print 'Reduced chi-squared is less than zero - model may over-fitting data!'
-
-    # Return result
-    return null_prob
-
-
-
 # Function to remove all NaN entries from an array
 # Input: Array to be cleansed
 # Output: Purified array
@@ -955,6 +929,7 @@ def wgetURL(url, filename, clobber=True, auto_retry=False):
             success = False
             if not auto_retry:
                 raise ValueError('Unsuccessful wget attempt.')
+
 
 
 

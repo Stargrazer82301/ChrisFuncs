@@ -490,6 +490,18 @@ def PercentileError(data, value, percentile=66.6, bounds=False):
 
 
 
+# Function to find the chi distribution in the deviation between two sets of values, each of which has an assocatiated uncertainty
+def ChiDist(data_1, err_1, data_2, err_2):
+    if np.array(data_1).shape[0] != np.array(data_2).shape[0]:
+        raise ValueError('Sets of values are different lengths')
+    chi = []
+    for i in range(0, np.array(data_1).shape[0]):
+        err_mutual = np.sqrt( err_1[i]**2.0 + err_2[i]**2.0 )
+        chi.append( (data_1[i]-data_2[i]) / err_mutual )
+    return np.array(chi)
+
+
+
 # Function to trim an array to a given size
 # Input: Array to be trimmed, i & j coordinates of centre of trimmed region, width of trimmed region
 # Output: Trimmed array

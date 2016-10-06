@@ -271,7 +271,7 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=Fa
             if fast==False:
                 cutout_tuple = reproject.reproject_exact(in_fitsdata, cutout_header, shape_out=cutout_shape, hdu_in=exten, parallel=parallel)
             elif fast==True:
-                cutout_tuple = reproject.reproject_exact(in_fitsdata, cutout_header, shape_out=cutout_shape, hdu_in=exten, parallel=parallel)
+                cutout_tuple = reproject.reproject_interp(in_fitsdata, cutout_header, shape_out=cutout_shape, hdu_in=exten)
         except Exception as exception:
             print exception.message
 

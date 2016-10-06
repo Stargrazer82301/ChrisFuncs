@@ -691,37 +691,6 @@ def GaussFitPlot(data, n_bins=50, show=True):
 
 
 
-# Function to create thumbnail of cutout
-# Input: Array, the downsampling factor, the colourmap to be used
-# Returns: Thumbnail as APLpy object
-def ThumbnailAPLpy(array, downsample=1.0, colourmap='gist_gray'):
-    thumbnail = aplpy.FITSFigure(array, downsample=downsample)
-    thumbnail.show_colorscale(cmap=colourmap)#, vmin=0.0, vmax=1.0)
-    thumbnail.axis_labels.hide()
-    thumbnail.tick_labels.hide()
-    thumbnail.ticks.hide()
-    return thumbnail
-
-
-
-# Function to create thumbnail of photometry cutout
-# Input: Array, semi-major axis of source aperture (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, the inner and outer bounds of the sky aperture (pix, list), width of the line to be drawn (pts), the downsampling factor, the colourmap to be used
-# Returns: Thumbnail as APLpy object
-def PhotThumbnailAPLpy(array, rad, axial_ratio, angle, i_centre, j_centre, sky, line_width=1.0, downsample=1.0, colourmap='gist_gray'):
-    x_centre_fits, y_centre_fits = j_centre+1.0, i_centre+1.0
-    thumbnail = aplpy.FITSFigure(array, downsample)
-    thumbnail.show_colorscale(cmap=colourmap)
-    thumbnail.show_ellipses(x_centre_fits, y_centre_fits, 2.0*float(rad), 2.0*(float(rad)/axial_ratio), angle=angle, edgecolor='cyan', facecolor='none', linewidth=line_width)
-    if sky>0:
-        thumbnail.show_ellipses(x_centre_fits, y_centre_fits, sky[0]*2.0*float(rad), sky[0]*2.0*(float(rad)/axial_ratio), angle=angle, edgecolor='cyan', facecolor='none', linewidth=line_width/3.0)#, linestyle='dotted')
-        thumbnail.show_ellipses(x_centre_fits, y_centre_fits, sky[1]*2.0*float(rad), sky[1]*2.0*(float(rad)/axial_ratio), angle=angle, edgecolor='cyan', facecolor='none', linewidth=line_width/3.0)#, linestyle='dotted')
-    thumbnail.axis_labels.hide()
-    thumbnail.tick_labels.hide()
-    thumbnail.ticks.hide()
-    return thumbnail
-
-
-
 # Function to quickly save a FITS image to file
 # Input: Array to be saved, path to which to save file
 # Output: None

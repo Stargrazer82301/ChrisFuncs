@@ -452,31 +452,32 @@ def Congrid(a, newdims, method='linear', centre=False, minusone=False):
 
 
 
-# Function that performs extinction correction on photometry, via IRSA dust extinction service (which uses the Schlafly & Finkbeiner 2011 prescription)
-# Input: RA of target coord (deg), dec of target coord (deg), name of band of interest
-# Output: Extinction correction (mag)
-def ExtCorrrct(ra, dec, band_name):
+# Function that provides Galactic extinction correction, via IRSA dust extinction service (which uses the Schlafly & Finkbeiner 2011 prescription)
+# Input: RA of target coord (deg), dec of target coord (deg), name of band of interest, (boolean of whether function should be verbose, and meaningless verbose output prefix string)
+# Output: Extinction correction factor (ie, multiply uncorrected flux by this value to yield corrected flux)
+def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
 
-    # Construct 'staw-man' pod, source dict, band dict, and kwarg dict inputs (as this function is just a re-worked part of CAAPR)
-    pod = {'id':'', 'ap_sum':1.0, 'ap_error':1.0}
-    source_dict = {'ra':ra, 'dec':dec}
-    band_dict = {'band_name':band_name}
-    kwargs_dict = {'verbose':False, 'extinction_corr':True}
+    # Make sure there's a space at the end of the verbose prefix
+    if verbose_prefix!='':
+        if verbose_prefix[-1:]!=' ':
+            verbose_prefix += ' '
 
     # List bands for which IRSA provids corrections
     excorr_possible = ['GALEX_FUV','GALEX_NUV','SDSS_u','SDSS_g','SDSS_r','SDSS_i','SDSS_z','CTIO_U','CTIO_B','CTIO_V','CTIO_R','CTIO_I','DSS_B','DSS_R','DSS_I','2MASS_J','2MASS_H','2MASS_Ks','UKIRT_J','UKIRT_H','UKIRT_K','Spitzer_3.6','Spitzer_4.5','Spitzer_5.8','Spitzer_8.0','WISE_3.4','WISE_4.6']
 
     # Check if corrections are available for this band
-    photom_band_parsed = BandParse(band_dict['band_name'])
+    photom_band_parsed = BandParse(band_name)
     if photom_band_parsed==None:
-        if kwargs_dict['verbose']: print '['+pod['id']+'] Unable to parse band name; not conducting Galactic extinction correction for this band.'
-        return pod
+        if verbose: print verbose_prefix+'Unable to parse band name; not conducting Galactic extinction correction for this band.'
+        excorr = 1.0
+        return excorr
     if photom_band_parsed not in excorr_possible:
-        if kwargs_dict['verbose']: print '['+pod['id']+'] Galactic extinction correction not available for this band.'
-        return pod
+        if verbose: print verbose_prefix+'Galactic extinction correction not available for this band.'
+        excorr = 1.0
+        return excorr
 
     # Else if extinction correction is possible, prepare query IRSA dust extinction service
-    if kwargs_dict['verbose']: print '['+pod['id']+'] Retreiving extinction corrections from IRSA Galactic Dust Reddening & Extinction Service.'
+    if verbose: print verbose_prefix+'Retreiving extinction corrections from IRSA Galactic Dust Reddening & Extinction Service.'
     query_count = 0
     query_success = False
     query_limit = 100
@@ -491,7 +492,7 @@ def ExtCorrrct(ra, dec, band_name):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 sys.stdout = open(os.devnull, "w")
-                irsa_query = astroquery.irsa_dust.IrsaDust.get_extinction_table( str(source_dict['ra'])+', '+str(source_dict['dec']) )
+                irsa_query = astroquery.irsa_dust.IrsaDust.get_extinction_table( str(ra)+', '+str(dec) )
             query_success = True
             break
 
@@ -499,17 +500,17 @@ def ExtCorrrct(ra, dec, band_name):
         except Exception as exception:
             sys.stdout = sys.__stdout__
             if query_count==0:
-                print '['+pod['id']+'] IRSA Galactic Dust Reddening & Extinction Service query failed with error: \"'+repr(exception.message)+'\" - reattempting.'
+                print verbose_prefix+'IRSA Galactic Dust Reddening & Extinction Service query failed with error: \"'+repr(exception.message)+'\" - reattempting.'
             query_count += 1
             time.sleep(60.0)
         except:
             sys.stdout = sys.__stdout__
             if query_count==0:
-                print '['+pod['id']+'] IRSA Galactic Dust Reddening & Extinction Service query failed: reattempting (exception not caught).'
+                print verbose_prefix+'IRSA Galactic Dust Reddening & Extinction Service query failed: reattempting (exception not caught).'
             query_count += 1
             time.sleep(60.0)
     if not query_success:
-        print '['+pod['id']+'] Unable to access IRSA Galactic Dust Reddening & Extinction Service after '+str(query_limit)+' attemps.'
+        print verbose_prefix+'Unable to access IRSA Galactic Dust Reddening & Extinction Service after '+str(query_limit)+' attemps.'
         raise ValueError('Unable to access IRSA Galactic Dust Reddening & Extinction Service after '+str(query_limit)+' attemps.')
 
     # Loop over entries in the IRSA table, looking for the current band
@@ -524,8 +525,6 @@ def ExtCorrrct(ra, dec, band_name):
             irsa_band_index = np.where( irsa_query['Filter_name']==irsa_band_raw )[0][0]
             irsa_band_excorr_mag = irsa_query['A_SandF'][irsa_band_index]
             irsa_band_excorr = 10.0**( irsa_band_excorr_mag / 2.51 )
-            pod['ap_sum'] *= irsa_band_excorr
-            pod['ap_error'] *= irsa_band_excorr
             irsa_band_exists = True
             break
 
@@ -548,12 +547,10 @@ def ExtCorrrct(ra, dec, band_name):
         # Calculate and apply the extincton correction
         irsa_band_excorr_mag = reddening_coeff * ( irsa_av / irsa_av_ebv_ratio )
         irsa_band_excorr = 10.0**( irsa_band_excorr_mag / 2.51 )
-        pod['ap_sum'] *= irsa_band_excorr
-        pod['ap_error'] *= irsa_band_excorr
 
-    # Determine extinction correction, and return
-    excorr = np.abs( 2.51 * np.log10( pod['ap_sum'] ) )
-    return excorr
+    # Report result and return extinction correction
+    if verbose: print verbose_prefix+'Galactic extinction correction factor is '+str(ChrisFuncs.FromGitHub.randlet.ToPrecision(irsa_band_excorr,4))+' (ie, '+str(ChrisFuncs.FromGitHub.randlet.ToPrecision(irsa_band_excorr_mag,4))+' magnitudes).'
+    return irsa_band_excorr
 
 
 

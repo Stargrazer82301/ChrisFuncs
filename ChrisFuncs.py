@@ -168,22 +168,6 @@ def EllipseAngle(a):
 
 
 
-# Pieter De Vis' function to remove a star from a given position in a map
-# Input: Map to be used, i & j coordinates of star to be removed, band to be used (w index: FUV, NUV, u, g, r, i, Z, Y, J, H, K, w1, w2, w3, w4, 100, 160, 250, 350, 500)
-# Outout: Map purged of unctuous stars
-def PurgeStarPieter(fits, star_i, star_j, w):
-    return Photom.PurgeStarPieter(fits, star_i, star_j, w)
-
-
-
-# Function to crudely remove a star from a given position in a map
-# Input: Map to be used, i & j coordinates of star to be removed
-# Outout: Map purged of unctuous stars
-def PurgeStar(fits, star_i, star_j, beam_pix):
-    return Photom.PurgeStar(fits, star_i, star_j, beam_pix)
-
-
-
 # Function to perform a sigma clip upon a set of values
 # Input: Array of values, convergence tolerance, state if median instead of mean should be used for clip centrepoint, clipping threshold, boolean for whether sigma of zero can be accepted
 # Returns: List containing the clipped standard deviation, the average, and the values themselves
@@ -409,8 +393,6 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
 
 
 
-
-
 # Define function to generate a generic FITS header for a given projection
 # Input: Central right ascension (deg), central declination (deg), image width (deg), pixel size (arcsec)
 # Output: FITS header
@@ -446,8 +428,6 @@ def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
 
     # Return header
     return header
-
-
 
 
 

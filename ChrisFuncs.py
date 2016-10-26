@@ -4,15 +4,13 @@ import os
 import pdb
 sys.path.insert(0, '../')
 current_module = sys.modules[__name__]
-from numpy import *
 import numpy as np
 import scipy.stats
 import scipy.ndimage
 import scipy.ndimage.measurements
 import scipy.spatial
-from cStringIO import StringIO
-from subprocess import call
-import matplotlib
+import subprocess
+#import matplotlib
 #matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.cm
@@ -23,14 +21,15 @@ import astropy.convolution
 import astropy.nddata.utils
 import astropy.coordinates
 import astropy.units
+astropy.log.setLevel('ERROR')
 import reproject
-import FITS_tools
-import random
+import astroquery.irsa_dust
 import pickle
 import time
+import re
+import warnings
 import pip
 import importlib
-import aplpy
 #sys.path.append(os.path.join(dropbox,'Work','Scripts'))
 
 # Import ChrisFuncs and sub-modules
@@ -280,69 +279,6 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=Fa
 
 
 
-# Wrapper of keflavich function to rebin a fits file the coordinate grid of another fits file
-# Input: Input fits, comparison fits, imput fits image extension, comparison fits image extension, boolean for if surface brightness instead of flux should be preserved, boolean stating if an output variable is desired, output fits pathname
-# Output: HDU of new file
-def FitsRebin(pathname_in, pathname_comp, exten_in=0, exten_comp=0, preserve_sb=False, variable=False, outfile=False, txt_header=False):
-
-    # Open input fits and extract data
-    if isinstance(pathname_in,str):
-        fitsdata_in = astropy.io.fits.open(pathname_in)
-    elif isinstance(pathname_in,astropy.io.fits.HDUList):
-        fitsdata_in = pathname_in
-    fits_in = fitsdata_in[exten_in].data
-    header_in = fitsdata_in[exten_in].header
-    wcs_in = astropy.wcs.WCS(header_in)
-
-    # Open comparison fits and extract data
-    if not txt_header:
-        if isinstance(pathname_comp,str):
-            fitsdata_comp = astropy.io.fits.open(pathname_comp)
-        elif isinstance(pathname_comp,astropy.io.fits.HDUList):
-            fitsdata_comp = pathname_comp
-        header_comp = fitsdata_comp[exten_comp].header
-        wcs_comp = astropy.wcs.WCS(header_comp)
-
-    # Or, if only a text header is being provided as the reference, process accordinly (assuming it behaves as like an IRSA template service header)
-    elif txt_header:
-        header_comp = astropy.io.fits.Header.fromfile( pathname_comp, sep='\n', endcard=False, padding=False)
-
-    # Use keflavich hcongrid to regrid input fits to header of comparison fits
-    fits_new = FITS_tools.hcongrid.hcongrid(fits_in, header_in, header_comp)
-    hdu_new = astropy.io.fits.PrimaryHDU(fits_new, header=header_comp)
-    hdulist_new = astropy.io.fits.HDUList([hdu_new])
-
-    # Determine pixels width by really fucking crudely exctracting cdelt or cd
-    try:
-        pixsize_in = np.max(np.abs(wcs_in.wcs.cd))
-    except:
-        pixsize_in = np.max(np.abs(wcs_in.wcs.cdelt))
-    try:
-        pixsize_comp = np.max(np.abs(wcs_comp.wcs.cd))
-    except:
-        pixsize_comp = np.max(np.abs(wcs_comp.wcs.cdelt))
-
-    # Unless not needed, rescale pixel values to preserve flux (as opposed to surface brightness)
-    if preserve_sb==False:
-        factor = float(pixsize_in) / float(pixsize_comp)
-        fits_new *= factor**-2.0
-
-    # Save new fits if required
-    if outfile!=False:
-        hdulist_new.writeto(outfile, clobber=True)
-
-    # Return new HDU if required
-    if variable==True:
-        return hdulist_new
-
-    # Close files
-    if isinstance(pathname_in,str):
-        fitsdata_in.close()
-    if isinstance(pathname_comp,str):
-        fitsdata_comp.close()
-
-
-
 # Function to embed a fits file in a larger array of NaNs (for APLpy or the like)
 # Input: Input fits pathname, margin to place around array, fits extension of interest, boolean stating if margin is in arcseconds, no pixelsboolean stating if an output variable is desired, output fits pathname
 # Output: HDU of new file
@@ -489,10 +425,9 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
 
         # Carry out query
         try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                sys.stdout = open(os.devnull, "w")
-                irsa_query = astroquery.irsa_dust.IrsaDust.get_extinction_table( str(ra)+', '+str(dec) )
+            sys.stdout = open(os.devnull, "w")
+            irsa_query = astroquery.irsa_dust.IrsaDust.get_extinction_table( str(ra)+', '+str(dec) )
+            sys.stdout = sys.__stdout__
             query_success = True
             break
 
@@ -679,7 +614,7 @@ def DustMass(S, parsecs, wavelength, T, kappa850=0.077, beta=2.0):
     nu = c / wavelength
     B_prefactor = (2.0 * h * nu**3.0) / c**2.0
     B_e = (h * nu) / (k * T)
-    B = B_prefactor * (e**B_e - 1.0)**-1.0
+    B = B_prefactor * (np.e**B_e - 1.0)**-1.0
     nu850 = c / 850E-6
     kappa = kappa850 * (nu / nu850)**beta
     D = parsecs * 3.26 * 9.5E15
@@ -809,7 +744,7 @@ def QuickWrite(data, outfile, sublists=False):
 def FluxToLum(flux, dist, freq=False, mags=False):
     if mags==True:
         flux = ChrisFuncs.ABMagsToJy(flux)
-    watts_per_hz = 10.0**-26.0 * flux * 4.0 * pi * ( dist * 3.26 * 9.5E15 )**2.0
+    watts_per_hz = 10.0**-26.0 * flux * 4.0 * np.pi * ( dist * 3.26 * 9.5E15 )**2.0
     if freq==False:
         watts = watts_per_hz
     elif (freq!=False) and (freq>0):
@@ -823,7 +758,7 @@ def FluxToLum(flux, dist, freq=False, mags=False):
 # Input: Value to be converted (nanomaggies)
 # Returns: Pogson magnitudes (mags; duh)
 def nMaggiesToMags(nMaggies):
-    mag = 22.5 - ( 2.5*log10(nMaggies) )
+    mag = 22.5 - ( 2.5*np.log10(nMaggies) )
     return mag
 
 
@@ -900,9 +835,9 @@ def ABAbsToLsol(Mag):
 # Returns: AB pogson magnitudes (mags; duh)
 def GALEXCountsToMags(GALEX,w):
     if w==0 or w=='FUV':
-        mag = 18.82 - ( 2.5*log10(GALEX) )
+        mag = 18.82 - ( 2.5*np.log10(GALEX) )
     if w==1 or w=='NUV':
-        mag = 20.08 - ( 2.5*log10(GALEX) )
+        mag = 20.08 - ( 2.5*np.log10(GALEX) )
     return mag
 
 
@@ -988,7 +923,7 @@ def Extrap1D(interpolator):
             return interpolator(x)
 
     def ufunclike(xs):
-        return array(map(pointwise, array(xs)))
+        return np.array(map(pointwise, np.array(xs)))
 
     return ufunclike
 
@@ -1218,7 +1153,7 @@ def PIP(package):
 # Output: None
 def UpgradeAllPIP():
     for dist in pip.get_installed_distributions():
-        call("pip install --upgrade --user" + dist.project_name, shell=True)
+        subprocess.call("pip install --upgrade --user" + dist.project_name, shell=True)
 
 
 

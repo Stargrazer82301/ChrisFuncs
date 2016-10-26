@@ -701,6 +701,18 @@ def OmegaSED(M, D, kappa_list=[850E-6, 0.077], beta=2.0):
 
 
 
+# Function that uses Driver & Robotham (2010) foruma to give percentage cosmic variance
+# Input: Survey volume (in Mpc^3, assuming H0=70 km s^-1 Mpc^-1), number of survey fields, survey field aspect ratio
+# Output: Percentage cosmic variance
+def CosmicVariance(v, n, x):
+    v, n, x = float(v), float(n), float(x)
+    first_term = 1.00 - ( 0.03 * np.sqrt(x-1.0) )
+    second_term = ( 219.7 - (52.4*np.log10(v)) + (3.21*(np.log10(v))**2.0) ) / n**0.5
+    cv = first_term * second_term
+    return cv
+
+
+
 # Function to convert the bin-edge output of np.histogram to be bin-centred (and this of same dimensions as bin totals)
 # Input: Array of bin edges
 # Output: Array of bin centres

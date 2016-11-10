@@ -27,9 +27,10 @@ import astroquery.irsa_dust
 import pickle
 import time
 import re
-import warnings
+import wget
 import pip
 import importlib
+import types
 #sys.path.append(os.path.join(dropbox,'Work','Scripts'))
 
 # Import ChrisFuncs and sub-modules

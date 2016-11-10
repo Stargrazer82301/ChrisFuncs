@@ -221,7 +221,7 @@ def SigmaClip(values, tolerance=0.001, median=False, sigma_thresh=3.0, no_zeros=
 # Function to create a cutout of a fits file - NOW JUST A WRAPPER OF AN ASTROPY FUNCTION
 # Input: Input fits, cutout central ra (deg), cutout central dec (deg), cutout radius (arcsec), fits image extension, boolean of whether to reproject, boolean stating if an output variable is desired, output fits pathname if required
 # Output: HDU of new file
-def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=False):
+def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=True):
 
     # Open input fits and extract data
     if isinstance(pathname,str):

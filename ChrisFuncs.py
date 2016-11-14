@@ -249,7 +249,7 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=Fa
     # If reporjection requested, pass input parameters to reprojection function (fast or thorough, as specified)
     if reproj==True:
         width_deg = ( 2.0 * float(rad_arcsec) ) / 3600.0
-        cutout_header = FitsHeader(ra, dec, width_deg, 3600.0*np.mean(np.abs(in_wcs.wcs.cdelt)))
+        cutout_header = FitsHeader(ra, dec, width_deg, 3600.0*np.mean(np.abs(np.diagonal(in_wcs.pixel_scale_matrix))))
         cutout_shape = ( cutout_header['NAXIS1'],  cutout_header['NAXIS1'] )
         try:
             if fast==False:

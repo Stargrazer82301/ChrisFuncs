@@ -400,7 +400,7 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
             verbose_prefix += ' '
 
     # List bands for which IRSA provids corrections
-    excorr_possible = ['GALEX_FUV','GALEX_NUV','SDSS_u','SDSS_g','SDSS_r','SDSS_i','SDSS_z','CTIO_U','CTIO_B','CTIO_V','CTIO_R','CTIO_I','DSS_B','DSS_R','DSS_I','2MASS_J','2MASS_H','2MASS_Ks','UKIRT_J','UKIRT_H','UKIRT_K','Spitzer_3.6','Spitzer_4.5','Spitzer_5.8','Spitzer_8.0','WISE_3.4','WISE_4.6']
+    excorr_possible = ['GALEX_FUV','GALEX_NUV','SDSS_u','SDSS_g','SDSS_r','SDSS_i','SDSS_z','CTIO_U','CTIO_B','CTIO_V','CTIO_R','CTIO_I','DSS_B','DSS_R','DSS_I','2MASS_J','2MASS_H','2MASS_Ks','UKIRT_Y','UKIRT_J','UKIRT_H','UKIRT_K','Spitzer_3.6','Spitzer_4.5','Spitzer_5.8','Spitzer_8.0','WISE_3.4','WISE_4.6']
 
     # Check if corrections are available for this band
     photom_band_parsed = BandParse(band_name)
@@ -484,6 +484,14 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
         irsa_band_excorr_mag = reddening_coeff * ( irsa_av / irsa_av_ebv_ratio )
         irsa_band_excorr = 10.0**( irsa_band_excorr_mag / 2.51 )
 
+    # If band is Y-band, use point 36.557% of way between z-band and J-band corrections
+    if (irsa_band_exists==False) and (photom_band_parsed=='UKIRT_Y'):
+        irsa_z_index = np.where( irsa_query['Filter_name']=='SDSS z' )[0][0]
+        irsa_J_index = np.where( irsa_query['Filter_name']=='UKIDSS J' )[0][0]
+        irsa_band_excorr_mag = irsa_query['A_SandF'][irsa_J_index] + ( (1.0-0.36557) * (irsa_query['A_SandF'][irsa_z_index] - irsa_query['A_SandF'][irsa_J_index]) )
+        irsa_band_excorr = 10.0**( irsa_band_excorr_mag / 2.51 )
+        irsa_band_exists = True
+
     # Report result and return extinction correction
     if verbose: print verbose_prefix+'Galactic extinction correction factor is '+str(ChrisFuncs.FromGitHub.randlet.ToPrecision(irsa_band_excorr,4))+' (ie, '+str(ChrisFuncs.FromGitHub.randlet.ToPrecision(irsa_band_excorr_mag,4))+' magnitudes).'
     return irsa_band_excorr
@@ -513,10 +521,11 @@ def BandParse(band_name_target):
                        'DSS_I':['DSS_I','DSS1_I','DSSI_I','DSS2_I','DSSII_I','DSS_I-band','DSS1_I-band','DSSI_I-band','DSS2_I-band','DSSII_I-band'],
                        '2MASS_J':['2MASS_J','J','J-band','2MASS_J-band'],
                        '2MASS_H':['2MASS_H','H','H-band','2MASS_H-band'],
-                       '2MASS_Ks':['2MASS_Ks','Ks','Ks-band','2MASS_Ks-band','2MASS_K','2MASS_K-band'],
-                       'UKIRT_J':['UKIRT_J','UKIRT_J-band','UKIDSS_J','UKIDSS_J-band'],
-                       'UKIRT_H':['UKIRT_H','UKIRT_H-band','UKIDSS_H','UKIDSS_H-band'],
-                       'UKIRT_K':['UKIRT_K','UKIRT_K-band','K','K-band','UKIDSS_K','UKIDSS_K-band'],
+                       '2MASS_Ks':['2MASS_Ks','Ks','Ks-band','2MASS_Ks-band','2MASS_K','2MASS_K-band','VISTA_Ks','VISTA_Ks-band','VISTA_K','VISTA_K-band','VIRCAM_Ks','VIRCAM_Ks-band','VIRCAM_K','VIRCAM_K-band'],
+                       'UKIRT_Y':['UKIRT_Y','UKIRT_Y-band','UKIDSS_Y','UKIDSS_Y-band','WFCAM_Y','WFCAM_Y-band','VISTA_Y','VISTA_Y-band','VIRCAM_Y','VIRCAM_Y-band'],
+                       'UKIRT_J':['UKIRT_J','UKIRT_J-band','UKIDSS_J','UKIDSS_J-band','WFCAM_J','WFCAM_J-band','VISTA_J','VISTA_J-band','VIRCAM_J','VIRCAM_J-band'],
+                       'UKIRT_H':['UKIRT_H','UKIRT_H-band','UKIDSS_H','UKIDSS_H-band','WFCAM_H','WFCAM_H-band','VISTA_H','VISTA_H-band','VIRCAM_H','VIRCAM_H-band'],
+                       'UKIRT_K':['UKIRT_K','UKIRT_K-band','K','K-band','UKIDSS_K','UKIDSS_K-band','WFCAM_K','WFCAM_K-band'],
                        'Spitzer_3.6':['Spitzer_3.6','Spitzer_3.6um','Spitzer_3.6mu','Spitzer_IRAC_3.6','Spitzer_IRAC_3.6um','Spitzer_IRAC_3.6mu','Spitzer_IRAC1','Spitzer_I1','IRAC_3.6','IRAC_3.6um','IRAC_3.6mu','IRAC1','I1','Spitzer_IRAC1-band','IRAC1-band','I1-band','3.6','3.6um','3.6mu'],
                        'Spitzer_4.5':['Spitzer_4.5','Spitzer_4.5um','Spitzer_4.5mu','Spitzer_IRAC_4.5','Spitzer_IRAC_4.5um','Spitzer_IRAC_4.5mu','Spitzer_IRAC2','Spitzer_I2','IRAC_4.5','IRAC_4.5um','IRAC_4.5mu','IRAC2','I2','Spitzer_IRAC2-band','IRAC2-band','I2-band','4.5','4.5um','4.5mu'],
                        'Spitzer_5.8':['Spitzer_5.8','Spitzer_5.8um','Spitzer_5.8mu','Spitzer_IRAC_5.8','Spitzer_IRAC_5.8um','Spitzer_IRAC_5.8mu','Spitzer_IRAC3','Spitzer_I3','IRAC_5.8','IRAC_5.8um','IRAC_5.8mu','IRAC3','I3','Spitzer_IRAC3-band','IRAC3-band','I3-band','5.8','5.8um','5.8mu'],
@@ -541,7 +550,7 @@ def BandParse(band_name_target):
     if len(band_altnames_matches)==0:
         return None
     elif len(band_altnames_matches)>1:
-        return None
+        raise Exception('Band name has multiple possible matches! Can you be more specific?')
 
     # Else if a good match is found, return it
     elif len(band_altnames_matches)==1:

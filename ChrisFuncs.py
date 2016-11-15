@@ -18,16 +18,16 @@ import matplotlib.patches
 import astropy.io.fits
 import astropy.wcs
 import astropy.convolution
-import astropy.nddata.utils
+#import astropy.nddata.utils
 import astropy.coordinates
 import astropy.units
 astropy.log.setLevel('ERROR')
 import reproject
 import astroquery.irsa_dust
+import wget
 import pickle
 import time
 import re
-import wget
 import pip
 import importlib
 import types
@@ -487,7 +487,7 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
     # If band is Y-band, use point 36.557% of way between z-band and J-band corrections
     if (irsa_band_exists==False) and (photom_band_parsed=='UKIRT_Y'):
         irsa_z_index = np.where( irsa_query['Filter_name']=='SDSS z' )[0][0]
-        irsa_J_index = np.where( irsa_query['Filter_name']=='UKIDSS J' )[0][0]
+        irsa_J_index = np.where( irsa_query['Filter_name']=='UKIRT J')[0][0]
         irsa_band_excorr_mag = irsa_query['A_SandF'][irsa_J_index] + ( (1.0-0.36557) * (irsa_query['A_SandF'][irsa_z_index] - irsa_query['A_SandF'][irsa_J_index]) )
         irsa_band_excorr = 10.0**( irsa_band_excorr_mag / 2.51 )
         irsa_band_exists = True

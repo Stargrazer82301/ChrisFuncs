@@ -806,7 +806,7 @@ def ErrGAMAMagsToCounts(err, mag):
 # Input: Value to be converted (mags)
 # Returns: Source flux density (Jy)
 def ABMagsToJy(mag):
-    Jy = 0.000001 * 10.0**((23.9-mag)/2.5)
+    Jy = 1E-6 * 10.0**((23.9-mag)/2.5)
     return Jy
 
 

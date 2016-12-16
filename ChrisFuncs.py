@@ -389,6 +389,69 @@ def Congrid(a, newdims, method='linear', centre=False, minusone=False):
 
 
 
+# A function to fit and remove a background polynomial to an image, masking a central ellipse
+# Input: Array to process, i-coord of masked central ellipse, j-coord of masked central ellipse, semimajor axis of masked central ellipse, axial ratio of masked central ellipse, position angle of masked central ellipse, order of polynomial, sigma threshold at which bright pixels cut off, boolean of whether to only apply polynomial if it makes significant difference to image
+# Output: Poynomial-filtered array, array of the polynomial filter
+def PolySub(image_in, mask_centre_i, mask_centre_j, mask_semimaj_pix, mask_axial_ratio, mask_angle, poly_order=5, cutoff_sigma=2.0, change_check=False):
+
+
+    # Find cutoff for excluding bright pixels by sigma-clipping map
+    clip_value = ChrisFuncs.SigmaClip(image_in, tolerance=0.01, sigma_thresh=3.0, median=True)
+    noise_value = clip_value[0]
+    field_value = clip_value[1]
+    cutoff = field_value + ( cutoff_sigma * noise_value )
+
+    # Mask all image pixels in masking region around source
+    image_masked = image_in.copy()
+    ellipse_mask = ChrisFuncs.Photom.EllipseMask(image_in, mask_semimaj_pix, mask_axial_ratio, mask_angle, mask_centre_i, mask_centre_j)
+    image_masked[ np.where( ellipse_mask==1 ) ] = np.nan
+
+    # Mask all image pixels identified as being high SNR
+    image_masked[ np.where( image_masked>cutoff ) ] = np.nan
+
+    # Use astropy to fit 2-dimensional polynomial to the image
+    image_masked[ np.where( np.isnan(image_masked)==True ) ] = field_value
+    poly_model = astropy.modeling.models.Polynomial2D(degree=poly_order)
+    i_coords, j_coords = np.mgrid[:image_masked.shape[0], :image_masked.shape[1]]
+    fitter = astropy.modeling.fitting.LevMarLSQFitter()
+    i_coords = i_coords.flatten()
+    j_coords = j_coords.flatten()
+    image_flattened = image_masked.flatten()
+    good = np.where(np.isnan(image_flattened)==False)
+    i_coords = i_coords[good]
+    j_coords = j_coords[good]
+    image_flattened = image_flattened[good]
+    fit = fitter(poly_model, i_coords, j_coords, image_flattened)
+
+    # Create final polynomial filter (undoing downsampling using lorenzoriano GitHub script)
+    i_coords, j_coords = np.mgrid[:image_in.shape[0], :image_in.shape[1]]
+    poly_filter = fit(i_coords, j_coords)
+
+    # Establish background variation before application of filter
+    sigma_thresh = 3.0
+    clip_in = ChrisFuncs.SigmaClip(image_in, tolerance=0.005, median=True, sigma_thresh=sigma_thresh)
+    bg_in = image_in[ np.where( image_in<clip_in[1] ) ]
+    spread_in = np.mean( np.abs( bg_in - clip_in[1] ) )
+
+    # How much reduction in background variation there was due to application of the filter
+    image_sub = image_in - poly_filter
+    clip_sub = ChrisFuncs.SigmaClip(image_sub, tolerance=0.005, median=True, sigma_thresh=sigma_thresh)
+    bg_sub = image_sub[ np.where( image_sub<clip_sub[1] ) ]
+    spread_sub = np.mean( np.abs( bg_sub - clip_sub[1] ) )
+    spread_diff = spread_in / spread_sub
+
+    # If the filter made significant difference, apply to image and return it; otherwise, just return the unaltered map
+    if change_check:
+        if spread_diff>1.1:
+            image_out = image_sub
+            poly_out = poly_filter
+        else:
+            image_out = image_in
+            poly_out = np.zeros(image_out)
+    return image_sub, poly_out
+
+
+
 # Function that provides Galactic extinction correction, via IRSA dust extinction service (which uses the Schlafly & Finkbeiner 2011 prescription)
 # Input: RA of target coord (deg), dec of target coord (deg), name of band of interest, (boolean of whether function should be verbose, and meaningless verbose output prefix string)
 # Output: Extinction correction factor (ie, multiply uncorrected flux by this value to yield corrected flux)

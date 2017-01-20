@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Import smorgasbord
 import sys
 import os
@@ -42,7 +43,7 @@ def LevelFITS(fitsfile_dir, target_suffix, convfile_dir=False):
 
     # Loop over each file
     for i in range(0, len(fitsfile_list)):
-        print 'Matching backgorund of map '+fitsfile_list[i]
+        print('Matching backgorund of map '+fitsfile_list[i])
 
         # Read in corresponding map from directory containing convolved images
         fitsdata_conv = astropy.io.fits.open( os.path.join(convfile_dir,fitsfile_list[i]) )

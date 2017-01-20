@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Import smorgasbord
 import sys
 import os
@@ -30,7 +31,7 @@ def EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre):
     j_centre_slice = j_centre - j_cutout_min
     if array[int(i_centre),int(j_centre)]!=array_slice[int(i_centre_slice),int(j_centre_slice)]:
         if np.isnan(array[int(i_centre),int(j_centre)]==False) and np.isnan(array_slice[int(i_centre_slice),int(j_centre_slice)]==False):
-            print 'SEVERE ERROR: EllipseSum check failed.'
+            print('SEVERE ERROR: EllipseSum check failed.')
             pdb.set_trace()
     else:
         array = array_slice
@@ -79,7 +80,7 @@ def AnnulusSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre):
     j_centre_slice = j_centre - j_cutout_min
     if array[int(i_centre),int(j_centre)]!=array_slice[int(i_centre_slice),int(j_centre_slice)]:
         if np.isnan(array[int(i_centre),int(j_centre)]==False) and np.isnan(array_slice[int(i_centre_slice),int(j_centre_slice)]==False):
-            print 'SEVERE ERROR: AnnulusSum check failed.'
+            print('SEVERE ERROR: AnnulusSum check failed.')
             pdb.set_trace()
     else:
         array = array_slice
@@ -157,7 +158,7 @@ def AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_cen
     j_centre_slice = j_centre - j_cutout_min
     if array[int(i_centre),int(j_centre)]!=array_slice[int(i_centre_slice),int(j_centre_slice)]:
         if np.isnan(array[int(i_centre),int(j_centre)]==False) and np.isnan(array_slice[int(i_centre_slice),int(j_centre_slice)]==False):
-            print 'SEVERE ERROR: AnnulusQuickSum check failed.'
+            print('SEVERE ERROR: AnnulusQuickSum check failed.')
             pdb.set_trace()
     else:
         array = array_slice
@@ -207,7 +208,7 @@ def EllipseQuickSum(array, rad, axial_ratio, angle, i_centre, j_centre, i_trans,
     j_centre_slice = j_centre - j_cutout_min
     if array[int(i_centre),int(j_centre)]!=array_slice[int(i_centre_slice),int(j_centre_slice)]:
         if np.isnan(array[int(i_centre),int(j_centre)]==False) and np.isnan(array_slice[int(i_centre_slice),int(j_centre_slice)]==False):
-            print 'SEVERE ERROR: EllipseQuickSum check failed.'
+            print('SEVERE ERROR: EllipseQuickSum check failed.')
             pdb.set_trace()
     else:
         array = array_slice
@@ -323,7 +324,7 @@ def EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upsca
     j_centre_slice = j_centre - j_cutout_min
     if cutout[i_centre,j_centre]!=cutout[i_centre_slice,j_centre_slice]:
         if np.isnan(cutout[i_centre,j_centre]==False) and np.isnan(cutout_slice[i_centre_slice,j_centre_slice]==False):
-            print 'SEVERE ERROR: EllipseSumUpscale check failed.'
+            print('SEVERE ERROR: EllipseSumUpscale check failed.')
             pdb.set_trace()
     else:
         cutout = cutout_slice
@@ -382,7 +383,7 @@ def AnnulusSumUpscale(cutout, rad_inner, width, axial_ratio, angle, i_centre, j_
     j_centre_slice = j_centre - j_cutout_min
     if cutout[i_centre,j_centre]!=cutout_slice[i_centre_slice,j_centre_slice]:
         if np.isnan(cutout[i_centre,j_centre]==False) and np.isnan(cutout_slice[i_centre_slice,j_centre_slice]==False):
-            print 'SEVERE ERROR: AnnulusQuickSum check failed.'
+            print('SEVERE ERROR: AnnulusQuickSum check failed.')
             pdb.set_trace()
     else:
         cutout = cutout_slice

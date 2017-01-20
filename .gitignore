@@ -22,8 +22,9 @@ $RECYCLE.BIN/
 # Dropbox attribute files
 *.dropbox.attr
 
-# Python binaries
+# Python binaries and backups
 *.pyc
+*.bak
 
 
 

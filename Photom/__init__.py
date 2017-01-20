@@ -1,2 +1,2 @@
-from . import Photom
-from .Photom import *
+#from . import Photom
+#from .Photom import *

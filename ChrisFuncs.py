@@ -257,7 +257,7 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=Fa
             elif fast==True:
                 cutout_tuple = reproject.reproject_interp(in_fitsdata, cutout_header, shape_out=cutout_shape, hdu_in=exten)
         except Exception as exception:
-            print exception.message
+            print(exception.message)
 
         # Extract outputs of interest
         out_map = cutout_tuple[0]
@@ -390,20 +390,31 @@ def Congrid(a, newdims, method='linear', centre=False, minusone=False):
 
 
 # A function to fit and remove a background polynomial to an image, masking a central ellipse
-# Input: Array to process, i-coord of masked central ellipse, j-coord of masked central ellipse, semimajor axis of masked central ellipse, axial ratio of masked central ellipse, position angle of masked central ellipse, order of polynomial, sigma threshold at which bright pixels cut off, boolean of whether to only apply polynomial if it makes significant difference to image
+# Input: Array to process, i-coord of masked central ellipse, j-coord of masked central ellipse, semimajor axis of masked central ellipse, axial ratio of masked central ellipse, position angle of masked central ellipse, order of polynomial, sigma threshold at which bright pixels cut off, downsampling factor to use, boolean of whether to only apply polynomial if it makes significant difference to image
 # Output: Poynomial-filtered array, array of the polynomial filter
-def PolySub(image_in, mask_centre_i, mask_centre_j, mask_semimaj_pix, mask_axial_ratio, mask_angle, poly_order=5, cutoff_sigma=2.0, change_check=False):
+def PolySub(image_in, mask_centre_i, mask_centre_j, mask_semimaj_pix, mask_axial_ratio, mask_angle, poly_order=5, cutoff_sigma=2.0, downsample=1.0, change_check=False):
 
+    # If requested, downsample image to improve processing time
+    downsample_factor = np.round(np.int(downsample))
+    if downsample_factor>=2:
+        image_ds = Downsample(image_in, downsample_factor)
+    else:
+        image_ds = image_in
+
+    # Downsample related values accordingly
+    mask_semimaj_pix = mask_semimaj_pix / downsample_factor
+    mask_centre_i = int(round(float((0.5*mask_centre_i)-1.0)))
+    mask_centre_j = int(round(float((0.5*mask_centre_j)-1.0)))
 
     # Find cutoff for excluding bright pixels by sigma-clipping map
-    clip_value = ChrisFuncs.SigmaClip(image_in, tolerance=0.01, sigma_thresh=3.0, median=True)
+    clip_value = ChrisFuncs.SigmaClip(image_ds, tolerance=0.01, sigma_thresh=2.0, median=True)
     noise_value = clip_value[0]
     field_value = clip_value[1]
     cutoff = field_value + ( cutoff_sigma * noise_value )
 
     # Mask all image pixels in masking region around source
-    image_masked = image_in.copy()
-    ellipse_mask = ChrisFuncs.Photom.EllipseMask(image_in, mask_semimaj_pix, mask_axial_ratio, mask_angle, mask_centre_i, mask_centre_j)
+    image_masked = image_ds.copy()
+    ellipse_mask = ChrisFuncs.Photom.EllipseMask(image_ds, mask_semimaj_pix, mask_axial_ratio, mask_angle, mask_centre_i, mask_centre_j)
     image_masked[ np.where( ellipse_mask==1 ) ] = np.nan
 
     # Mask all image pixels identified as being high SNR
@@ -424,17 +435,18 @@ def PolySub(image_in, mask_centre_i, mask_centre_j, mask_semimaj_pix, mask_axial
     fit = fitter(poly_model, i_coords, j_coords, image_flattened)
 
     # Create final polynomial filter (undoing downsampling using lorenzoriano GitHub script)
-    i_coords, j_coords = np.mgrid[:image_in.shape[0], :image_in.shape[1]]
-    poly_filter = fit(i_coords, j_coords)
+    i_coords, j_coords = np.mgrid[:image_ds.shape[0], :image_ds.shape[1]]
+    poly_fit = fit(i_coords, j_coords)
+    poly_full = scipy.ndimage.interpolation.zoom(poly_fit, [ float(image_in.shape[0])/float(poly_fit.shape[0]), float(image_in.shape[1])/float(poly_fit.shape[1]) ], mode='nearest')
 
     # Establish background variation before application of filter
-    sigma_thresh = 3.0
+    sigma_thresh = 2.0
     clip_in = ChrisFuncs.SigmaClip(image_in, tolerance=0.005, median=True, sigma_thresh=sigma_thresh)
     bg_in = image_in[ np.where( image_in<clip_in[1] ) ]
     spread_in = np.mean( np.abs( bg_in - clip_in[1] ) )
 
     # How much reduction in background variation there was due to application of the filter
-    image_sub = image_in - poly_filter
+    image_sub = image_in - poly_full
     clip_sub = ChrisFuncs.SigmaClip(image_sub, tolerance=0.005, median=True, sigma_thresh=sigma_thresh)
     bg_sub = image_sub[ np.where( image_sub<clip_sub[1] ) ]
     spread_sub = np.mean( np.abs( bg_sub - clip_sub[1] ) )
@@ -444,11 +456,14 @@ def PolySub(image_in, mask_centre_i, mask_centre_j, mask_semimaj_pix, mask_axial
     if change_check:
         if spread_diff>1.1:
             image_out = image_sub
-            poly_out = poly_filter
+            poly_out = poly_full
         else:
-            image_out = image_in
-            poly_out = np.zeros(image_out)
-    return image_sub, poly_out
+            image_out = image_ds
+            poly_out = np.zeros(image_in.shape)
+    else:
+        image_out = image_sub
+        poly_out = poly_full
+    return image_out, poly_out
 
 
 
@@ -468,16 +483,16 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
     # Check if corrections are available for this band
     photom_band_parsed = BandParse(band_name)
     if photom_band_parsed==None:
-        if verbose: print verbose_prefix+'Unable to parse band name; not conducting Galactic extinction correction for this band.'
+        if verbose: print(verbose_prefix+'Unable to parse band name; not conducting Galactic extinction correction for this band.')
         excorr = 1.0
         return excorr
     if photom_band_parsed not in excorr_possible:
-        if verbose: print verbose_prefix+'Galactic extinction correction not available for this band.'
+        if verbose: print(verbose_prefix+'Galactic extinction correction not available for this band.')
         excorr = 1.0
         return excorr
 
     # Else if extinction correction is possible, prepare query IRSA dust extinction service
-    if verbose: print verbose_prefix+'Retreiving extinction corrections from IRSA Galactic Dust Reddening & Extinction Service.'
+    if verbose: print(verbose_prefix+'Retreiving extinction corrections from IRSA Galactic Dust Reddening & Extinction Service.')
     query_count = 0
     query_success = False
     query_limit = 100
@@ -499,17 +514,17 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
         except Exception as exception:
             sys.stdout = sys.__stdout__
             if query_count==0:
-                print verbose_prefix+'IRSA Galactic Dust Reddening & Extinction Service query failed with error: \"'+repr(exception.message)+'\" - reattempting.'
+                print(verbose_prefix+'IRSA Galactic Dust Reddening & Extinction Service query failed with error: \"'+repr(exception.message)+'\" - reattempting.')
             query_count += 1
             time.sleep(60.0)
         except:
             sys.stdout = sys.__stdout__
             if query_count==0:
-                print verbose_prefix+'IRSA Galactic Dust Reddening & Extinction Service query failed: reattempting (exception not caught).'
+                print(verbose_prefix+'IRSA Galactic Dust Reddening & Extinction Service query failed: reattempting (exception not caught).')
             query_count += 1
             time.sleep(60.0)
     if not query_success:
-        print verbose_prefix+'Unable to access IRSA Galactic Dust Reddening & Extinction Service after '+str(query_limit)+' attemps.'
+        print(verbose_prefix+'Unable to access IRSA Galactic Dust Reddening & Extinction Service after '+str(query_limit)+' attemps.')
         raise ValueError('Unable to access IRSA Galactic Dust Reddening & Extinction Service after '+str(query_limit)+' attemps.')
 
     # Loop over entries in the IRSA table, looking for the current band
@@ -556,7 +571,7 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
         irsa_band_exists = True
 
     # Report result and return extinction correction
-    if verbose: print verbose_prefix+'Galactic extinction correction factor is '+str(ChrisFuncs.FromGitHub.randlet.ToPrecision(irsa_band_excorr,4))+' (ie, '+str(ChrisFuncs.FromGitHub.randlet.ToPrecision(irsa_band_excorr_mag,4))+' magnitudes).'
+    if verbose: print(verbose_prefix+'Galactic extinction correction factor is '+str(ChrisFuncs.FromGitHub.randlet.ToPrecision(irsa_band_excorr,4))+' (ie, '+str(ChrisFuncs.FromGitHub.randlet.ToPrecision(irsa_band_excorr_mag,4))+' magnitudes).')
     return irsa_band_excorr
 
 
@@ -573,7 +588,7 @@ def BandParse(band_name_target):
                        'SDSS_g':['SDSS_g','g','g-band','SDSS_g-band'],
                        'SDSS_r':['SDSS_r','r','r-band','SDSS_r-band'],
                        'SDSS_i':['SDSS_i','i','i-band','SDSS_i-band'],
-                       'SDSS_z':['SDSS_z','z','z-band','SDSS_z-band'],
+                       'SDSS_z':['SDSS_z','z','z-band','SDSS_z-band','VISTA_Z','VISTA_Z-band'],
                        'CTIO_U':['CTIO_U','CTIO_U-band'],
                        'CTIO_B':['CTIO_B','CTIO_B-band','B','B-band'],
                        'CTIO_V':['CTIO_V','CTIO_V-band','V','V-band'],
@@ -1102,10 +1117,10 @@ def wgetURL(url, filename, clobber=True, auto_retry=False):
                 wget.download(url, out=filename)
             except:
                 os.system('wget \"'+url+'\" -O '+filename)
-            print 'Successful acquisition of '+url
+            print('Successful acquisition of '+url)
             success = True
         except:
-            print 'Failure! Retrying acquistion of '+url
+            print('Failure! Retrying acquistion of '+url)
             time.sleep(0.1)
             success = False
             if not auto_retry:

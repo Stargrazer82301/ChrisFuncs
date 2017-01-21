@@ -3,7 +3,6 @@ import sys
 import os
 import pdb
 sys.path.insert(0, '../')
-current_module = sys.modules[__name__]
 import numpy as np
 import scipy.stats
 import scipy.ndimage
@@ -33,17 +32,12 @@ import importlib
 import types
 #sys.path.append(os.path.join(dropbox,'Work','Scripts'))
 
-# Import ChrisFuncs and sub-modules
-import ChrisFuncs
-import Photom
-import FromGitHub
-
-
 
 # Function to sum all elements in an ellipse centred on the middle of a given array
 # Input: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Returns: Numpy array containing the sum of the pixel values in the ellipse, total number of pixels counted, and an array containing the pixel values
 def EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre):
+    import Photom
     return Photom.EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre)
 
 
@@ -52,6 +46,7 @@ def EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre):
 # Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Returns: Numpy array containing the sum of the pixel values in the annulus, the total number of pixels counted, and an array containing the pixel values
 def AnnulusSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre):
+    import Photom
     return Photom.AnnulusSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre)
 
 
@@ -60,6 +55,7 @@ def AnnulusSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre):
 # Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Returns: List containing i & j transposed coords
 def AnnulusQuickPrepare(array, angle, i_centre, j_centre):
+    import Photom
     return Photom.AnnulusQuickPrepare(array, angle, i_centre, j_centre)
 
 
@@ -68,6 +64,7 @@ def AnnulusQuickPrepare(array, angle, i_centre, j_centre):
 # Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, i & j transposed coord arrays
 # Returns: Numpy array containing the sum of the pixel values in the annulus, the total number of pixels counted, and an array containing the pixel values
 def AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans):
+    import Photom
     return Photom.AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans)
 
 
@@ -76,6 +73,7 @@ def AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_cen
 # Input: Array, semi-major axis of ellipse (pix), position angle (deg), i & j coords of centre of ellipse, i & j transposed coord arrays
 # Returns: Numpy array containing the sum of the pixel values in the ellipse, the total number of pixels counted, and an array containing the pixel values
 def EllipseQuickSum(array, rad, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans):
+    import Photom
     return Photom.EllipseQuickSum(array, rad, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans)
 
 
@@ -84,6 +82,7 @@ def EllipseQuickSum(array, rad, axial_ratio, angle, i_centre, j_centre, i_trans,
 # Input: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Output: Mask array of same dimensions as input array where pixels that lie within ellipse have value 1
 def EllipseMask(array, rad, axial_ratio, angle, i_centre, j_centre):
+    import Photom
     return Photom.EllipseMask(array, rad, axial_ratio, angle, i_centre, j_centre)
 
 
@@ -92,6 +91,7 @@ def EllipseMask(array, rad, axial_ratio, angle, i_centre, j_centre):
 # Input: Array to be used, i & j coordinates of centre of circle, radius of circle
 # Output: Sum of elements within circle, number of pixels within circle
 def CircleSum(fits, i_centre, j_centre, r):
+    import Photom
     return Photom.CircleSum(fits, i_centre, j_centre, r)
 
 
@@ -100,6 +100,7 @@ def CircleSum(fits, i_centre, j_centre, r):
 # Input: Array to be used, i & j coordinates of centre of circle, radius of circle
 # Output: Sum of elements within circle, number of pixels within circle
 def CircleAnnulusSum(fits, i_centre, j_centre, r, width):
+    import Photom
     return Photom.CircleAnnulusSum(fits, i_centre, j_centre, r, width)
 
 
@@ -108,6 +109,7 @@ def CircleAnnulusSum(fits, i_centre, j_centre, r, width):
 # Input: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, upscaling factor
 # Returns: Numpy array containing the sum of the pixel values in the ellipse, the total number of pixels counted, and an array containing the pixel values
 def EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upscale=1):
+    import Photom
     return Photom.EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upscale=1)
 
 
@@ -116,6 +118,7 @@ def EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upsca
 # Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, upscaling factor
 # Returns: Numpy array containing the sum of the pixel values in the annulus, the total number of pixels counted, and an array containing the pixel values
 def AnnulusSumUpscale(cutout, rad_inner, width, axial_ratio, angle, i_centre, j_centre, upscale=1):
+    import Photom
     return Photom.AnnulusSumUpscale(cutout, rad_inner, width, axial_ratio, angle, i_centre, j_centre, upscale=1)
 
 
@@ -124,6 +127,7 @@ def AnnulusSumUpscale(cutout, rad_inner, width, axial_ratio, angle, i_centre, j_
 # Input: Map, radius of aperture (pix), area of aperture (pix), boolean of whether or not to sky-subtract the noise apertures, relative radius of inner edge of annulus, relative width of annulus, angle of source ellipse, axial ratio of source ellipse
 # Returns: Aperture standard deviation, and list of mean background values, list of aperture sum values
 def CircularApertureStandardDeviationFinder(fits, area, ann=True, ann_inner=1.5, ann_width=1.0, angle=0.0, axial_ratio=1.0, apertures=100):
+    import Photom
     return Photom.CircularApertureStandardDeviationFinder(fits, area, ann=True, ann_inner=1.5, ann_width=1.0, angle=0.0, axial_ratio=1.0, apertures=100)
 
 
@@ -132,6 +136,7 @@ def CircularApertureStandardDeviationFinder(fits, area, ann=True, ann_inner=1.5,
 # Input: Array, radius of guess region (pix), i & j coords of centre of guess region, cutoff value for pixel selection
 # Returns: Array of ones and zeros indicating contiguous region
 def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff):
+    import Photom
     return Photom.ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff)
 
 
@@ -140,6 +145,7 @@ def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff):
 # Input: x & y coordinates to which the ellipse is to be fitted
 # Output: Array of x & y coordinates of ellipse centre, array of ellipse's major & minor axes, ellipse's position angle
 def EllipseFit(x,y):
+    import Photom
     return Photom.EllipseFit(x,y)
 
 
@@ -148,6 +154,7 @@ def EllipseFit(x,y):
 # Input: Ellipse produced by EllipseFit
 # Output: Array of x & y coordinates of ellipse centre
 def EllipseCentre(a):
+    import Photom
     return Photom.EllipseCentre(a)
 
 
@@ -156,6 +163,7 @@ def EllipseCentre(a):
 # Input: Ellipse produced by EllipseFit
 # Output: Array of ellipse's major & minor axes
 def EllipseAxes(a):
+    import Photom
     return Photom.EllipseAxes(a)
 
 
@@ -164,6 +172,7 @@ def EllipseAxes(a):
 # Input: Ellipse produced by EllipseFit
 # Output: Ellipse's position angle
 def EllipseAngle(a):
+    import Photom
     return Photom.EllipseAngle(a)
 
 
@@ -407,14 +416,14 @@ def PolySub(image_in, mask_centre_i, mask_centre_j, mask_semimaj_pix, mask_axial
     mask_centre_j = int(round(float((0.5*mask_centre_j)-1.0)))
 
     # Find cutoff for excluding bright pixels by sigma-clipping map
-    clip_value = ChrisFuncs.SigmaClip(image_ds, tolerance=0.01, sigma_thresh=2.0, median=True)
+    clip_value = SigmaClip(image_ds, tolerance=0.01, sigma_thresh=2.0, median=True)
     noise_value = clip_value[0]
     field_value = clip_value[1]
     cutoff = field_value + ( cutoff_sigma * noise_value )
 
     # Mask all image pixels in masking region around source
     image_masked = image_ds.copy()
-    ellipse_mask = ChrisFuncs.Photom.EllipseMask(image_ds, mask_semimaj_pix, mask_axial_ratio, mask_angle, mask_centre_i, mask_centre_j)
+    ellipse_mask = EllipseMask(image_ds, mask_semimaj_pix, mask_axial_ratio, mask_angle, mask_centre_i, mask_centre_j)
     image_masked[ np.where( ellipse_mask==1 ) ] = np.nan
 
     # Mask all image pixels identified as being high SNR
@@ -441,13 +450,13 @@ def PolySub(image_in, mask_centre_i, mask_centre_j, mask_semimaj_pix, mask_axial
 
     # Establish background variation before application of filter
     sigma_thresh = 2.0
-    clip_in = ChrisFuncs.SigmaClip(image_in, tolerance=0.005, median=True, sigma_thresh=sigma_thresh)
+    clip_in = SigmaClip(image_in, tolerance=0.005, median=True, sigma_thresh=sigma_thresh)
     bg_in = image_in[ np.where( image_in<clip_in[1] ) ]
     spread_in = np.mean( np.abs( bg_in - clip_in[1] ) )
 
     # How much reduction in background variation there was due to application of the filter
     image_sub = image_in - poly_full
-    clip_sub = ChrisFuncs.SigmaClip(image_sub, tolerance=0.005, median=True, sigma_thresh=sigma_thresh)
+    clip_sub = SigmaClip(image_sub, tolerance=0.005, median=True, sigma_thresh=sigma_thresh)
     bg_sub = image_sub[ np.where( image_sub<clip_sub[1] ) ]
     spread_sub = np.mean( np.abs( bg_sub - clip_sub[1] ) )
     spread_diff = spread_in / spread_sub
@@ -571,7 +580,8 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
         irsa_band_exists = True
 
     # Report result and return extinction correction
-    if verbose: print(verbose_prefix+'Galactic extinction correction factor is '+str(ChrisFuncs.FromGitHub.randlet.ToPrecision(irsa_band_excorr,4))+' (ie, '+str(ChrisFuncs.FromGitHub.randlet.ToPrecision(irsa_band_excorr_mag,4))+' magnitudes).')
+    import FromGitHub.randlet
+    if verbose: print(verbose_prefix+'Galactic extinction correction factor is '+str(FromGitHub.randlet.ToPrecision(irsa_band_excorr,4))+' (ie, '+str(FromGitHub.randlet.ToPrecision(irsa_band_excorr_mag,4))+' magnitudes).')
     return irsa_band_excorr
 
 
@@ -640,7 +650,7 @@ def BandParse(band_name_target):
 # Input: Array of numbers to find uncertainty of, percentile range to find uncertainty out to, boolean of whether to return up-and-down bound values
 # Output: Percentile uncertainty
 def PercentileError(data, value, percentile=66.6, bounds=False):
-    data = ChrisFuncs.Nanless(data)
+    data = Nanless(data)
     percentile = np.float(percentile)
     if bounds==False:
         error = ( np.sort( np.abs( data - value ) ) )[ np.int( (percentile/100.0) * data.shape[0] ) ]
@@ -769,7 +779,7 @@ def GaussFit(data, n_bins=50):
         A, mu, sigma = p
         return A * np.exp( (-((x-mu)**2.0)) / (2.0*sigma**2.0) )
     hist_tots, hist_bins = np.histogram(data, bins=n_bins)
-    hist_bins = ChrisFuncs.HistBinMerge(hist_bins)
+    hist_bins = HistBinMerge(hist_bins)
     hist_guesses = [np.max(hist_tots), np.mean(data), np.std(data)]
     hist_fit = scipy.optimize.curve_fit(QuickGauss, hist_bins, hist_tots, p0=hist_guesses)
     return abs(hist_fit[0][1]), abs(hist_fit[0][2])
@@ -784,7 +794,7 @@ def GaussFitPlot(data, n_bins=50, show=True):
         A, mu, sigma = p
         return A * np.exp( (-((x-mu)**2.0)) / (2.0*sigma**2.0) )
     hist_tots, hist_bins = np.histogram(data, bins=n_bins)
-    hist_bins = ChrisFuncs.HistBinMerge(hist_bins)
+    hist_bins = HistBinMerge(hist_bins)
     hist_guesses = [1.0, np.mean(data), np.std(data)]
     hist_fit = scipy.optimize.curve_fit(QuickGauss, hist_bins, hist_tots, p0=hist_guesses)
     fig = plt.figure(1)
@@ -831,7 +841,7 @@ def QuickWrite(data, outfile, sublists=False):
 # Output; Luminosity in bolometric solar luminosities
 def FluxToLum(flux, dist, freq=False, mags=False):
     if mags==True:
-        flux = ChrisFuncs.ABMagsToJy(flux)
+        flux = ABMagsToJy(flux)
     watts_per_hz = 10.0**-26.0 * flux * 4.0 * np.pi * ( dist * 3.26 * 9.5E15 )**2.0
     if freq==False:
         watts = watts_per_hz
@@ -1023,9 +1033,9 @@ def Extrap1D(interpolator):
 def DisIntervals(best_fit, dis, log_space=False, sigma_thresh=3.0, median=False):
     dis = np.array(dis)
     if log_space==False:
-        dis_clip = ChrisFuncs.SigmaClip(dis, sigma_thresh=sigma_thresh, median=median)
+        dis_clip = SigmaClip(dis, sigma_thresh=sigma_thresh, median=median)
     if log_space==True:
-        dis_clip = ChrisFuncs.SigmaClip(np.log10(dis), sigma_thresh=sigma_thresh, median=median)
+        dis_clip = SigmaClip(np.log10(dis), sigma_thresh=sigma_thresh, median=median)
     int_down = np.abs( dis_clip[1] - (dis_clip[1]-dis_clip[0]) )
     int_up = np.abs( dis_clip[1] - (dis_clip[1]-dis_clip[0]) )
     return [int_down, int_up]
@@ -1072,7 +1082,7 @@ def Nanless(bad):
 # Output: Quadrature sum of values
 def AddInQuad(values):
     values = np.array(values)
-    values = ChrisFuncs.Nanless(values)
+    values = Nanless(values)
     value_tot = 0.0
     for i in range(0, values.shape[0]):
         value_new = values[i]
@@ -1096,7 +1106,7 @@ def PanAppend(arr_list):
 # Input: Array to be added in quadrature
 # Output: Quadrature sum of values
 def NanlessKS(array1,array2):
-    output = scipy.stats.ks_2samp(ChrisFuncs.Nanless(array1), ChrisFuncs.Nanless(array2))
+    output = scipy.stats.ks_2samp(Nanless(array1), Nanless(array2))
     return output[1]
 
 

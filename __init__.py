@@ -1,4 +1,4 @@
-__all__ = ['ChrisFuncs','Photom','Coadd']
+__all__ = ['ChrisFuncs','Photom','Coadd','FromGitHub']
 #from . import ChrisFuncs
 from .ChrisFuncs import *
 #from . import Photom

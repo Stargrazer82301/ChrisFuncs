@@ -2,7 +2,9 @@
 import sys
 import os
 import pdb
-sys.path.insert(0, '../')
+sys.path.append( os.path.split( os.path.realpath(__file__) )[:-1][0] )
+sys.path.append( os.path.split( os.path.split( os.path.realpath(__file__) )[:-1][0] )[:-1][0] )
+#sys.path.insert(0, '../')
 import numpy as np
 import scipy.stats
 import scipy.ndimage

@@ -25,6 +25,7 @@ import astropy.units
 astropy.log.setLevel('ERROR')
 import reproject
 import astroquery.irsa_dust
+import shutil
 import wget
 import pickle
 import time
@@ -488,6 +489,12 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
         if verbose_prefix[-1:]!=' ':
             verbose_prefix += ' '
 
+    # Offset RA or Dec if either is exactly 0, as this can confuse IRSA
+    if np.abs(ra)<0.01:
+        ra = 0.01
+    if np.abs(dec)<0.01:
+        dec = 0.01
+
     # List bands for which IRSA provids corrections
     excorr_possible = ['GALEX_FUV','GALEX_NUV','SDSS_u','SDSS_g','SDSS_r','SDSS_i','SDSS_z','CTIO_U','CTIO_B','CTIO_V','CTIO_R','CTIO_I','DSS_B','DSS_R','DSS_I','2MASS_J','2MASS_H','2MASS_Ks','UKIRT_Y','UKIRT_J','UKIRT_H','UKIRT_K','Spitzer_3.6','Spitzer_4.5','Spitzer_5.8','Spitzer_8.0','WISE_3.4','WISE_4.6']
 
@@ -506,7 +513,7 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
     if verbose: print(verbose_prefix+'Retreiving extinction corrections from IRSA Galactic Dust Reddening & Extinction Service.')
     query_count = 0
     query_success = False
-    query_limit = 100
+    query_limit = 10
 
     # Keep trying to access extinction corrections, until it works
     while not query_success:
@@ -527,7 +534,7 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
             if query_count==0:
                 print(verbose_prefix+'IRSA Galactic Dust Reddening & Extinction Service query failed with error: \"'+repr(exception.message)+'\" - reattempting.')
             query_count += 1
-            time.sleep(60.0)
+            time.sleep(30.0)
         except:
             sys.stdout = sys.__stdout__
             if query_count==0:
@@ -1140,7 +1147,6 @@ def wgetURL(url, filename, clobber=True, auto_retry=False):
 
 
 
-
 # Function to estimate time until a task completes
 # Input: List of time taken by each iteration in units of seconds since Unix epoch, total number of iterations
 # Output: Python time string of estimated time/date of completion
@@ -1193,10 +1199,47 @@ def TimeEst(time_list, total, plot=False):
         ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
 
     # Return estimate (and plot, if requested)
+
     if plot:
         return time.ctime(time_end), fig
     elif not plot:
         return time.ctime(time_end)
+
+
+
+# Function that uses small files in a temporary folder to track progress of parallel functions
+# Input; Progress directory to use, total number of iterations to be completed
+# Outut: How many iterations have completed, and estimated completion time
+def ProgressDir(prog_dir, iter_total):
+
+    # Check progress directroy exists
+    if os.path.exists(prog_dir):
+
+        # Create file in directory, with filename recording the current time
+        prog_file = open( os.path.join(prog_dir, str(time.time())), 'w')
+        prog_file.close()
+
+        # List of all files in directory, and convert to list of completion times, and record completed iterations
+        prog_list = os.listdir(prog_dir)
+        prog_list = [ float(prog_time) for prog_time in prog_list ]
+        iter_complete = len(prog_list)
+
+        # Estimate time until completion
+        time_est = TimeEst(prog_list, iter_total)
+
+        # If this was the final iteration, clean up
+        if iter_complete == iter_total:
+            shutil.rmtree(prog_dir)
+
+        # Return results
+        return iter_complete, time_est
+
+    # If directory doesn't already exist, create it, add time file, and finish up
+    else:
+        os.mkdir(prog_dir)
+        prog_file = open( os.path.join(prog_dir, str(time.time())), 'w')
+        prog_file.close()
+        return 1, 'pending'
 
 
 

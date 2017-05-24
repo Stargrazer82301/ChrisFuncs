@@ -322,8 +322,14 @@ def EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upsca
     cutout_slice = cutout[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
     i_centre_slice = i_centre - i_cutout_min
     j_centre_slice = j_centre - j_cutout_min
-    if cutout[i_centre,j_centre]!=cutout[i_centre_slice,j_centre_slice]:
-        if np.isnan(cutout[i_centre,j_centre]==False) and np.isnan(cutout_slice[i_centre_slice,j_centre_slice]==False):
+
+    # Produce integer versions of values
+    i_centre_int, j_centre_int = int(round(i_centre)), int(round(j_centre))
+    i_centre_slice_int, j_centre_slice_int = int(round(i_centre_slice)), int(round(j_centre_slice))
+
+    # Check that sliced coordinates are compatible with the original coordinates
+    if cutout[i_centre_int,j_centre_int]!=cutout[i_centre_slice_int,j_centre_slice_int]:
+        if np.isnan(cutout[i_centre_int,j_centre_int]==False) and np.isnan(cutout_slice[i_centre_slice_int,j_centre_slice_int]==False):
             print('SEVERE ERROR: EllipseSumUpscale check failed.')
             pdb.set_trace()
     else:
@@ -381,9 +387,15 @@ def AnnulusSumUpscale(cutout, rad_inner, width, axial_ratio, angle, i_centre, j_
     cutout_slice = cutout[ int(round(i_cutout_min)):int(round(i_cutout_max))+1, int(round(j_cutout_min)):int(round(j_cutout_max))+1 ]
     i_centre_slice = i_centre - i_cutout_min
     j_centre_slice = j_centre - j_cutout_min
-    if cutout[i_centre,j_centre]!=cutout_slice[i_centre_slice,j_centre_slice]:
-        if np.isnan(cutout[i_centre,j_centre]==False) and np.isnan(cutout_slice[i_centre_slice,j_centre_slice]==False):
-            print('SEVERE ERROR: AnnulusQuickSum check failed.')
+
+    # Produce integer versions of values
+    i_centre_int, j_centre_int = int(round(i_centre)), int(round(j_centre))
+    i_centre_slice_int, j_centre_slice_int = int(round(i_centre_slice)), int(round(j_centre_slice))
+
+    # Check that sliced coordinates are compatible with the original coordinates
+    if cutout[i_centre_int,j_centre_int]!=cutout[i_centre_slice_int,j_centre_slice_int]:
+        if np.isnan(cutout[i_centre_int,j_centre_int]==False) and np.isnan(cutout_slice[i_centre_slice_int,j_centre_slice_int]==False):
+            print('SEVERE ERROR: AnnulusSumUpscale check failed.')
             pdb.set_trace()
     else:
         cutout = cutout_slice

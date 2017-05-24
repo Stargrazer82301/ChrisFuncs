@@ -1220,8 +1220,9 @@ def ProgressDir(prog_dir, iter_total):
         prog_file.close()
 
         # List of all files in directory, and convert to list of completion times, and record completed iterations
-        prog_list = os.listdir(prog_dir)
-        prog_list = [ float(prog_time) for prog_time in prog_list ]
+        prog_list = np.array([ float(prog_time) for prog_time in os.listdir(prog_dir) ])
+        prog_list.sort()
+        prog_list = prog_list.tolist()
         iter_complete = len(prog_list)
 
         # Estimate time until completion
@@ -1229,6 +1230,7 @@ def ProgressDir(prog_dir, iter_total):
 
         # If this was the final iteration, clean up
         if iter_complete == iter_total:
+            time.sleep(10)
             shutil.rmtree(prog_dir)
 
         # Return results

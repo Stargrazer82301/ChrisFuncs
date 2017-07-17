@@ -1150,7 +1150,7 @@ def wgetURL(url, filename, clobber=True, auto_retry=False):
 # Function to estimate time until a task completes
 # Input: List of time taken by each iteration in units of seconds since Unix epoch, total number of iterations
 # Output: Python time string of estimated time/date of completion
-def TimeEst(time_list, total, plot=False):
+def TimeEst(time_list, total, plot=False, raw=False):
 
     # Convert times into log space, fit trend, project, and un-log
     time_list_log = np.log10(np.array(time_list))
@@ -1198,8 +1198,11 @@ def TimeEst(time_list, total, plot=False):
         ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
         ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
 
-    # Return estimate (and plot, if requested)
+    # Produce human-readable output, if required
+    if not raw:
+        time_end = time.ctime(time_end)
 
+    # Return estimate (and plot, if requested)
     if plot:
         return time.ctime(time_end), fig
     elif not plot:
@@ -1210,14 +1213,18 @@ def TimeEst(time_list, total, plot=False):
 # Function that uses small files in a temporary folder to track progress of parallel functions
 # Input; Progress directory to use, total number of iterations to be completed
 # Outut: How many iterations have completed, and estimated completion time
-def ProgressDir(prog_dir, iter_total):
+def ProgressDir(prog_dir, iter_total, raw=False):
 
     # Check progress directroy exists
     if os.path.exists(prog_dir):
 
-        # Create file in directory, with filename recording the current time
-        prog_file = open( os.path.join(prog_dir, str(time.time())), 'w')
-        prog_file.close()
+        # Create file in directory, with filename recording the current time (assuming no identically-named file exists)
+        while True:
+            prog_filename = os.path.join(prog_dir, str(time.time()))
+            if not os.path.exists(prog_filename):
+                prog_file = open(prog_filename, 'w')
+                prog_file.close()
+                break
 
         # List of all files in directory, and convert to list of completion times, and record completed iterations
         prog_list = np.array([ float(prog_time) for prog_time in os.listdir(prog_dir) ])
@@ -1226,7 +1233,7 @@ def ProgressDir(prog_dir, iter_total):
         iter_complete = len(prog_list)
 
         # Estimate time until completion
-        time_est = TimeEst(prog_list, iter_total)
+        time_est = TimeEst(prog_list, iter_total, raw=raw)
 
         # If this was the final iteration, clean up
         if iter_complete == iter_total:

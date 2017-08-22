@@ -1,0 +1,13 @@
+setup.py
+ChrisFuncs/ChrisFuncs.py
+ChrisFuncs/Coadd.py
+ChrisFuncs/Photom.py
+ChrisFuncs/__init__.py
+ChrisFuncs/FromGitHub/__init__.py
+ChrisFuncs/FromGitHub/martynbristow.py
+ChrisFuncs/FromGitHub/randlet.py
+chrisfuncs.egg-info/PKG-INFO
+chrisfuncs.egg-info/SOURCES.txt
+chrisfuncs.egg-info/dependency_links.txt
+chrisfuncs.egg-info/not-zip-safe
+chrisfuncs.egg-info/top_level.txt

@@ -1204,9 +1204,9 @@ def TimeEst(time_list, total, plot=False, raw=False):
 
     # Return estimate (and plot, if requested)
     if plot:
-        return time.ctime(time_end), fig
+        return time_end, fig
     elif not plot:
-        return time.ctime(time_end)
+        return time_end
 
 
 

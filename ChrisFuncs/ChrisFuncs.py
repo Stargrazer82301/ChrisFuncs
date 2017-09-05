@@ -30,7 +30,6 @@ import wget
 import pickle
 import time
 import re
-import pip
 import importlib
 import types
 #sys.path.append(os.path.join(dropbox,'Work','Scripts'))
@@ -1289,23 +1288,6 @@ def ReloadPackage(package):
                         module_visit.add(fn_child)
                         reload_recursive_ex(module_child)
     return reload_recursive_ex(package)
-
-
-
-# Function to install a package with PIP
-# Input: String of package name
-# Output: None
-def PIP(package):
-    pip.main(['install', package])
-
-
-
-# Function to use PIP to upgrade all installed packages
-# Input: None
-# Output: None
-def UpgradeAllPIP():
-    for dist in pip.get_installed_distributions():
-        subprocess.call("pip install --upgrade --user" + dist.project_name, shell=True)
 
 
 

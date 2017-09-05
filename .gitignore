@@ -26,6 +26,16 @@ $RECYCLE.BIN/
 *.pyc
 *.bak
 
+# Setup directories
+/astrocell.egg-info/*
+/build/*
+/dist/*
+
+# PyInstaller directories
+/ChrisFuncs/dist/*
+/ChrisFuncs/build/*
+
+
 
 
 

@@ -22,7 +22,7 @@ import astropy.convolution
 #import astropy.nddata.utils
 import astropy.coordinates
 import astropy.units
-astropy.log.setLevel('ERROR')
+#astropy.log.setLevel('ERROR')
 import reproject
 import astroquery.irsa_dust
 import shutil
@@ -361,6 +361,8 @@ def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
 
     # Create empty header, and set map dimensions in it
     header = astropy.io.fits.Header()
+    header.set('WCSAXES', 2)
+    header.set('NAXIS', 2)
     header.set('NAXIS1', map_width_pix)
     header.set('NAXIS2', map_width_pix)
 

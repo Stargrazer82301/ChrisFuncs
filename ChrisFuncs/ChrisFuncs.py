@@ -1216,8 +1216,24 @@ def TimeEst(time_list, total, plot=False, raw=False):
 # Outut: How many iterations have completed, and estimated completion time
 def ProgressDir(prog_dir, iter_total, raw=False):
 
-    # Check progress directroy exists
-    if os.path.exists(prog_dir):
+    # If directory doens't seem to exist, wait a bit to see if some parallel process makes it first
+    prog_dir_exists = False
+    for i in range(0,10):
+        if os.path.exists(prog_dir):
+            prog_dir_exists = True
+            break
+        else:
+            time.sleep( 5.0 * np.random.random() )
+
+    # If directory definately doesn't already exist, create it, add time file, and finish up
+    if not prog_dir_exists:
+        os.mkdir(prog_dir)
+        prog_file = open( os.path.join(prog_dir, str(time.time())), 'w')
+        prog_file.close()
+        return 1, 'pending'
+
+    # Else if progress directroy does indeed exist, carry on
+    elif prog_dir_exists:
 
         # Create file in directory, with filename recording the current time (assuming no identically-named file exists)
         while True:
@@ -1244,12 +1260,7 @@ def ProgressDir(prog_dir, iter_total, raw=False):
         # Return results
         return iter_complete, time_est
 
-    # If directory doesn't already exist, create it, add time file, and finish up
-    else:
-        os.mkdir(prog_dir)
-        prog_file = open( os.path.join(prog_dir, str(time.time())), 'w')
-        prog_file.close()
-        return 1, 'pending'
+
 
 
 

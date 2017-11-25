@@ -10,19 +10,19 @@ import scipy.stats
 import scipy.ndimage
 import scipy.ndimage.measurements
 import scipy.spatial
-import subprocess
 #import matplotlib
 #matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.cm
 import matplotlib.patches
+import astropy
+astropy.log.setLevel('ERROR')
 import astropy.io.fits
 import astropy.wcs
 import astropy.convolution
 #import astropy.nddata.utils
 import astropy.coordinates
 import astropy.units
-#astropy.log.setLevel('ERROR')
 import reproject
 import astroquery.irsa_dust
 import shutil

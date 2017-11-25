@@ -1,4 +1,8 @@
 from . import randlet
-from . import martynbristow
 from .randlet import *
+
+from . import martynbristow
 from .martynbristow import *
+
+from . import neojume
+from .neojume import *

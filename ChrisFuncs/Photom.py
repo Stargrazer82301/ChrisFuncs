@@ -590,11 +590,11 @@ def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff, custom_str
     # If no features found, only return central "cross" of pixels; otherwise, identify primary feature
     if int(sum(cont_search_values)) == 0:
         cont_array = np.zeros([(cutout.shape)[0], (cutout.shape)[1]])
-        cont_array[i_centre, j_centre] = 1
-        cont_array[i_centre+1, j_centre] = 1
-        cont_array[i_centre-1, j_centre] = 1
-        cont_array[i_centre, j_centre+1] = 1
-        cont_array[i_centre, j_centre-1] = 1
+        cont_array[int(round(i_centre)), int(round(j_centre))] = 1
+        cont_array[int(round(i_centre))+1, int(round(j_centre))] = 1
+        cont_array[int(round(i_centre))-1, int(round(j_centre))] = 1
+        cont_array[int(round(i_centre)), int(round(j_centre))+1] = 1
+        cont_array[int(round(i_centre)), int(round(j_centre))-1] = 1
     else:
 
         # Take mode of values
@@ -608,11 +608,11 @@ def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff, custom_str
         # If feautre contains fewer than 5 pixels, once again default to central "cross"
         if int(sum(cont_search_values)) < 5:
             cont_array = np.zeros([(cutout.shape)[0], (cutout.shape)[1]])
-            cont_array[i_centre, j_centre] = 1
-            cont_array[i_centre+1, j_centre] = 1
-            cont_array[i_centre-1, j_centre] = 1
-            cont_array[i_centre, j_centre+1] = 1
-            cont_array[i_centre, j_centre-1] = 1
+            cont_array[int(round(i_centre)), int(round(j_centre))] = 1
+            cont_array[int(round(i_centre))+1, int(round(j_centre))] = 1
+            cont_array[int(round(i_centre))-1, int(round(j_centre))] = 1
+            cont_array[int(round(i_centre)), int(round(j_centre))+1] = 1
+            cont_array[int(round(i_centre)), int(round(j_centre))-1] = 1
 
     # Report array and count
     return cont_array

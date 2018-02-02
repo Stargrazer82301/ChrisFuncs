@@ -1,9 +1,11 @@
+setup.py
 ChrisFuncs/ChrisFuncs.py
 ChrisFuncs/Coadd.py
 ChrisFuncs/Photom.py
 ChrisFuncs/__init__.py
 ChrisFuncs/FromGitHub/__init__.py
 ChrisFuncs/FromGitHub/martynbristow.py
+ChrisFuncs/FromGitHub/neojume.py
 ChrisFuncs/FromGitHub/randlet.py
 chrisfuncs.egg-info/PKG-INFO
 chrisfuncs.egg-info/SOURCES.txt

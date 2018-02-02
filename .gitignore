@@ -27,7 +27,7 @@ $RECYCLE.BIN/
 *.bak
 
 # Setup directories
-/astrocell.egg-info/*
+/chrisfuncs.egg-info/*
 /build/*
 /dist/*
 

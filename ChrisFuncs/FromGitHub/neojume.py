@@ -7,7 +7,7 @@ Implements different bandwidth selection methods, including:
 '''
 
 import numpy as np
-import distributions as distr
+import scipy.stats
 
 
 __all__ = ['wmean',
@@ -16,7 +16,7 @@ __all__ = ['wmean',
            'hsilverman',
            'hscott',
            'hnorm',
-           'hsj']
+           'sj']
 
 
 def wmean(x, w):
@@ -34,7 +34,7 @@ def wvar(x, w):
 
 
 def dnorm(x):
-    return distr.normal.pdf(x, 0.0, 1.0)
+    return scipy.stats.norm.pdf(x, loc=0.0, scale=1.0)
 
 
 def bowman(x):
@@ -167,5 +167,5 @@ def sj_12(x, h):
     sdalpha2 = np.dot(np.dot(one, W1), one.T)
     sdalpha2 = sdalpha2 / (n * (n - 1) * alpha2 ** 5)
 
-    return (distr.normal.pdf(0, 0, np.sqrt(2)) /
+    return (scipy.stats.norm.pdf(0, loc=0, scale=np.sqrt(2)) /
             (n * abs(sdalpha2[0, 0]))) ** 0.2 - h

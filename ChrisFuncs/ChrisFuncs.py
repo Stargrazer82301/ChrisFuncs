@@ -1195,7 +1195,7 @@ def TimeEst(time_list, total, plot=False, raw=False):
             xlabel.set_fontproperties(matplotlib.font_manager.FontProperties(size=15))
         for ylabel in ax.get_yticklabels():
             ylabel.set_fontproperties(matplotlib.font_manager.FontProperties(size=15))
-        ax.grid()
+        ax.grid(linestyle='dotted')
         ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
         ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
 

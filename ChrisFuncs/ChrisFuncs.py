@@ -659,7 +659,7 @@ def BandParse(band_name_target):
 # Function to find uncertainty in an array, in terms of distance from given value, out to a certain percentile limit
 # Input: Array of numbers to find uncertainty of, percentile range to find uncertainty out to, boolean of whether to return up-and-down bound values
 # Output: Percentile uncertainty
-def PercentileError(data, value, percentile=66.6, bounds=False):
+def PercentileError(data, value, percentile=68.27, bounds=False):
     data = Nanless(data)
     percentile = np.float(percentile)
     if bounds==False:

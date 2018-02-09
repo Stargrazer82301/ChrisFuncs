@@ -1121,6 +1121,23 @@ def NanlessKS(array1,array2):
 
 
 
+# Implementaton of the Gelman-Rubin (1992) MCMC convergance diagnostic, adapted from Jörg Dietrich's blog
+# Input: Array of MCMC chains
+# Output: Gelman-Rubin diagnostic (value of 1.0 is expected from converged cahins whilst >1.1 suggests lack of convergance)
+def GelmanRubin(mcmc_chains):
+    variance = np.var(mcmc_chains, axis=1, ddof=1)
+    W = np.mean(variance, axis=0)
+    theta_b = np.mean(mcmc_chains, axis=1)
+    theta_bb = np.mean(theta_b, axis=0)
+    m = mcmc_chains.shape[0]
+    n = mcmc_chains.shape[1]
+    B = n / (m - 1) * np.sum((theta_bb - theta_b)**2, axis=0)
+    var_theta = (n - 1) / n * W + 1 / n * B
+    R_hat = np.sqrt(var_theta / W)
+    return R_hat
+
+
+
 # Function to wget a file from a given URL to a given directory
 # Input: String of target url, string of output filepath, boolean for clobbering, boolean for auto-retrying, boolean for verbosity
 # Output: None

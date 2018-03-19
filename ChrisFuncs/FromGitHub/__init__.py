@@ -5,7 +5,7 @@ from . import martynbristow
 from .martynbristow import *
 
 from . import neojume
-from .neojume import *from . import denis_bz
+from .neojume import *
 
 from . import denis_bz
 from .denis_bz import *

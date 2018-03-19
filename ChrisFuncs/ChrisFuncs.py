@@ -533,15 +533,12 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
         except Exception as exception:
             sys.stdout = sys.__stdout__
             if query_count==0:
-                print(verbose_prefix+'IRSA Galactic Dust Reddening & Extinction Service query failed with error: \"'+repr(exception.message)+'\" - reattempting.')
+                if hasattr(exception, 'message'):
+                    print(verbose_prefix+'IRSA Galactic Dust Reddening & Extinction Service query failed with error: \"'+repr(exception.message)+'\" - reattempting.')
+                else:
+                    print(verbose_prefix+'IRSA Galactic Dust Reddening & Extinction Service query failed: reattempting (exception not caught).')
             query_count += 1
-            time.sleep(30.0)
-        except:
-            sys.stdout = sys.__stdout__
-            if query_count==0:
-                print(verbose_prefix+'IRSA Galactic Dust Reddening & Extinction Service query failed: reattempting (exception not caught).')
-            query_count += 1
-            time.sleep(60.0)
+            time.sleep(10.0)
     if not query_success:
         print(verbose_prefix+'Unable to access IRSA Galactic Dust Reddening & Extinction Service after '+str(query_limit)+' attemps.')
         raise ValueError('Unable to access IRSA Galactic Dust Reddening & Extinction Service after '+str(query_limit)+' attemps.')

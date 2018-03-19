@@ -4,6 +4,8 @@ ChrisFuncs/Coadd.py
 ChrisFuncs/Photom.py
 ChrisFuncs/__init__.py
 ChrisFuncs/FromGitHub/__init__.py
+ChrisFuncs/FromGitHub/denis_bz.py
+ChrisFuncs/FromGitHub/endolith.py
 ChrisFuncs/FromGitHub/martynbristow.py
 ChrisFuncs/FromGitHub/neojume.py
 ChrisFuncs/FromGitHub/randlet.py

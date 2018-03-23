@@ -13,4 +13,5 @@ chrisfuncs.egg-info/PKG-INFO
 chrisfuncs.egg-info/SOURCES.txt
 chrisfuncs.egg-info/dependency_links.txt
 chrisfuncs.egg-info/not-zip-safe
+chrisfuncs.egg-info/requires.txt
 chrisfuncs.egg-info/top_level.txt

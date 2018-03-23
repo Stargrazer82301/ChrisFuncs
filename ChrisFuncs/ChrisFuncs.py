@@ -34,6 +34,12 @@ import importlib
 import types
 #sys.path.append(os.path.join(dropbox,'Work','Scripts'))
 
+# A python 2/3 compatability hack for stirng type handling
+try:
+  basestring
+except NameError:
+  basestring = str
+
 
 # Function to sum all elements in an ellipse centred on the middle of a given array
 # Input: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
@@ -236,7 +242,7 @@ def SigmaClip(values, tolerance=0.001, median=False, sigma_thresh=3.0, no_zeros=
 def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=True):
 
     # Open input fits and extract data
-    if isinstance(pathname,str):
+    if isinstance(pathname,basestring):
         in_fitsdata = astropy.io.fits.open(pathname)
     elif isinstance(pathname,astropy.io.fits.HDUList):
         in_fitsdata = pathname
@@ -271,7 +277,10 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=Fa
             print(exception.message)
 
         # Extract outputs of interest
-        out_map = cutout_tuple[0]
+        try:
+            out_map = cutout_tuple[0]
+        except:
+            pdb.set_trace()
         out_wcs = astropy.wcs.WCS(cutout_header)
         out_header = cutout_header
 
@@ -281,8 +290,8 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=Fa
     if outfile!=False:
         out_hdu = astropy.io.fits.PrimaryHDU(data=out_map, header=out_header)
         out_hdulist = astropy.io.fits.HDUList([out_hdu])
-        out_hdulist.writeto(outfile, clobber=True)
-    if isinstance(pathname,str):
+        out_hdulist.writeto(outfile, overwrite=True)
+    if isinstance(pathname,basestring):
         in_fitsdata.close()
     if variable==True:
         out_hdu = astropy.io.fits.PrimaryHDU(data=out_map, header=out_header)
@@ -297,7 +306,7 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=Fa
 def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
 
     # Open fits file and extract data
-    if isinstance(pathname,str):
+    if isinstance(pathname,basestring):
         fitsdata = astropy.io.fits.open(pathname)
     elif isinstance(pathname,astropy.io.fits.HDUList):
         fitsdata = pathname
@@ -1121,12 +1130,12 @@ def NanlessKS(array1,array2):
 # Function to wget a file from a given URL to a given directory
 # Input: String of target url, string of output filepath, boolean for clobbering, boolean for auto-retrying, boolean for verbosity
 # Output: None
-def wgetURL(url, filename, clobber=True, auto_retry=False):
+def wgetURL(url, filename, overwrite=True, auto_retry=False):
     if os.path.exists(filename):
-        if clobber:
+        if overwrite:
             os.remove(filename)
         else:
-            raise ValueError('Output file already exists; if you\'re happy to overwrite it, re-run wgetURL with clobber=True.')
+            raise ValueError('Output file already exists; if you\'re happy to overwrite it, re-run wgetURL with overwrite=True.')
     success = False
     while success==False:
         try:

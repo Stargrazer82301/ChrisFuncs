@@ -14,4 +14,6 @@ ChrisFuncs is imported as:
 ```
 import ChrisFuncs
 ```
+Functions and sub-modules can be found therein. For example, the `SigmaClip` function is called via `ChrisFuncs.SigmaClip(*args)`. Whilst the `Photom` sub-module is imported via `import ChrisFuncs.Photom`.
+
 Enjoy!

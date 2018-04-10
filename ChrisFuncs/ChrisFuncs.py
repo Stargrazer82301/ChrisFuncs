@@ -403,14 +403,6 @@ def Downsample(myarr, factor, estimator=np.nanmean):
 
 
 
-# Mortcanty function that replicates IDL's congrid
-def Congrid(a, newdims, method='linear', centre=False, minusone=False):
-    import Congrid
-    newa = Congrid.Congrid(a, newdims, method=method, centre=centre, minusone=minusone)
-    return newa
-
-
-
 # A function to fit and remove a background polynomial to an image, masking a central ellipse
 # Input: Array to process, i-coord of masked central ellipse, j-coord of masked central ellipse, semimajor axis of masked central ellipse, axial ratio of masked central ellipse, position angle of masked central ellipse, order of polynomial, sigma threshold at which bright pixels cut off, downsampling factor to use, boolean of whether to only apply polynomial if it makes significant difference to image
 # Output: Poynomial-filtered array, array of the polynomial filter

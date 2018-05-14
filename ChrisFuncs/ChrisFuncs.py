@@ -237,9 +237,9 @@ def SigmaClip(values, tolerance=0.001, median=False, sigma_thresh=3.0, no_zeros=
 
 
 # Function to create a cutout of a fits file - NOW JUST A WRAPPER OF AN ASTROPY FUNCTION
-# Input: Input fits, cutout central ra (deg), cutout central dec (deg), cutout radius (arcsec), fits image extension, boolean of whether to reproject, boolean stating if an output variable is desired, output fits pathname if required
+# Input: Input fits, cutout central ra (deg), cutout central dec (deg), cutout radius (arcsec), pixel width (arcsec), fits image extension, boolean of whether to reproject, boolean stating if an output variable is desired, output fits pathname if required
 # Output: HDU of new file
-def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=True):
+def FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=True):
 
     # Open input fits and extract data
     if isinstance(pathname,basestring):
@@ -266,7 +266,9 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, exten=0, reproj=False, variable=Fa
     # If reporjection requested, pass input parameters to reprojection function (fast or thorough, as specified)
     if reproj==True:
         width_deg = ( 2.0 * float(rad_arcsec) ) / 3600.0
-        cutout_header = FitsHeader(ra, dec, width_deg, 3600.0*np.mean(np.abs(np.diagonal(in_wcs.pixel_scale_matrix))))
+        if pix_width_arcsec == None:
+            pix_width_arcsec = 3600.0*np.mean(np.abs(np.diagonal(in_wcs.pixel_scale_matrix)))
+        cutout_header = FitsHeader(ra, dec, width_deg, pix_width_arcsec)
         cutout_shape = ( cutout_header['NAXIS1'],  cutout_header['NAXIS1'] )
         try:
             if fast==False:

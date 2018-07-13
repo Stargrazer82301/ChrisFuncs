@@ -185,6 +185,33 @@ def EllipseAngle(a):
 
 
 
+# Function to create a cutout of a fits file - NOW JUST A WRAPPER OF AN ASTROPY FUNCTION
+# Input: Input fits, cutout central ra (deg), cutout central dec (deg), cutout radius (arcsec), pixel width (arcsec), fits image extension, boolean of whether to reproject, boolean stating if an output variable is desired, output fits pathname if required
+# Output: HDU of new file
+def FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=True):
+    import Fits
+    return Fits.FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=True)
+
+
+
+# Function to embed a fits file in a larger array of NaNs (for APLpy or the like)
+# Input: Input fits pathname, margin to place around array, fits extension of interest, boolean stating if margin is in arcseconds, no pixelsboolean stating if an output variable is desired, output fits pathname
+# Output: HDU of new file
+def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
+    import Fits
+    return Fits.FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False)
+
+
+
+# Define function to generate a generic FITS header for a given projection
+# Input: Central right ascension (deg), central declination (deg), image width (deg), pixel size (arcsec)
+# Output: FITS header
+def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
+    import Fits
+    return Fits.FitsHeader(ra, dec, map_width_deg, pix_width_arcsec)
+
+
+
 # Function to perform a sigma clip upon a set of values
 # Input: Array of values, convergence tolerance, state if median instead of mean should be used for clip centrepoint, clipping threshold, boolean for whether sigma of zero can be accepted
 # Returns: List containing the clipped standard deviation, the average, and the values themselves
@@ -236,159 +263,6 @@ def SigmaClip(values, tolerance=0.001, median=False, sigma_thresh=3.0, no_zeros=
 
 
 
-# Function to create a cutout of a fits file - NOW JUST A WRAPPER OF AN ASTROPY FUNCTION
-# Input: Input fits, cutout central ra (deg), cutout central dec (deg), cutout radius (arcsec), pixel width (arcsec), fits image extension, boolean of whether to reproject, boolean stating if an output variable is desired, output fits pathname if required
-# Output: HDU of new file
-def FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=True):
-
-    # Open input fits and extract data
-    if isinstance(pathname,basestring):
-        in_fitsdata = astropy.io.fits.open(pathname)
-    elif isinstance(pathname,astropy.io.fits.HDUList):
-        in_fitsdata = pathname
-    in_map = in_fitsdata[exten].data
-    in_header = in_fitsdata[exten].header
-    in_wcs = astropy.wcs.WCS(in_header)
-
-
-
-    # If reprojection not requesed, pass input parameters to astropy cutout function
-    if reproj==False:
-        pos = astropy.coordinates.SkyCoord(ra, dec, unit='deg')
-        size = astropy.units.Quantity(2.0*rad_arcsec, astropy.units.arcsec)
-        cutout_obj = astropy.nddata.utils.Cutout2D(in_map, pos, size, wcs=in_wcs, mode='partial', fill_value=np.NaN)
-
-        # Extract outputs of interest
-        out_map = cutout_obj.data
-        out_wcs = cutout_obj.wcs
-        out_header = out_wcs.to_header()
-
-    # If reporjection requested, pass input parameters to reprojection function (fast or thorough, as specified)
-    if reproj==True:
-        width_deg = ( 2.0 * float(rad_arcsec) ) / 3600.0
-        if pix_width_arcsec == None:
-            pix_width_arcsec = 3600.0*np.mean(np.abs(np.diagonal(in_wcs.pixel_scale_matrix)))
-        cutout_header = FitsHeader(ra, dec, width_deg, pix_width_arcsec)
-        cutout_shape = ( cutout_header['NAXIS1'],  cutout_header['NAXIS1'] )
-        try:
-            if fast==False:
-                cutout_tuple = reproject.reproject_exact(in_fitsdata, cutout_header, shape_out=cutout_shape, hdu_in=exten, parallel=parallel)
-            elif fast==True:
-                cutout_tuple = reproject.reproject_interp(in_fitsdata, cutout_header, shape_out=cutout_shape, hdu_in=exten)
-        except Exception as exception:
-            print(exception.message)
-
-        # Extract outputs of interest
-        try:
-            out_map = cutout_tuple[0]
-        except:
-            pdb.set_trace()
-        out_wcs = astropy.wcs.WCS(cutout_header)
-        out_header = cutout_header
-
-
-
-    # Save, tidy, and return; all to taste
-    if outfile!=False:
-        out_hdu = astropy.io.fits.PrimaryHDU(data=out_map, header=out_header)
-        out_hdulist = astropy.io.fits.HDUList([out_hdu])
-        out_hdulist.writeto(outfile, overwrite=True)
-    if isinstance(pathname,basestring):
-        in_fitsdata.close()
-    if variable==True:
-        out_hdu = astropy.io.fits.PrimaryHDU(data=out_map, header=out_header)
-        out_hdulist = astropy.io.fits.HDUList([out_hdu])
-        return out_hdulist
-
-
-
-# Function to embed a fits file in a larger array of NaNs (for APLpy or the like)
-# Input: Input fits pathname, margin to place around array, fits extension of interest, boolean stating if margin is in arcseconds, no pixelsboolean stating if an output variable is desired, output fits pathname
-# Output: HDU of new file
-def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
-
-    # Open fits file and extract data
-    if isinstance(pathname,basestring):
-        fitsdata = astropy.io.fits.open(pathname)
-    elif isinstance(pathname,astropy.io.fits.HDUList):
-        fitsdata = pathname
-    fits_old = fitsdata[exten].data
-    wcs_old = astropy.wcs.WCS(fitsdata[exten].header)
-    fitsdata.close()
-
-    # Create larger array
-    fits_new = np.zeros([ fits_old.shape[0]+(2*int(margin)), fits_old.shape[1]+(2*int(margin)) ])
-    fits_new[:] = np.NaN
-
-    # Plonck old array into new
-    if margin>=0:
-        fits_new[margin:margin+fits_old.shape[0], margin:margin+fits_old.shape[1]] = fits_old
-    elif margin<0:
-        fits_new = fits_old[-margin:margin+fits_old.shape[0], -margin:margin+fits_old.shape[1]]
-
-    # Populate header
-    new_wcs = astropy.wcs.WCS(naxis=2)
-    new_wcs.wcs.crpix = [margin+wcs_old.wcs.crpix[0], margin+wcs_old.wcs.crpix[1]]
-    new_wcs.wcs.cdelt = wcs_old.wcs.cdelt
-    new_wcs.wcs.crval = wcs_old.wcs.crval
-    new_wcs.wcs.ctype = wcs_old.wcs.ctype
-    new_header = new_wcs.to_header()
-
-    # Construct fits HDU
-    new_hdu = astropy.io.fits.PrimaryHDU(data=fits_new, header=new_header)
-    new_hdulist = astropy.io.fits.HDUList([new_hdu])
-
-    # Save new fits
-    if outfile!=False:
-        try:
-            os.remove(outfile)
-            new_hdulist.writeto(outfile)
-        except:
-            new_hdulist.writeto(outfile)
-
-    # Return new HDU
-    if variable==True:
-        return new_hdulist
-
-
-
-# Define function to generate a generic FITS header for a given projection
-# Input: Central right ascension (deg), central declination (deg), image width (deg), pixel size (arcsec)
-# Output: FITS header
-def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
-
-    # Calculate map dimensions
-    map_width_arcsec = float(map_width_deg) * 3600.0
-    map_width_pix = int( np.ceil( map_width_arcsec / float(pix_width_arcsec) ) )
-    map_centre_pix = map_width_pix / 2.0
-    pix_width_deg = float(pix_width_arcsec) / 3600.0
-
-    # Set up WCS object
-    wcs = astropy.wcs.WCS(naxis=2)
-    wcs.wcs.crval = [ float(ra), float(dec) ]
-    wcs.wcs.crpix = [ map_centre_pix, map_centre_pix ]
-    wcs.wcs.cdelt = np.array([ -float(pix_width_deg), float(pix_width_deg) ])
-    wcs.wcs.ctype = [ 'RA---TAN', 'DEC--TAN' ]
-
-    # Create empty header, and set map dimensions in it
-    header = astropy.io.fits.Header()
-    header.set('WCSAXES', 2)
-    header.set('NAXIS', 2)
-    header.set('NAXIS1', map_width_pix)
-    header.set('NAXIS2', map_width_pix)
-
-    # Add WCS parameters to header
-    header.set('CRVAL1', wcs.wcs.crval[0])
-    header.set('CRVAL2', wcs.wcs.crval[1])
-    header.set('CRPIX1', wcs.wcs.crpix[0])
-    header.set('CRPIX2', wcs.wcs.crpix[1])
-    header.set('CDELT1', wcs.wcs.cdelt[0])
-    header.set('CDELT2', wcs.wcs.cdelt[1])
-    header.set('CTYPE1', wcs.wcs.ctype[0])
-    header.set('CTYPE2', wcs.wcs.ctype[1])
-
-    # Return header
-    return header
 
 
 
@@ -668,9 +542,9 @@ def PercentileError(data, value, percentile=68.27, bounds=False):
     elif bounds==True:
         data_up = data[ np.where( data>=value ) ]
         data_down = data[ np.where( data<value ) ]
-        error_up = ( np.sort( np.abs( data_up - value ) ) )[ np.int( (percentile/100.0) * data_up.shape[0] ) ]
-        error_down = ( np.sort( np.abs( data_down - value ) ) )[ np.int( (percentile/100.0) * data_down.shape[0] ) ]
-        return [error_down, error_up]
+        error_up = np.percentile( np.sort(np.abs(data_up-value)), percentile )
+        error_down = np.percentile( np.sort(np.abs(data_down-value)), percentile )
+        return (error_down, error_up)
 
 
 

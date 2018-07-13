@@ -1,3 +1,4 @@
+README.md
 setup.py
 ChrisFuncs/ChrisFuncs.py
 ChrisFuncs/Coadd.py

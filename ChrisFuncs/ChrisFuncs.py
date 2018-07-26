@@ -2,8 +2,8 @@
 import sys
 import os
 import pdb
-sys.path.append( os.path.split( os.path.realpath(__file__) )[:-1][0] )
-sys.path.append( os.path.split( os.path.split( os.path.realpath(__file__) )[:-1][0] )[:-1][0] )
+#sys.path.append( os.path.split( os.path.realpath(__file__) )[:-1][0] )
+#sys.path.append( os.path.split( os.path.split( os.path.realpath(__file__) )[:-1][0] )[:-1][0] )
 #sys.path.insert(0, '../')
 import numpy as np
 import scipy.stats
@@ -190,7 +190,7 @@ def EllipseAngle(a):
 # Output: HDU of new file
 def FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=True):
     import Fits
-    return Fits.FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=True)
+    return Fits.FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=pix_width_arcsec, exten=exten, reproj=reproj, variable=variable, outfile=outfile, parallel=parallel, fast=fast)
 
 
 
@@ -199,7 +199,7 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, re
 # Output: HDU of new file
 def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
     import Fits
-    return Fits.FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False)
+    return Fits.FitsEmbed(pathname, margin, exten=exten, variable=variable, outfile=outfile)
 
 
 

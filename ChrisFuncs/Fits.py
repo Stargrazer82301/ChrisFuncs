@@ -5,8 +5,6 @@ import os
 import pdb
 current_module = sys.modules[__name__]
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
 import astropy.io.fits
 import astropy.wcs
 import astropy.convolution
@@ -228,8 +226,8 @@ def FitsRGB(ra, dec, rad_arcsec, in_paths, out_dir, pmin=False, pmax=False, stre
     for k in range(len(path_list)):
 
         # Calculate band vmin
+        vmin_phot = astropy.io.fits.getdata(path_list[k])
         if pmin == False:
-            vmin_phot = astropy.io.fits.getdata(path_list[k])
             vmin_phot_clip = SigmaClip(vmin_phot, median=True, sigma_thresh=3.0, tolerance=0.0005)
             vmin_list[k] = vmin_phot_clip[1] + (1.75 * vmin_phot_clip[0])
         else:

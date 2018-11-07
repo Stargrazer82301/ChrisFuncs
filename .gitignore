@@ -27,13 +27,14 @@ $RECYCLE.BIN/
 *.bak
 
 # Setup directories
-/chrisfuncs.egg-info/*
-/build/*
-/dist/*
+/chrisfuncs.egg-info
+/build
+/dist
 
 # PyInstaller directories
-/ChrisFuncs/dist/*
-/ChrisFuncs/build/*
+/ChrisFuncs/dist
+/ChrisFuncs/build
+/ChrisFuncs/__pycache__
 
 
 

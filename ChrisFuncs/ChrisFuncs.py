@@ -45,7 +45,7 @@ except NameError:
 # Input: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Returns: Numpy array containing the sum of the pixel values in the ellipse, total number of pixels counted, and an array containing the pixel values
 def EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre):
-    import Photom
+    from . import Photom
     return Photom.EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre)
 
 
@@ -54,7 +54,7 @@ def EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre):
 # Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Returns: Numpy array containing the sum of the pixel values in the annulus, the total number of pixels counted, and an array containing the pixel values
 def AnnulusSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre):
-    import Photom
+    from . import Photom
     return Photom.AnnulusSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre)
 
 
@@ -63,7 +63,7 @@ def AnnulusSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre):
 # Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Returns: List containing i & j transposed coords
 def AnnulusQuickPrepare(array, angle, i_centre, j_centre):
-    import Photom
+    from . import Photom
     return Photom.AnnulusQuickPrepare(array, angle, i_centre, j_centre)
 
 
@@ -72,7 +72,7 @@ def AnnulusQuickPrepare(array, angle, i_centre, j_centre):
 # Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, i & j transposed coord arrays
 # Returns: Numpy array containing the sum of the pixel values in the annulus, the total number of pixels counted, and an array containing the pixel values
 def AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans):
-    import Photom
+    from . import Photom
     return Photom.AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans)
 
 
@@ -81,7 +81,7 @@ def AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_cen
 # Input: Array, semi-major axis of ellipse (pix), position angle (deg), i & j coords of centre of ellipse, i & j transposed coord arrays
 # Returns: Numpy array containing the sum of the pixel values in the ellipse, the total number of pixels counted, and an array containing the pixel values
 def EllipseQuickSum(array, rad, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans):
-    import Photom
+    from . import Photom
     return Photom.EllipseQuickSum(array, rad, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans)
 
 
@@ -90,7 +90,7 @@ def EllipseQuickSum(array, rad, axial_ratio, angle, i_centre, j_centre, i_trans,
 # Input: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Output: Mask array of same dimensions as input array where pixels that lie within ellipse have value 1
 def EllipseMask(array, rad, axial_ratio, angle, i_centre, j_centre):
-    import Photom
+    from . import Photom
     return Photom.EllipseMask(array, rad, axial_ratio, angle, i_centre, j_centre)
 
 
@@ -99,7 +99,7 @@ def EllipseMask(array, rad, axial_ratio, angle, i_centre, j_centre):
 # Input: Array to be used, i & j coordinates of centre of circle, radius of circle
 # Output: Sum of elements within circle, number of pixels within circle
 def CircleSum(fits, i_centre, j_centre, r):
-    import Photom
+    from . import Photom
     return Photom.CircleSum(fits, i_centre, j_centre, r)
 
 
@@ -108,7 +108,7 @@ def CircleSum(fits, i_centre, j_centre, r):
 # Input: Array to be used, i & j coordinates of centre of circle, radius of circle
 # Output: Sum of elements within circle, number of pixels within circle
 def CircleAnnulusSum(fits, i_centre, j_centre, r, width):
-    import Photom
+    from . import Photom
     return Photom.CircleAnnulusSum(fits, i_centre, j_centre, r, width)
 
 
@@ -117,7 +117,7 @@ def CircleAnnulusSum(fits, i_centre, j_centre, r, width):
 # Input: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, upscaling factor
 # Returns: Numpy array containing the sum of the pixel values in the ellipse, the total number of pixels counted, and an array containing the pixel values
 def EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upscale=1):
-    import Photom
+    from . import Photom
     return Photom.EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upscale=1)
 
 
@@ -126,7 +126,7 @@ def EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upsca
 # Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, upscaling factor
 # Returns: Numpy array containing the sum of the pixel values in the annulus, the total number of pixels counted, and an array containing the pixel values
 def AnnulusSumUpscale(cutout, rad_inner, width, axial_ratio, angle, i_centre, j_centre, upscale=1):
-    import Photom
+    from . import Photom
     return Photom.AnnulusSumUpscale(cutout, rad_inner, width, axial_ratio, angle, i_centre, j_centre, upscale=1)
 
 
@@ -135,7 +135,7 @@ def AnnulusSumUpscale(cutout, rad_inner, width, axial_ratio, angle, i_centre, j_
 # Input: Map, radius of aperture (pix), area of aperture (pix), boolean of whether or not to sky-subtract the noise apertures, relative radius of inner edge of annulus, relative width of annulus, angle of source ellipse, axial ratio of source ellipse
 # Returns: Aperture standard deviation, and list of mean background values, list of aperture sum values
 def CircularApertureStandardDeviationFinder(fits, area, ann=True, ann_inner=1.5, ann_width=1.0, angle=0.0, axial_ratio=1.0, apertures=100):
-    import Photom
+    from . import Photom
     return Photom.CircularApertureStandardDeviationFinder(fits, area, ann=True, ann_inner=1.5, ann_width=1.0, angle=0.0, axial_ratio=1.0, apertures=100)
 
 
@@ -144,7 +144,7 @@ def CircularApertureStandardDeviationFinder(fits, area, ann=True, ann_inner=1.5,
 # Input: Array, radius of guess region (pix), i & j coords of centre of guess region, cutoff value for pixel selection
 # Returns: Array of ones and zeros indicating contiguous region
 def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff):
-    import Photom
+    from . import Photom
     return Photom.ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff)
 
 
@@ -153,7 +153,7 @@ def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff):
 # Input: x & y coordinates to which the ellipse is to be fitted
 # Output: Array of x & y coordinates of ellipse centre, array of ellipse's major & minor axes, ellipse's position angle
 def EllipseFit(x,y):
-    import Photom
+    from . import Photom
     return Photom.EllipseFit(x,y)
 
 
@@ -162,7 +162,7 @@ def EllipseFit(x,y):
 # Input: Ellipse produced by EllipseFit
 # Output: Array of x & y coordinates of ellipse centre
 def EllipseCentre(a):
-    import Photom
+    from . import Photom
     return Photom.EllipseCentre(a)
 
 
@@ -171,7 +171,7 @@ def EllipseCentre(a):
 # Input: Ellipse produced by EllipseFit
 # Output: Array of ellipse's major & minor axes
 def EllipseAxes(a):
-    import Photom
+    from . import Photom
     return Photom.EllipseAxes(a)
 
 
@@ -180,7 +180,7 @@ def EllipseAxes(a):
 # Input: Ellipse produced by EllipseFit
 # Output: Ellipse's position angle
 def EllipseAngle(a):
-    import Photom
+    from . import Photom
     return Photom.EllipseAngle(a)
 
 
@@ -189,7 +189,7 @@ def EllipseAngle(a):
 # Input: Input fits, cutout central ra (deg), cutout central dec (deg), cutout radius (arcsec), pixel width (arcsec), fits image extension, boolean of whether to reproject, boolean stating if an output variable is desired, output fits pathname if required
 # Output: HDU of new file
 def FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=True):
-    import Fits
+    from . import Fits
     return Fits.FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=pix_width_arcsec, exten=exten, reproj=reproj, variable=variable, outfile=outfile, parallel=parallel, fast=fast)
 
 
@@ -198,7 +198,7 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, re
 # Input: Input fits pathname, margin to place around array, fits extension of interest, boolean stating if margin is in arcseconds, no pixelsboolean stating if an output variable is desired, output fits pathname
 # Output: HDU of new file
 def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
-    import Fits
+    from . import Fits
     return Fits.FitsEmbed(pathname, margin, exten=exten, variable=variable, outfile=outfile)
 
 
@@ -207,7 +207,7 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
 # Input: Central right ascension (deg), central declination (deg), image width (deg), pixel size (arcsec)
 # Output: FITS header
 def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
-    import Fits
+    from . import Fits
     return Fits.FitsHeader(ra, dec, map_width_deg, pix_width_arcsec)
 
 

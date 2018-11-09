@@ -606,7 +606,7 @@ def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff, custom_str
         cont_array[np.where(cont_array!=0)] = 1
 
         # If feautre contains fewer than 5 pixels, once again default to central "cross"
-        if int(sum(cont_search_values)) < 5:
+        if np.sum(cont_array) < 5:
             cont_array = np.zeros([(cutout.shape)[0], (cutout.shape)[1]])
             cont_array[int(round(i_centre)), int(round(j_centre))] = 1
             cont_array[int(round(i_centre))+1, int(round(j_centre))] = 1

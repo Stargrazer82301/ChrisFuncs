@@ -530,10 +530,38 @@ def BandParse(band_name_target):
 
 
 
+# Function to read in file containing transmission functions for instruments, and convert to a dictionary
+# Input: Path to file where every row has format '[SOME WAVELENGTH IN MICRONS],[TRANSMISSION FRACTION]', except for the first row for each instrument, whcih takes form 'band,[BAND NAME]'
+# Returns: Dictionary of filter transmissions
+def TransmissionDict(path):
+
+    # Read in transmission curves file, and loop over lines
+    curves_dict = {}
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)).replace('ChrisFuncs/',''),'Transmissions.dat')) as curve_file:
+        curve_list = curve_file.readlines()
+    for i in range(0,len(curve_list)):
+        curve_line = curve_list[i]
+
+        # Check if this line indicates start of a new band; if so determine if it's a band we care about
+        if curve_line[:4] == 'band':
+            band = curve_line[5:].replace('\n','')
+            curves_dict[band] = []
+        else:
+            curves_dict[band].append(curve_line.replace('\n','').split(','))
+
+    # Loop over filters in filter dict, setting them to be arrays
+    for curve in curves_dict.keys():
+        curves_dict[curve] = np.array(curves_dict[curve]).astype(float)
+
+    # Return finished dictionary
+    return curves_dict
+
+
+
 # Function to colour correct a flux density, given the source SED, the reference SED, and the response curve
 # Input: Source flux density, wavelength of source flux density, the source spectrum (a Nx2 array of wavelengths and fluxes), the refernece spectrum (a Nx2 array of wavelengths and fluxes)), and filter curve (either a string giving name of common filter, or a Nx2 array of wavelenghts and transmission fractions)
 # Output: Colour correction factor (yes, FACTOR)
-def ColourCorrect(flux, wavelength, source_spec, ref_spec, filter_curve, curve_dict=None):
+def ColourCorrect(flux, wavelength, source_spec, ref_spec, filter_curve, curves_dict=None):
 
     # Check if a filter curve has been provided, or if a string is given for a common filter
     if isinstance(filter_curve, np.ndarray):
@@ -541,27 +569,10 @@ def ColourCorrect(flux, wavelength, source_spec, ref_spec, filter_curve, curve_d
     elif isinstance(filter_curve, str):
 
         # If a dictionary of curves has already been provided, use it; else read in Transmissions.dat
-        if curve_dict == None:
+        if curves_dict == None:
+            curves_dict = TransmissionDict(os.path.join(os.path.dirname(os.path.realpath(__file__)).replace('ChrisFuncs/',''),'Transmissions.dat'))
 
-            # Read in transmission curves file, and loop over lines
-            curves_dict = {}
-            with open(os.path.join(os.path.dirname(os.path.realpath(__file__)).replace('ChrisFuncs/',''),'Transmissions.dat')) as curve_file:
-                curve_list = curve_file.readlines()
-            for i in range(0,len(curve_list)):
-                curve_line = curve_list[i]
-
-                # Check if this line indicates start of a new band; if so determine if it's a band we care about
-                if curve_line[:4] == 'band':
-                    band = curve_line[5:].replace('\n','')
-                    curves_dict[band] = []
-                else:
-                    curves_dict[band].append(curve_line.replace('\n','').split(','))
-
-            # Loop over filters in filter dict, setting them to be arrays, and normalising them
-            for curve in curves_dict.keys():
-                curves_dict[curve] = np.array(curves_dict[curve]).astype(float)
-
-        # Check that requested filter is actually in dictionary; if it is, grab it, and convert wavelength to metres
+        # Check that requested filter is actually in dictionary; if it is, grab it, and convert wavelengths from microns to metres
         if filter_curve not in curves_dict.keys():
             raise Exception('Reqested filter not in database of common filters; please provide as an array instead')
         else:

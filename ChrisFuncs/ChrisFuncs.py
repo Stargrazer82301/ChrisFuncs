@@ -530,6 +530,61 @@ def BandParse(band_name_target):
 
 
 
+# Function to colour correct a flux density, given the source SED, the reference SED, and the response curve
+# Input: Source flux density, wavelength of source flux density, the source spectrum (a Nx2 array of wavelengths and fluxes), the refernece spectrum (a Nx2 array of wavelengths and fluxes)), and filter curve (either a string giving name of common filter, or a Nx2 array of wavelenghts and transmission fractions)
+# Output: Colour correction factor (yes, FACTOR)
+def ColourCorrect(flux, wavelength, source_spec, ref_spec, filter_curve, curve_dict=None):
+
+    # Check if a filter curve has been provided, or if a string is given for a common filter
+    if isinstance(filter_curve, np.ndarray):
+        pass
+    elif isinstance(filter_curve, str):
+
+        # If a dictionary of curves has already been provided, use it; else read in Transmissions.dat
+        if curve_dict == None:
+
+            # Read in transmission curves file, and loop over lines
+            curves_dict = {}
+            with open(os.path.join(os.path.dirname(os.path.realpath(__file__)).replace('ChrisFuncs/',''),'Transmissions.dat')) as curve_file:
+                curve_list = curve_file.readlines()
+            for i in range(0,len(curve_list)):
+                curve_line = curve_list[i]
+
+                # Check if this line indicates start of a new band; if so determine if it's a band we care about
+                if curve_line[:4] == 'band':
+                    band = curve_line[5:].replace('\n','')
+                    curves_dict[band] = []
+                else:
+                    curves_dict[band].append(curve_line.replace('\n','').split(','))
+
+            # Loop over filters in filter dict, setting them to be arrays, and normalising them
+            for curve in curves_dict.keys():
+                curves_dict[curve] = np.array(curves_dict[curve]).astype(float)
+
+        # Check that requested filter is actually in dictionary; if it is, grab it, and convert wavelength to metres
+        if filter_curve not in curves_dict.keys():
+            raise Exception('Reqested filter not in database of common filters; please provide as an array instead')
+        else:
+            filter_curve = curves_dict[filter_curve]
+            filter_curve[:,0] /= 1E6
+
+    # Normalise source and reference SEDs to have observed flux at (interpolated) observed wavelength
+    source_spec[:,1] /= np.interp(wavelength, source_spec[:,0], source_spec[:,1])
+    ref_spec[:,1] /= np.interp(wavelength, ref_spec[:,0], ref_spec[:,1])
+
+    # Filter SEDs by response curve (appropriately resampled in wavelength intervals), to record observed flux
+    source_obs = source_spec[:,1] * np.interp(source_spec[:,0], filter_curve[:,0], filter_curve[:,1])
+    ref_obs = ref_spec[:,1] * np.interp(ref_spec[:,0], filter_curve[:,0], filter_curve[:,1])
+
+    # Integrate observed filtered SEDs
+    source_int = np.trapz(source_obs, x=source_spec[:,0])
+    ref_int = np.trapz(ref_obs, x=ref_spec[:,0])
+
+    # Calculate and return colour correction factor from integrals
+    return ref_int / source_int
+
+
+
 # Function to find uncertainty in an array, in terms of distance from given value, out to a certain percentile limit
 # Input: Array of numbers to find uncertainty of, percentile range to find uncertainty out to, boolean of whether to return up-and-down bound values
 # Output: Percentile uncertainty

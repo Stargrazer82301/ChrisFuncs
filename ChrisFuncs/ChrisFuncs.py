@@ -574,9 +574,10 @@ def TransmissionDict(path):
 # Input: Source flux density, wavelength of source flux density, the source spectrum (a Nx2 array of wavelengths and fluxes),
     # the band filter (either a string giving name of a filter in Transmissions.dat, or a Nx2 array of wavelenghts in metres, and transmission fractions),
     # the refernece spectrum (a Nx2 array of wavelengths in metres, and fluxes; although this can be left to None if this band is in Transmissions.dat)
-    # and a dictionary containing transmission curves (optional, in case a custom dictionary is desired; must be in same format as yielded by TransmissionDict)
+    # a dictionary containing transmission curves (optional, in case a custom dictionary is desired; must be in same format as yielded by TransmissionDict)
+    # and a boolean for unsafe failing, where a correction factor of 1 will be retunred if band name not recognised
 # Output: Colour correction factor (yes, FACTOR)
-def ColourCorrect(wavelength, source_spec, band_filter, ref_spec=None, trans_dict=None):
+def ColourCorrect(wavelength, source_spec, band_filter, ref_spec=None, trans_dict=None, fail_unsafe=False):
 
     # Define physical constants
     c = 3E8
@@ -599,7 +600,10 @@ def ColourCorrect(wavelength, source_spec, band_filter, ref_spec=None, trans_dic
 
         # Check that requested filter is actually in dictionary; if it is, grab it, and convert wavelengths from microns to metres
         if band_filter not in trans_dict.keys():
-            raise Exception('Reqested filter not in database of common filters; please provide as an array instead')
+            if fail_unsafe:
+                return 1.0
+            else:
+                raise Exception('Reqested filter not in database of common filters; please provide as an array instead')
         else:
             band_filter = trans_dict[band_filter]
             band_filter[:,0] /= 1E6
@@ -631,7 +635,7 @@ def ColourCorrect(wavelength, source_spec, band_filter, ref_spec=None, trans_dic
 
     # If reference spectrum not in Transmission.dat, nor provided by user, raise exception
     else:
-        raise Exception('Reference spectrum not given, not found in dictionary of band transmissions; please provide reference spectrum')
+        raise Exception('Reference spectrum not given, nor found in dictionary of band transmissions; please provide reference spectrum')
 
     # Normalise source and reference SEDs to have observed flux at (interpolated) nominal wavelength
     source_spec[:,1] /= np.interp(wavelength, source_spec[:,0], source_spec[:,1])

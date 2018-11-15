@@ -30,6 +30,7 @@ import wget
 import pickle
 import time
 import re
+import copy
 import importlib
 import types
 #sys.path.append(os.path.join(dropbox,'Work','Scripts'))
@@ -531,68 +532,122 @@ def BandParse(band_name_target):
 
 
 # Function to read in file containing transmission functions for instruments, and convert to a dictionary
-# Input: Path to file where every row has format '[SOME WAVELENGTH IN MICRONS],[TRANSMISSION FRACTION]', except for the first row for each instrument, whcih takes form 'band,[BAND NAME]'
+# Input: Path of a file containing transmisison information for all the bands.
+    # The first row for a given band takes form 'band,[BAND NAME]'.
+    # The following row for a givnen band may optionally contain information about that band's reference spectrum, taking the form 'ref,[SPECTRUM_DESCRIPTION]'; the spectrum description can be either nu_X, where X is replaced by a number giving the index of some frequency-dependent power law spectrum; of BB_T, where T is replaced by a number giving the temperature of a blackbody spectrum.
+    # All subsequent rows for a given band then take the form '[SOME WAVELENGTH IN MICRONS],[TRANSMISSION FRACTION]'.
+    # This format can be repeated to fit transmissions data for any number of bands in one file.
 # Returns: Dictionary of filter transmissions
 def TransmissionDict(path):
 
     # Read in transmission curves file, and loop over lines
-    curves_dict = {}
-    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)).replace('ChrisFuncs/',''),'Transmissions.dat')) as curve_file:
+    trans_dict = {'refs':{}}
+    with open(path) as curve_file:
         curve_list = curve_file.readlines()
     for i in range(0,len(curve_list)):
         curve_line = curve_list[i]
 
-        # Check if this line indicates start of a new band; if so determine if it's a band we care about
+        # Check if this line indicates start of a new band; if so, start recording new band
         if curve_line[:4] == 'band':
             band = curve_line[5:].replace('\n','')
-            curves_dict[band] = []
+            trans_dict[band] = []
+
+        # Check if this line contains reference spectrun information; if so, place in the 'refs' dictionary entry
+        elif curve_line[:3] == 'ref':
+            trans_dict['refs'][band] = curve_line[4:].replace('\n','')
+
+        # Check if this line contains regular transmission information; if so, record
         else:
-            curves_dict[band].append(curve_line.replace('\n','').split(','))
+            trans_dict[band].append(curve_line.replace('\n','').split(','))
 
     # Loop over filters in filter dict, setting them to be arrays
-    for curve in curves_dict.keys():
-        curves_dict[curve] = np.array(curves_dict[curve]).astype(float)
+    for curve in trans_dict.keys():
+        if curve != 'refs':
+            trans_dict[curve] = np.array(trans_dict[curve]).astype(float)
 
     # Return finished dictionary
-    return curves_dict
+    return trans_dict
 
 
 
-# Function to colour correct a flux density, given the source SED, the reference SED, and the response curve
-# Input: Source flux density, wavelength of source flux density, the source spectrum (a Nx2 array of wavelengths and fluxes), the refernece spectrum (a Nx2 array of wavelengths and fluxes)), and filter curve (either a string giving name of common filter, or a Nx2 array of wavelenghts and transmission fractions)
+# Function to colour correct a flux density, for a given source SED, reference SED, and response curve
+# Input: Source flux density, wavelength of source flux density, the source spectrum (a Nx2 array of wavelengths and fluxes),
+    # the band filter (either a string giving name of a filter in Transmissions.dat, or a Nx2 array of wavelenghts in metres, and transmission fractions),
+    # the refernece spectrum (a Nx2 array of wavelengths in metres, and fluxes; although this can be left to None if this band is in Transmissions.dat)
+    # and a dictionary containing transmission curves (optional, in case a custom dictionary is desired; must be in same format as yielded by TransmissionDict)
 # Output: Colour correction factor (yes, FACTOR)
-def ColourCorrect(flux, wavelength, source_spec, ref_spec, filter_curve, curves_dict=None):
+def ColourCorrect(wavelength, source_spec, band_filter, ref_spec=None, trans_dict=None):
 
-    # Check if a filter curve has been provided, or if a string is given for a common filter
-    if isinstance(filter_curve, np.ndarray):
-        pass
-    elif isinstance(filter_curve, str):
+    # Define physical constants
+    c = 3E8
+    h = 6.64E-34
+    k = 1.38E-23
+
+    # Check if a filter curve has been provided, or if a band name has been given for a common band in Transmissions.dat
+    if isinstance(band_filter, np.ndarray):
+        band_name = False
+    elif isinstance(band_filter, str):
+        band_name = copy.copy(band_filter)
 
         # If a dictionary of curves has already been provided, use it; else read in Transmissions.dat
-        if curves_dict == None:
-            curves_dict = TransmissionDict(os.path.join(os.path.dirname(os.path.realpath(__file__)).replace('ChrisFuncs/',''),'Transmissions.dat'))
+        if trans_dict == None:
+            trans_path = os.path.join(os.path.dirname(os.path.realpath(__file__)).replace('ChrisFuncs/',''),'Transmissions.dat')
+            if os.path.exists(trans_path):
+                trans_dict = TransmissionDict(trans_path)
+            else:
+                raise Exception('Dictionary of band transmissions not given, and no Transmissions.dat file found in same directory as script')
 
         # Check that requested filter is actually in dictionary; if it is, grab it, and convert wavelengths from microns to metres
-        if filter_curve not in curves_dict.keys():
+        if band_filter not in trans_dict.keys():
             raise Exception('Reqested filter not in database of common filters; please provide as an array instead')
         else:
-            filter_curve = curves_dict[filter_curve]
-            filter_curve[:,0] /= 1E6
+            band_filter = trans_dict[band_filter]
+            band_filter[:,0] /= 1E6
 
-    # Normalise source and reference SEDs to have observed flux at (interpolated) observed wavelength
+    # Check if reference spectrum present in transmission dictionary
+    if isinstance(ref_spec, np.ndarray):
+        pass
+    elif (isinstance(band_name, str)) and (ref_spec == None) and (band_name in trans_dict.keys()) and (band_name in trans_dict['refs'].keys()):
+
+        nu = (c / band_filter[:,0])
+
+        # If reference is a power law, turn into corresponding array of values at same wavelength intervals as filter curve
+        if trans_dict['refs'][band_name][:2] == 'nu':
+            index = float(trans_dict['refs'][band_name][3:])
+            ref_spec = np.zeros(band_filter.shape)
+            ref_spec[:,0] = band_filter[:,0]
+            ref_spec[:,1] = nu**index
+            #ref_spec[:,1] /= np.max(ref_spec[:,1])
+
+        # If reference spectrum is a blackbody, turn into a corresponding array of values at same wavelength intervals as filter curve
+        if trans_dict['refs'][band_name][:2] == 'BB':
+            temp = float(trans_dict['refs'][band_name][3:])
+            ref_spec = np.zeros(band_filter.shape)
+            ref_spec[:,0] = band_filter[:,0]
+            planck_prefactor = np.divide((2.0 * h * nu**3.0), c**2.0)
+            planck_exponent = (h * nu) / (k * temp)
+            ref_spec[:,1] = planck_prefactor * (np.e**planck_exponent - 1)**-1.0
+            #ref_spec[:,1] /= np.max(ref_spec[:,1])
+
+    # If reference spectrum not in Transmission.dat, nor provided by user, raise exception
+    else:
+        raise Exception('Reference spectrum not given, not found in dictionary of band transmissions; please provide reference spectrum')
+
+    # Normalise source and reference SEDs to have observed flux at (interpolated) nominal wavelength
     source_spec[:,1] /= np.interp(wavelength, source_spec[:,0], source_spec[:,1])
     ref_spec[:,1] /= np.interp(wavelength, ref_spec[:,0], ref_spec[:,1])
 
     # Filter SEDs by response curve (appropriately resampled in wavelength intervals), to record observed flux
-    source_obs = source_spec[:,1] * np.interp(source_spec[:,0], filter_curve[:,0], filter_curve[:,1])
-    ref_obs = ref_spec[:,1] * np.interp(ref_spec[:,0], filter_curve[:,0], filter_curve[:,1])
+    source_obs = source_spec[:,1] * np.interp(source_spec[:,0], band_filter[:,0], band_filter[:,1])
+    ref_obs = ref_spec[:,1] * np.interp(ref_spec[:,0], band_filter[:,0], band_filter[:,1])
 
-    # Integrate observed filtered SEDs
-    source_int = np.trapz(source_obs, x=source_spec[:,0])
-    ref_int = np.trapz(ref_obs, x=ref_spec[:,0])
+    # Integrate observed filtered SEDs (in intervals of freqency, as Jy are in terms of Hz)
+    source_int = np.trapz(source_obs, x=(c/source_spec[:,0]))
+    ref_int = np.trapz(ref_obs, x=(c/ref_spec[:,0]))
 
     # Calculate and return colour correction factor from integrals
-    return ref_int / source_int
+    colour_corr_factor = ref_int / source_int
+    return colour_corr_factor
 
 
 

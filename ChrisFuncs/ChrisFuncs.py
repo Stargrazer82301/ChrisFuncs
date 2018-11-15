@@ -591,7 +591,7 @@ def ColourCorrect(wavelength, source_spec, band_filter, ref_spec=None, trans_dic
 
         # If a dictionary of curves has already been provided, use it; else read in Transmissions.dat
         if trans_dict == None:
-            trans_path = os.path.join(os.path.dirname(os.path.realpath(__file__)).replace('ChrisFuncs/',''),'Transmissions.dat')
+            trans_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),'Transmissions.dat')
             if os.path.exists(trans_path):
                 trans_dict = TransmissionDict(trans_path)
             else:

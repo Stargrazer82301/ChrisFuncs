@@ -608,11 +608,10 @@ def ColourCorrect(wavelength, source_spec, band_filter, ref_spec=None, trans_dic
             band_filter = trans_dict[band_filter]
             band_filter[:,0] /= 1E6
 
-    # Check if reference spectrum present in transmission dictionary
+    # Check if reference spectrum present in transmission dictionary; if it is, construct spectrum array
     if isinstance(ref_spec, np.ndarray):
         pass
     elif (isinstance(band_name, str)) and (ref_spec == None) and (band_name in trans_dict.keys()) and (band_name in trans_dict['refs'].keys()):
-
         nu = (c / band_filter[:,0])
 
         # If reference is a power law, turn into corresponding array of values at same wavelength intervals as filter curve

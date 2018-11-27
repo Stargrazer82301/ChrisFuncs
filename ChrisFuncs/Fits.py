@@ -12,6 +12,12 @@ import aplpy
 import reproject
 from ChrisFuncs import SigmaClip, Nanless
 
+# Handle the lack of the basestring class in Python 3
+try:
+  basestring
+except NameError:
+  basestring = str
+
 
 
 # Function to create a cutout of a fits file - NOW JUST A WRAPPER OF AN ASTROPY FUNCTION

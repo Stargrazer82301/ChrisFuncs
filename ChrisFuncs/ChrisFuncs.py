@@ -532,13 +532,17 @@ def BandParse(band_name_target):
 
 
 # Function to read in file containing transmission functions for instruments, and convert to a dictionary
-# Input: Path of a file containing transmisison information for all the bands.
+# Input: Path of a file containing transmisison information for all the bands (or, optionally, leave blank to look for Transmissions.dat in same directory as script).
     # The first row for a given band takes form 'band,[BAND NAME]'.
     # The following row for a givnen band may optionally contain information about that band's reference spectrum, taking the form 'ref,[SPECTRUM_DESCRIPTION]'; the spectrum description can be either nu_X, where X is replaced by a number giving the index of some frequency-dependent power law spectrum; of BB_T, where T is replaced by a number giving the temperature of a blackbody spectrum.
     # All subsequent rows for a given band then take the form '[SOME WAVELENGTH IN MICRONS],[TRANSMISSION FRACTION]'.
     # This format can be repeated to fit transmissions data for any number of bands in one file.
 # Returns: Dictionary of filter transmissions
-def TransmissionDict(path):
+def TransmissionDict(path=None):
+
+    # If no path given, assume Tramsissions.dat file is in same directory as script
+    if path == None:
+        os.path.join(os.path.dirname(os.path.realpath(__file__)),'Transmissions.dat')
 
     # Read in transmission curves file, and loop over lines
     trans_dict = {'refs':{}}

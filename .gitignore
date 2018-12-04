@@ -30,6 +30,7 @@ $RECYCLE.BIN/
 /chrisfuncs.egg-info
 /build
 /dist
+*.egg-info
 
 # PyInstaller directories
 /ChrisFuncs/dist

@@ -264,9 +264,6 @@ def SigmaClip(values, tolerance=0.001, median=False, sigma_thresh=3.0, no_zeros=
 
 
 
-
-
-
 # Keflavich function to downsample an array
 # Input: Array to downsample, downsampling factor, and estiamtor
 # Output: Downsampled array
@@ -575,7 +572,7 @@ def TransmissionDict(path=None):
 
 
 # Function to colour correct a flux density, for a given source SED, reference SED, and response curve
-# Input: Source flux density, wavelength of source flux density, the source spectrum (a Nx2 array of wavelengths and fluxes),
+# Input: Wavelength of source flux density, the source spectrum (a Nx2 array of wavelengths and fluxes),
     # the band filter (either a string giving name of a filter in Transmissions.dat, or a Nx2 array of wavelenghts in metres, and transmission fractions),
     # the refernece spectrum (a Nx2 array of wavelengths in metres, and fluxes; although this can be left to None if this band is in Transmissions.dat)
     # a dictionary containing transmission curves (optional, in case a custom dictionary is desired; must be in same format as yielded by TransmissionDict)
@@ -1080,10 +1077,74 @@ def GridPos(n_plot, plot_tot, img_dim, axis='y', nonstandard=False, gaps=False):
 
 
 
+# Function to find the Sheather-Jones bandwidth estimator (Sheather & Jones, 1991), adapted from: https://github.com/Neojume/pythonABC
+# Input: Array of values of which bandwidth will be found
+# Output: Sheather-Jones bandwidth of array
+def SheatherJones(x, weights=None):
+
+    # Define Equation 12 from Sheather & Jones (1991)
+    def sj12(x, h):
+        phi6 = lambda x: (x ** 6 - 15 * x ** 4 + 45 * x ** 2 - 15) * scipy.stats.norm.pdf(x, loc=0.0, scale=1.0)
+        phi4 = lambda x: (x ** 4 - 6 * x ** 2 + 3) * scipy.stats.norm.pdf(x, loc=0.0, scale=1.0)
+        n = len(x)
+        one = np.ones((1, n))
+        lam = np.percentile(x, 75) - np.percentile(x, 25)
+        a = 0.92 * lam * n ** (-1 / 7.0)
+        b = 0.912 * lam * n ** (-1 / 9.0)
+        W = np.tile(x, (n, 1))
+        W = W - W.T
+        W1 = phi6(W / b)
+        tdb = np.dot(np.dot(one, W1), one.T)
+        tdb = -tdb / (n * (n - 1) * b ** 7)
+        W1 = phi4(W / a)
+        sda = np.dot(np.dot(one, W1), one.T)
+        sda = sda / (n * (n - 1) * a ** 5)
+        alpha2 = 1.357 * (abs(sda / tdb)) ** (1 / 7.0) * h ** (5 / 7.0)
+        W1 = phi4(W / alpha2)
+        sdalpha2 = np.dot(np.dot(one, W1), one.T)
+        sdalpha2 = sdalpha2 / (n * (n - 1) * alpha2 ** 5)
+        return (scipy.stats.norm.pdf(0, loc=0, scale=np.sqrt(2)) /
+                (n * abs(sdalpha2[0, 0]))) ** 0.2 - h
+
+    # Bandwidth estimator for normal case (From paragraph 2.4.2 of Bowman & Azzalini, 1997)
+    def hnorm(x, weights=None):
+        wmean = lambda x,w: sum(x * w) / float(sum(w))
+        wvar = lambda x,w: sum(w * (x - wmean(x, w)) ** 2) / float(sum(w) - 1)
+        x = np.asarray(x)
+        if weights is None:
+            weights = np.ones(len(x))
+        n = float(sum(weights))
+        if len(x.shape) == 1:
+            sd = np.sqrt(wvar(x, weights))
+            return sd * (4 / (3 * n)) ** (1 / 5.0)
+        if len(x.shape) == 2:
+            ndim = x.shape[1]
+            sd = np.sqrt(np.apply_along_axis(wvar, 1, x, weights))
+            return (4.0 / ((ndim + 2.0) * n) ** (1.0 / (ndim + 4.0))) * sd
+
+        # Actual calculator of bandwidth
+        h0 = hnorm(x)
+        v0 = sj12(x, h0)
+        if v0 > 0:
+            hstep = 1.1
+        else:
+            hstep = 0.9
+        h1 = h0 * hstep
+        v1 = sj12(x, h1)
+        while v1 * v0 > 0:
+            h0 = h1
+            v0 = v1
+            h1 = h0 * hstep
+            v1 = sj12(x, h1)
+        return h0 + (h1 - h0) * abs(v0) / (abs(v0) + abs(v1))
+
+
+
 # Function to remove all NaN entries from an array
 # Input: Array to be cleansed
 # Output: Purified array
 def Nanless(bad):
+    bad = np.array(bad)
     good = bad[np.where(np.isnan(bad)==False)]
     return good
 

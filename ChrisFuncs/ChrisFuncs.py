@@ -23,7 +23,6 @@ import astropy.convolution
 #import astropy.nddata.utils
 import astropy.coordinates
 import astropy.units
-import reproject
 import astroquery.irsa_dust
 import shutil
 import wget

@@ -1122,21 +1122,21 @@ def SheatherJones(x, weights=None):
             sd = np.sqrt(np.apply_along_axis(wvar, 1, x, weights))
             return (4.0 / ((ndim + 2.0) * n) ** (1.0 / (ndim + 4.0))) * sd
 
-        # Actual calculator of bandwidth
-        h0 = hnorm(x)
-        v0 = sj12(x, h0)
-        if v0 > 0:
-            hstep = 1.1
-        else:
-            hstep = 0.9
+    # Actual calculator of bandwidth
+    h0 = hnorm(x)
+    v0 = sj12(x, h0)
+    if v0 > 0:
+        hstep = 1.1
+    else:
+        hstep = 0.9
+    h1 = h0 * hstep
+    v1 = sj12(x, h1)
+    while v1 * v0 > 0:
+        h0 = h1
+        v0 = v1
         h1 = h0 * hstep
         v1 = sj12(x, h1)
-        while v1 * v0 > 0:
-            h0 = h1
-            v0 = v1
-            h1 = h0 * hstep
-            v1 = sj12(x, h1)
-        return h0 + (h1 - h0) * abs(v0) / (abs(v0) + abs(v1))
+    return h0 + (h1 - h0) * abs(v0) / (abs(v0) + abs(v1))
 
 
 

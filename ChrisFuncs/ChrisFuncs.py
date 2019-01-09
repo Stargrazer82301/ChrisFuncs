@@ -526,6 +526,12 @@ def BandParse(band_name_target):
             band_name_target_comp = re.sub(r'\W+', '', band_name_target).replace('_','').lower()
             band_altname_comp = re.sub(r'\W+', '', band_altname).replace('_','').lower()
 
+            # Strip away wavelength and frequency units suffixes, for ease of comparison
+            unit_suffixes = ['um','micron','mm','GHz','MHz']
+            for unit in unit_suffixes:
+                band_name_target_comp = band_name_target_comp.replace(unit,'')
+                band_altname_comp = band_altname_comp.replace(unit,'')
+
             # If target and alternate band names match, record
             if band_name_target_comp==band_altname_comp:
                 band_altnames_matches.append(band_name_key)

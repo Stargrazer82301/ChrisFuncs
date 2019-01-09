@@ -500,7 +500,22 @@ def BandParse(band_name_target):
                        'Spitzer_5.8':['Spitzer_5.8','Spitzer_5.8um','Spitzer_5.8mu','Spitzer_IRAC_5.8','Spitzer_IRAC_5.8um','Spitzer_IRAC_5.8mu','Spitzer_IRAC3','Spitzer_I3','IRAC_5.8','IRAC_5.8um','IRAC_5.8mu','IRAC3','I3','Spitzer_IRAC3-band','IRAC3-band','I3-band','5.8','5.8um','5.8mu'],
                        'Spitzer_8.0':['Spitzer_8.0','Spitzer_8.0um','Spitzer_8.0mu','Spitzer_IRAC_8.0','Spitzer_IRAC_8.0um','Spitzer_IRAC_8.0mu','Spitzer_IRAC4','Spitzer_I4','IRAC_8.0','IRAC_8.0um','IRAC_8.0mu','IRAC4','I4','Spitzer_IRAC4-band','IRAC4-band','I4-band','8.0','8.0um','8.0mu','Spitzer_8','Spitzer_8m','Spitzer_8mu','Spitzer_IRAC_8','Spitzer_IRAC_8um','Spitzer_IRAC_8mu','IRAC_8','IRAC_8um','IRAC_8mu','8','8um','8mu'],
                        'WISE_3.4':['WISE_3.4','WISE_3.4um','WISE_3.4mu','WISE1','WISE1-band','W1','W1-band','WISE_W1','WISE_W1-band'],
-                       'WISE_4.6':['WISE_4.6','WISE_4.6um','WISE_4.6mu','WISE2','WISE2-band','W2','W2-band','WISE_W2','WISE_W2-band']}
+                       'WISE_4.6':['WISE_4.6','WISE_4.6um','WISE_4.6mu','WISE2','WISE2-band','W2','W2-band','WISE_W2','WISE_W2-band'],
+                       'PACS_70':['PACS_70','Herschel_70','Herschel-PACS_70'],
+                       'PACS_100':['PACS_100','Herschel_100','Hercshel-PACS_100'],
+                       'PACS_160':['PACS_160','Herschel_160','Herschel-PACS_160'],
+                       'SPIRE_250':['SPIRE_250','Hercshel_250','Hercshel-SPIRE_250'],
+                       'SPIRE_350':['SPIRE_350','Hercshel_350','Hercshel-SPIRE_350'],
+                       'SPIRE_500':['SPIRE_500','Hercshel_500','Hercshel-SPIRE_500'],
+                       'Planck_350':['Planck_857','Planck-HFI_350','Planck-HFI_857','HFI_350','HFI_857'],
+                       'Planck_550':['Planck_545','Planck-HFI_550','Planck-HFI_545','HFI_550','HFI_545'],
+                       'Planck_850':['Planck_353','Planck-HFI_850','Planck-HFI_353','HFI_850','HFI_353'],
+                       'Planck_1380':['Planck_217','Planck-HFI_1380','Planck-HFI_217','HFI_1380','HFI_217'],
+                       'Planck_2100':['Planck_143','Planck-HFI_2100','Planck-HFI_143','HFI_2100','HFI_143'],
+                       'Planck_3000':['Planck_100','Planck-HFI_3000','Planck-HFI_100','HFI_3000','HFI_100'],
+                       'Planck_4260':['Planck_70','Planck-LFI_4260','Planck_LFI_70','LFI_4260','LFI_70'],
+                       'Planck_6810':['Planck_44','Planck-LFI_6810','Planck_LFI_44','LFI_6810','LFI_44'],
+                       'Planck_10600':['Planck_30','Planck-LFI_10600','Planck_LFI_30','LFI_10600','LFI_30'],}
 
     # Loop over alternate band name dictionary entries
     band_altnames_matches = []

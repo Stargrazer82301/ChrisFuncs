@@ -1100,7 +1100,7 @@ def GridPos(n_plot, plot_tot, img_dim, axis='y', nonstandard=False, gaps=False):
 # Function to find the Sheather-Jones bandwidth estimator (Sheather & Jones, 1991), adapted from: https://github.com/Neojume/pythonABC
 # Input: Array of values of which bandwidth will be found
 # Output: Sheather-Jones bandwidth of array
-def SheatherJones(x, weights=None):
+def SheatherJonesBW(x, weights=None):
 
     # Define Equation 12 from Sheather & Jones (1991)
     def sj12(x, h):

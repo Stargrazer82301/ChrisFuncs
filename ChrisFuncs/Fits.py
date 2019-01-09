@@ -182,11 +182,11 @@ def FitsRGB(ra, dec, rad_arcsec, in_paths, out_dir, pmin=False, pmax=False, stre
     for b in range(len(path_list)):
 
         # If this band gives a single path for a specific file, record it
-        if not hasattr(in_paths[b], '__iter__'):
+        if in_paths[b].__class__ == str:
             path_list[b] = in_paths[b]
 
         # Else if this band gives a list of paths (ie, an order of preference), find the first file that exists and record it
-        else:
+        elif hasattr(in_paths[b], '__iter__'):
             for path in in_paths[b]:
                 if not os.path.exists(path):
                     continue

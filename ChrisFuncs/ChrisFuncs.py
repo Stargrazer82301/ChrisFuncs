@@ -1074,7 +1074,7 @@ def DisIntervals(best_fit, dis, log_space=False, sigma_thresh=3.0, median=False)
 # Function to generate appropriate dimensions plot divisions of a figure in along a given direction
 # Input: Index of plot element in question, total number of plot elements, dimension of figure, x or y axis,
 # Output: Starting position of plot, dimension of plot
-def GridPos(n_plot, plot_tot, img_dim, axis='y', nonstandard=False, gaps=False):
+def GridPos(n_plot, n_tot, img_dim, axis='y', nonstandard=False, gaps=False):
     if nonstandard>0:
         base = nonstandard
     elif nonstandard==False:
@@ -1082,14 +1082,14 @@ def GridPos(n_plot, plot_tot, img_dim, axis='y', nonstandard=False, gaps=False):
             base = 6.0
         elif axis=='x':
             base = 8.0
-    n_plot, plot_tot, img_dim = float(n_plot), float(plot_tot), float(img_dim)
+    n_plot, n_tot, img_dim = float(n_plot), float(n_tot), float(img_dim)
     margin_start = 0.125 * (base / img_dim)
     margin_end = (1.0 - 0.95) * (base / img_dim)
     fig_start = margin_start
     fig_end = 1.0 - margin_end
     fig_dim = fig_end - fig_start
-    plot_dim = fig_dim / plot_tot
-    plot_start = fig_start + ((n_plot-1.0) * plot_dim)
+    plot_dim = fig_dim / n_tot
+    plot_start = fig_start + (n_plot * plot_dim)
     if gaps>0:
         plot_start += (0.5 * gaps) * plot_dim
         plot_dim *= 1.0 - (0.5 * gaps)

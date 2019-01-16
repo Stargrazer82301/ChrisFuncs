@@ -695,7 +695,7 @@ def EllipseAngle(a):
 
 
 """
-# IDIUT'S GUIDE TO ELLIPTICAL APERTURES
+# GUIDE TO ELLIPTICAL APERTURES
 I assume you also know the location of the ellipse's center. Call that (x0,y0).
 Let t be the counterclockwise angle the major axis makes with respect to the
 x-axis. Let a and b be the semi-major and semi-minor axes, respectively. If

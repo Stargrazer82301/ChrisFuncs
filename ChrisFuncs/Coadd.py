@@ -19,7 +19,7 @@ import ChrisFuncs
 
 
 # Function to set a set of maps to the same level but least-squares fitting a plane to their levels to estimate and remove their backgrounds
-# Input: Directory of files to be levelled, suffix identifying files to be levelled, optioal directory if a set of smoothed files is to be used to determine the level
+# Args: Directory of files to be levelled, suffix identifying files to be levelled, optioal directory if a set of smoothed files is to be used to determine the level
 # Output: None
 def LevelFITS(fitsfile_dir, target_suffix, convfile_dir=False):
 

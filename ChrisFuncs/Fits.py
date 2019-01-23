@@ -21,7 +21,7 @@ except NameError:
 
 
 # Function to create a cutout of a fits file - NOW JUST A WRAPPER OF AN ASTROPY FUNCTION
-# Input: Input fits, cutout central ra (deg), cutout central dec (deg), cutout radius (arcsec), pixel width (arcsec), fits image extension, boolean of whether to reproject, boolean stating if an output variable is desired, output fits pathname if required
+# Args: Input fits, cutout central ra (deg), cutout central dec (deg), cutout radius (arcsec), pixel width (arcsec), fits image extension, boolean of whether to reproject, boolean stating if an output variable is desired, output fits pathname if required
 # Output: HDU of new file
 def FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=True):
 
@@ -83,7 +83,7 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, re
 
 
 # Function to embed a fits file in a larger array of NaNs (for APLpy or the like)
-# Input: Input fits pathname, margin to place around array, fits extension of interest, boolean stating if margin is in arcseconds, no pixelsboolean stating if an output variable is desired, output fits pathname
+# Args: Input fits pathname, margin to place around array, fits extension of interest, boolean stating if margin is in arcseconds, no pixelsboolean stating if an output variable is desired, output fits pathname
 # Output: HDU of new file
 def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
 
@@ -133,7 +133,7 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
 
 
 # Define function to generate a generic FITS header for a given projection
-# Input: Central right ascension (deg), central declination (deg), image width (deg), pixel size (arcsec)
+# Args: Central right ascension (deg), central declination (deg), image width (deg), pixel size (arcsec)
 # Output: FITS header
 def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
 
@@ -173,7 +173,7 @@ def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
 
 
 # Define function create a three-colour PNG image from some FITS files
-# Input: Central RA for output image, central Dec of output image, radius of output image in arcseconds, list of paths (or list of lists when giving order-of-preference) to red green and blue files, output directory, (pmin threshold or list of 3 threshold values, pmax threshold or list of 3 threshold values, stretch type or list of stretch types)
+# Args: Central RA for output image, central Dec of output image, radius of output image in arcseconds, list of paths (or list of lists when giving order-of-preference) to red green and blue files, output directory, (pmin threshold or list of 3 threshold values, pmax threshold or list of 3 threshold values, stretch type or list of stretch types)
 # Output: None
 def FitsRGB(ra, dec, rad_arcsec, in_paths, out_dir, pmin=False, pmax=False, stretch='log'):
 

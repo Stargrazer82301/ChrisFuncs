@@ -17,7 +17,7 @@ import ChrisFuncs
 
 
 # Function to sum all elements in an ellipse centred on the middle of a given array
-# Input: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
+# Args: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Returns: Numpy array containing the sum of the pixel values in the ellipse, total number of pixels counted, and an array containing the pixel values
 def EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre):
 
@@ -66,7 +66,7 @@ def EllipseSum(array, rad, axial_ratio, angle, i_centre, j_centre):
 
 
 # Function to sum all elements in an annulus centred upon the middle of the given array
-# Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
+# Args: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Returns: Numpy array containing the sum of the pixel values in the annulus, the total number of pixels counted, and an array containing the pixel values
 def AnnulusSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre):
 
@@ -122,7 +122,7 @@ def AnnulusSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre):
 
 
 # Function to make annular photometry faster by pre-preparing arrays of transposed coords that are to be repeatedly used
-# Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
+# Args: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Returns: List containing i & j transposed coords
 def AnnulusQuickPrepare(array, angle, i_centre, j_centre):
 
@@ -144,7 +144,7 @@ def AnnulusQuickPrepare(array, angle, i_centre, j_centre):
 
 
 # Function to sum all elements in an annulus centred upon the middle of the given array, usingpre-prepared transposed coord arrays
-# Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, i & j transposed coord arrays
+# Args: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, i & j transposed coord arrays
 # Returns: Numpy array containing the sum of the pixel values in the annulus, the total number of pixels counted, and an array containing the pixel values
 def AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans):
 
@@ -194,7 +194,7 @@ def AnnulusQuickSum(array, rad_inner, width, axial_ratio, angle, i_centre, j_cen
 
 
 # Function to sum all elements in an annulus centred upon the middle of the given array, using pre-prepared transposed coord arrays
-# Input: Array, semi-major axis of ellipse (pix), position angle (deg), i & j coords of centre of ellipse, i & j transposed coord arrays
+# Args: Array, semi-major axis of ellipse (pix), position angle (deg), i & j coords of centre of ellipse, i & j transposed coord arrays
 # Returns: Numpy array containing the sum of the pixel values in the ellipse, the total number of pixels counted, and an array containing the pixel values
 def EllipseQuickSum(array, rad, axial_ratio, angle, i_centre, j_centre, i_trans, j_trans):
 
@@ -239,7 +239,7 @@ def EllipseQuickSum(array, rad, axial_ratio, angle, i_centre, j_centre, i_trans,
 
 
 # Function to return a mask identifying all pixels within an ellipse of given parameters
-# Input: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
+# Args: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Output: Mask array of same dimensions as input array where pixels that lie within ellipse have value 1
 def EllipseMask(array, rad, axial_ratio, angle, i_centre, j_centre):
 
@@ -268,7 +268,7 @@ def EllipseMask(array, rad, axial_ratio, angle, i_centre, j_centre):
 
 
 # Function to sum all pixel elements inside a given circle... the old-fashioned way
-# Input: Array to be used, i & j coordinates of centre of circle, radius of circle
+# Args: Array to be used, i & j coordinates of centre of circle, radius of circle
 # Output: Sum of elements within circle, number of pixels within circle
 def CircleSum(fits, i_centre, j_centre, r):
     i_centre, j_centre, r = int(i_centre), int(j_centre), int(r)
@@ -289,7 +289,7 @@ def CircleSum(fits, i_centre, j_centre, r):
 
 
 # Function to sum all pixel elements inside a given circle... the old-fashioned way
-# Input: Array to be used, i & j coordinates of centre of circle, radius of circle
+# Args: Array to be used, i & j coordinates of centre of circle, radius of circle
 # Output: Sum of elements within circle, number of pixels within circle
 def CircleAnnulusSum(fits, i_centre, j_centre, r, width):
     i_centre, j_centre, r, width = int(i_centre), int(j_centre), int(r), int(width)
@@ -310,7 +310,7 @@ def CircleAnnulusSum(fits, i_centre, j_centre, r, width):
 
 
 # Function to sum all elements in an ellipse centred on the middle of an array that has been resized to allow better pixel sampling
-# Input: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, upscaling factor
+# Args: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, upscaling factor
 # Returns: Numpy array containing the sum of the pixel values in the ellipse, the total number of pixels counted, and an array containing the pixel values
 def EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upscale=1):
 
@@ -375,7 +375,7 @@ def EllipseSumUpscale(cutout, rad, axial_ratio, angle, i_centre, j_centre, upsca
 
 
 # Function to sum all elements in an annulus centred upon the middle of an array that has been resized to allow better pixel sampling
-# Input: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, upscaling factor
+# Args: Array, semi-major axis of inside edge of annulus (pix), width of annulus (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse, upscaling factor
 # Returns: Numpy array containing the sum of the pixel values in the annulus, the total number of pixels counted, and an array containing the pixel values
 def AnnulusSumUpscale(cutout, rad_inner, width, axial_ratio, angle, i_centre, j_centre, upscale=1):
 
@@ -447,7 +447,7 @@ def AnnulusSumUpscale(cutout, rad_inner, width, axial_ratio, angle, i_centre, j_
 
 
 # Function to iteratively calculate SPIRE aperture noise of photometry cutout using randomly-placed (annular-background-subtracted) circular aperture
-# Input: Map, radius of aperture (pix), area of aperture (pix), boolean of whether or not to sky-subtract the noise apertures, relative radius of inner edge of annulus, relative width of annulus, angle of source ellipse, axial ratio of source ellipse
+# Args: Map, radius of aperture (pix), area of aperture (pix), boolean of whether or not to sky-subtract the noise apertures, relative radius of inner edge of annulus, relative width of annulus, angle of source ellipse, axial ratio of source ellipse
 # Returns: Aperture standard deviation, and list of mean background values, list of aperture sum values
 def CircularApertureStandardDeviationFinder(fits, area, ann=True, ann_inner=1.5, ann_width=1.0, angle=0.0, axial_ratio=1.0, apertures=100):
 
@@ -567,7 +567,7 @@ def CircularApertureStandardDeviationFinder(fits, area, ann=True, ann_inner=1.5,
 
 
 # Function to find all contiguous pixels that lie above a given flux limit
-# Input: Array, radius of guess region (pix), i & j coords of centre of guess region, cutoff value for pixel selection, optional custom structure
+# Args: Array, radius of guess region (pix), i & j coords of centre of guess region, cutoff value for pixel selection, optional custom structure
 # Returns: Array of ones and zeros indicating contiguous region
 def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff, custom_structure=False):
 
@@ -620,7 +620,7 @@ def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff, custom_str
 
 
 # Function that combines all of the ellipse-fitting steps (finds convex hull, fits ellipse to this, then finds properties of ellipse)
-# Input: x & y coordinates to which the ellipse is to be fitted
+# Args: x & y coordinates to which the ellipse is to be fitted
 # Output: Array of x & y coordinates of ellipse centre, array of ellipse's major & minor axes, ellipse's position angle
 def EllipseFit(x,y):
 
@@ -656,7 +656,7 @@ def EllipseFit(x,y):
 
 
 # Function to calculate the coordinates of the centre of an ellipse produced by EllipseFit
-# Input: Ellipse produced by EllipseFit
+# Args: Ellipse produced by EllipseFit
 # Output: Array of x & y coordinates of ellipse centre
 def EllipseCentre(a):
     b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
@@ -669,7 +669,7 @@ def EllipseCentre(a):
 
 
 # Function to calculate the lengths of the axes of an ellipse produced by EllipseFit
-# Input: Ellipse produced by EllipseFit
+# Args: Ellipse produced by EllipseFit
 # Output: Array of ellipse's major & minor axes
 def EllipseAxes(a):
     b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
@@ -683,7 +683,7 @@ def EllipseAxes(a):
 
 
 # Function to calculat the position angle of the centre of an ellipse produced by EllipseFit
-# Input: Ellipse produced by EllipseFit
+# Args: Ellipse produced by EllipseFit
 # Output: Ellipse's position angle
 def EllipseAngle(a):
     b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]

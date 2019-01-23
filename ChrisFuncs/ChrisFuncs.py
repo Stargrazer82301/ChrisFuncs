@@ -88,7 +88,7 @@ def EllipseQuickSum(array, rad, axial_ratio, angle, i_centre, j_centre, i_trans,
 
 # Function to return a mask identifying all pixels within an ellipse of given parameters
 # Args: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
-# Output: Mask array of same dimensions as input array where pixels that lie within ellipse have value 1
+# Returns: Mask array of same dimensions as input array where pixels that lie within ellipse have value 1
 def EllipseMask(array, rad, axial_ratio, angle, i_centre, j_centre):
     from . import Photom
     return Photom.EllipseMask(array, rad, axial_ratio, angle, i_centre, j_centre)
@@ -97,7 +97,7 @@ def EllipseMask(array, rad, axial_ratio, angle, i_centre, j_centre):
 
 # Function to sum all pixel elements inside a given circle... the old-fashioned way
 # Args: Array to be used, i & j coordinates of centre of circle, radius of circle
-# Output: Sum of elements within circle, number of pixels within circle
+# Returns: Sum of elements within circle, number of pixels within circle
 def CircleSum(fits, i_centre, j_centre, r):
     from . import Photom
     return Photom.CircleSum(fits, i_centre, j_centre, r)
@@ -106,7 +106,7 @@ def CircleSum(fits, i_centre, j_centre, r):
 
 # Function to sum all pixel elements inside a given circle... the old-fashioned way
 # Args: Array to be used, i & j coordinates of centre of circle, radius of circle
-# Output: Sum of elements within circle, number of pixels within circle
+# Returns: Sum of elements within circle, number of pixels within circle
 def CircleAnnulusSum(fits, i_centre, j_centre, r, width):
     from . import Photom
     return Photom.CircleAnnulusSum(fits, i_centre, j_centre, r, width)
@@ -151,7 +151,7 @@ def ContiguousPixels(cutout, rad_initial, i_centre, j_centre, cutoff):
 
 # Function that combines all of the ellipse-fitting steps (finds convex hull, fits ellipse to this, then finds properties of ellipse)
 # Args: x & y coordinates to which the ellipse is to be fitted
-# Output: Array of x & y coordinates of ellipse centre, array of ellipse's major & minor axes, ellipse's position angle
+# Returns: Array of x & y coordinates of ellipse centre, array of ellipse's major & minor axes, ellipse's position angle
 def EllipseFit(x,y):
     from . import Photom
     return Photom.EllipseFit(x,y)
@@ -160,7 +160,7 @@ def EllipseFit(x,y):
 
 # Function to calculate the coordinates of the centre of an ellipse produced by EllipseFit
 # Args: Ellipse produced by EllipseFit
-# Output: Array of x & y coordinates of ellipse centre
+# Returns: Array of x & y coordinates of ellipse centre
 def EllipseCentre(a):
     from . import Photom
     return Photom.EllipseCentre(a)
@@ -169,7 +169,7 @@ def EllipseCentre(a):
 
 # Function to calculate the lengths of the axes of an ellipse produced by EllipseFit
 # Args: Ellipse produced by EllipseFit
-# Output: Array of ellipse's major & minor axes
+# Returns: Array of ellipse's major & minor axes
 def EllipseAxes(a):
     from . import Photom
     return Photom.EllipseAxes(a)
@@ -178,7 +178,7 @@ def EllipseAxes(a):
 
 # Function to calculat the position angle of the centre of an ellipse produced by EllipseFit
 # Args: Ellipse produced by EllipseFit
-# Output: Ellipse's position angle
+# Returns: Ellipse's position angle
 def EllipseAngle(a):
     from . import Photom
     return Photom.EllipseAngle(a)
@@ -187,7 +187,7 @@ def EllipseAngle(a):
 
 # Function to create a cutout of a fits file - NOW JUST A WRAPPER OF AN ASTROPY FUNCTION
 # Args: Input fits, cutout central ra (deg), cutout central dec (deg), cutout radius (arcsec), pixel width (arcsec), fits image extension, boolean of whether to reproject, boolean stating if an output variable is desired, output fits pathname if required
-# Output: HDU of new file
+# Returns: HDU of new file
 def FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, reproj=False, variable=False, outfile=False, parallel=True, fast=True):
     from . import Fits
     return Fits.FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=pix_width_arcsec, exten=exten, reproj=reproj, variable=variable, outfile=outfile, parallel=parallel, fast=fast)
@@ -196,7 +196,7 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, re
 
 # Function to embed a fits file in a larger array of NaNs (for APLpy or the like)
 # Args: Input fits pathname, margin to place around array, fits extension of interest, boolean stating if margin is in arcseconds, no pixelsboolean stating if an output variable is desired, output fits pathname
-# Output: HDU of new file
+# Returns: HDU of new file
 def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
     from . import Fits
     return Fits.FitsEmbed(pathname, margin, exten=exten, variable=variable, outfile=outfile)
@@ -205,7 +205,7 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
 
 # Define function to generate a generic FITS header for a given projection
 # Args: Central right ascension (deg), central declination (deg), image width (deg), pixel size (arcsec)
-# Output: FITS header
+# Returns: FITS header
 def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
     from . import Fits
     return Fits.FitsHeader(ra, dec, map_width_deg, pix_width_arcsec)
@@ -265,7 +265,7 @@ def SigmaClip(values, tolerance=0.001, median=False, sigma_thresh=3.0, no_zeros=
 
 # Keflavich function to downsample an array
 # Args: Array to downsample, downsampling factor, and estiamtor
-# Output: Downsampled array
+# Returns: Downsampled array
 def Downsample(myarr, factor, estimator=np.nanmean):
     ys,xs = myarr.shape
     crarr = myarr[:ys-(ys % int(factor)),:xs-(xs % int(factor))]
@@ -278,7 +278,7 @@ def Downsample(myarr, factor, estimator=np.nanmean):
 
 # A function to fit and remove a background polynomial to an image, masking a central ellipse
 # Args: Array to process, i-coord of masked central ellipse, j-coord of masked central ellipse, semimajor axis of masked central ellipse, axial ratio of masked central ellipse, position angle of masked central ellipse, order of polynomial, sigma threshold at which bright pixels cut off, downsampling factor to use, boolean of whether to only apply polynomial if it makes significant difference to image
-# Output: Poynomial-filtered array, array of the polynomial filter
+# Returns: Poynomial-filtered array, array of the polynomial filter
 def PolySub(image_in, mask_centre_i, mask_centre_j, mask_semimaj_pix, mask_axial_ratio, mask_angle, poly_order=5, cutoff_sigma=2.0, downsample=1.0, change_check=False):
 
     # If requested, downsample image to improve processing time
@@ -356,7 +356,7 @@ def PolySub(image_in, mask_centre_i, mask_centre_j, mask_semimaj_pix, mask_axial
 
 # Function that provides Galactic extinction correction, via IRSA dust extinction service (which uses the Schlafly & Finkbeiner 2011 prescription)
 # Args: RA of target coord (deg), dec of target coord (deg), name of band of interest, (boolean of whether function should be verbose, and meaningless verbose output prefix string)
-# Output: Extinction correction factor (ie, multiply uncorrected flux by this value to yield corrected flux)
+# Returns: Extinction correction factor (ie, multiply uncorrected flux by this value to yield corrected flux)
 def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
 
     # Make sure there's a space at the end of the verbose prefix
@@ -469,7 +469,7 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
 
 # A function to determine what particular band a given band name refers to
 # Args: The band name to be parsed
-# Output: The parsed band name
+# Returns: The parsed band name
 def BandParse(band_name_target):
 
     # Define dictionary containing lists of possible alternate names for each band
@@ -677,7 +677,7 @@ def ColourCorrect(wavelength, source_spec, band_filter, ref_spec=None, trans_dic
 
 # Function to find uncertainty in an array, in terms of distance from given value, out to a certain percentile limit
 # Args: Array of numbers to find uncertainty of, percentile range to find uncertainty out to, boolean of whether to return up-and-down bound values
-# Output: Percentile uncertainty
+# Returns: Percentile uncertainty
 def PercentileError(data, value, percentile=68.27, bounds=False):
     data = Nanless(data)
     percentile = np.float(percentile)
@@ -707,7 +707,7 @@ def ChiDist(data_1, err_1, data_2, err_2):
 
 # Function to trim an array to a given size
 # Args: Array to be trimmed, i & j coordinates of centre of trimmed region, width of trimmed region
-# Output: Trimmed array
+# Returns: Trimmed array
 def Trim(data, i_centre, j_centre, width):
     box_rad  = int(round(float(width)/2.0))
     i_cutout_min = max([0, i_centre-box_rad])
@@ -723,7 +723,7 @@ def Trim(data, i_centre, j_centre, width):
 
 # Function that normalises an array so that its values range from 0 to 1
 # Args: Array to be normalised, optional percentile for max normalisation, optional percentile for min normalisation
-# Output: Normalised array
+# Returns: Normalised array
 def Normalise(data, percentile_max=100, percentile_min=0):
     data -= np.percentile(data, percentile_min)
     data /= np.percentile(data, percentile_max)
@@ -733,7 +733,7 @@ def Normalise(data, percentile_max=100, percentile_min=0):
 
 # Function to calculate dust mass
 # Args: Flux (Jy), distance (pc), wavelength (m), temperature (K), kappa at 850um (m^2 kg^-1), dust emissivity index
-# Output: Dust mass (Msol)
+# Returns: Dust mass (Msol)
 def DustMass(S, parsecs, wavelength, T, kappa850=0.077, beta=2.0):
     c = 3E8
     h = 6.64E-34
@@ -752,7 +752,7 @@ def DustMass(S, parsecs, wavelength, T, kappa850=0.077, beta=2.0):
 
 # Function to calculate normalisation constant Omega of a particular set of greybody attributes
 # Args: Dust mass (Msol), distance (pc), list of [kappa reference wavelength, kappa], beta
-# Output: Omega (NOT RENDERED IN JANSKYS)
+# Returns: Omega (NOT RENDERED IN JANSKYS)
 def OmegaSED(M, D, kappa_list=[850E-6, 0.077], beta=2.0):
     nu_0 = 3E8 / kappa_list[0]
     kappa_0 = kappa_list[1]
@@ -765,7 +765,7 @@ def OmegaSED(M, D, kappa_list=[850E-6, 0.077], beta=2.0):
 
 # Function that uses Driver & Robotham (2010) foruma to give percentage cosmic variance
 # Args: Survey volume (in Mpc^3, assuming H0=70 km s^-1 Mpc^-1), number of survey fields, survey field aspect ratio
-# Output: Percentage cosmic variance
+# Returns: Percentage cosmic variance
 def CosmicVariance(v, n, x):
     v, n, x = float(v), float(n), float(x)
     first_term = 1.00 - ( 0.03 * np.sqrt(x-1.0) )
@@ -777,7 +777,7 @@ def CosmicVariance(v, n, x):
 
 # Function to convert the bin-edge output of np.histogram to be bin-centred (and this of same dimensions as bin totals)
 # Args: Array of bin edges
-# Output: Array of bin centres
+# Returns: Array of bin centres
 def HistBinMerge(bin_edges):
     bin_edges = np.array(bin_edges)
     bin_centres = np.zeros([bin_edges.shape[0]-1])
@@ -789,7 +789,7 @@ def HistBinMerge(bin_edges):
 
 # Function to plot histogram of input data
 # Args: Array of data to be fit
-# Output: (plot of data)
+# Returns: (plot of data)
 def HistPlot(data, n_bins=25, show=True):
     fig = plt.figure(1)
     ax = fig.add_subplot(111)
@@ -802,7 +802,7 @@ def HistPlot(data, n_bins=25, show=True):
 
 # Function to perform gaussian fit to data
 # Args: Array of data to be fit
-# Output: Mean of fit, standard deviation of fit
+# Returns: Mean of fit, standard deviation of fit
 def GaussFit(data, n_bins=50):
     def QuickGauss(x, *p):
         A, mu, sigma = p
@@ -817,7 +817,7 @@ def GaussFit(data, n_bins=50):
 
 # Function to perform gaussian fit to data, and perform plot of data and fit
 # Args: Array of data to be fit
-# Output: Mean of fit, standard deviation of fit (,plot of data and fit)
+# Returns: Mean of fit, standard deviation of fit (,plot of data and fit)
 def GaussFitPlot(data, n_bins=50, show=True):
     def QuickGauss(x, *p):
         A, mu, sigma = p
@@ -842,7 +842,7 @@ def GaussFitPlot(data, n_bins=50, show=True):
 
 # Function to quickly save a FITS image to file
 # Args: Array to be saved, path to which to save file
-# Output: None
+# Returns: None
 def Cutout(array, path='E:\\Work\\Cutout.fits'):
     array_hdu = astropy.io.fits.PrimaryHDU(array)
     try:
@@ -855,7 +855,7 @@ def Cutout(array, path='E:\\Work\\Cutout.fits'):
 
 # Function to quickly write a list to a text file
 # Args: List to be written
-# Output: File to write to
+# Returns: File to write to
 def QuickWrite(data, outfile, sublists=False):
     outfile = open('/home/herdata/spx7cjc/Dropbox/Work/Tables/DustPedia/DustPedia_SPIRE_Cutouts_File_List.dat', 'w')
     if sublists:
@@ -950,7 +950,7 @@ def ErrABMagsToJy(err, mag):
 
 # Function to convery absolute AB pogson magnitudes into solar luminosities
 # Args: Absolute AB pogson magnitude (Mags)
-# Output: Luminosity (Lsol):
+# Returns: Luminosity (Lsol):
 def ABAbsToLsol(Mag):
     Lsol = 10.0**( (4.58 - Mag ) / 2.51 )
     return Lsol
@@ -983,7 +983,7 @@ def GALEXMagsToCounts(mag,w):
 
 # Function to convert an RMS deviation in relative linear flux to magnitudes
 # Args: Relative RMS deviation in flux
-# Output: RMS deviation in mangitude
+# Returns: RMS deviation in mangitude
 def RMSFluxToMags(S_rms):
     M_rms = abs( 2.5 * np.log10(1.0-S_rms) )
     return M_rms
@@ -992,7 +992,7 @@ def RMSFluxToMags(S_rms):
 
 # Function to convert an RMS deviation in magnitude to relative linear flux
 # Args: RMS deviation in magnitude
-# Output: RMS deviation in relative flux
+# Returns: RMS deviation in relative flux
 def RMSMagsToFlux(m_rms):
     S_rms = 1.0 - abs( 10.0**(m_rms/-2.5) )
     return S_rms
@@ -1001,7 +1001,7 @@ def RMSMagsToFlux(m_rms):
 
 # New function to convert an uncertainty to log space
 # Args: Value, uncertainty
-# Output: Logarithmic uncertainty
+# Returns: Logarithmic uncertainty
 def LogError(value, error):
     value, error = np.array(value), np.array(error)
     frac = 1.0 + (error/value)
@@ -1015,7 +1015,7 @@ def LogError(value, error):
 
 # Function to convert a logarithmic uncertainty to linear space
 # Args: Logarithmic value, logarithmic uncertainty, boolean of whether average unlogged errors or return them asymetrically
-# Output: Linear uncertainty
+# Returns: Linear uncertainty
 def UnlogError(log_value, log_error, bounds=False):
     if bounds==False:
         value = 10**log_value
@@ -1036,7 +1036,7 @@ def UnlogError(log_value, log_error, bounds=False):
 
 # Function which takes a scipy.interpolate.interp1d interpolator object, and uses it to create a function for linear extrapolation
 # Args: Interpolator object from scipy.interpolate.interp1d
-# Output: Function to give result of linear extrapolation
+# Returns: Function to give result of linear extrapolation
 def Extrap1D(interpolator):
     xs = interpolator.x
     ys = interpolator.y
@@ -1058,7 +1058,7 @@ def Extrap1D(interpolator):
 
 # Funtion which takes a (presumably bootstrap) distribution, and a best fit value, and returns the confidence intervals up and down
 # Args: Best fit value, array of distribution, boolean for whether intervals should be in log space, sigma clipping threshold, booleon for whether to sigmap clip with median
-# Output: List of interval distance from best fit, down and up
+# Returns: List of interval distance from best fit, down and up
 def DisIntervals(best_fit, dis, log_space=False, sigma_thresh=3.0, median=False):
     dis = np.array(dis)
     if log_space==False:
@@ -1073,7 +1073,7 @@ def DisIntervals(best_fit, dis, log_space=False, sigma_thresh=3.0, median=False)
 
 # Function to generate appropriate dimensions plot divisions of a figure in along a given direction
 # Args: Index of plot element in question, total number of plot elements, dimension of figure, x or y axis,
-# Output: Starting position of plot, dimension of plot
+# Returns: Starting position of plot, dimension of plot
 def GridPos(n_plot, n_tot, img_dim, axis='y', nonstandard=False, gaps=False):
     if nonstandard>0:
         base = nonstandard
@@ -1099,7 +1099,7 @@ def GridPos(n_plot, n_tot, img_dim, axis='y', nonstandard=False, gaps=False):
 
 # Function to find the Sheather-Jones bandwidth estimator (Sheather & Jones, 1991), adapted from: https://github.com/Neojume/pythonABC
 # Args: Array of values of which bandwidth will be found
-# Output: Sheather-Jones bandwidth of array
+# Returns: Sheather-Jones bandwidth of array
 def SheatherJonesBW(x, weights=None):
 
     # Define Equation 12 from Sheather & Jones (1991)
@@ -1162,7 +1162,7 @@ def SheatherJonesBW(x, weights=None):
 
 # Function to remove all NaN entries from an array
 # Args: Array to be cleansed
-# Output: Purified array
+# Returns: Purified array
 def Nanless(bad):
     bad = np.array(bad)
     good = bad[np.where(np.isnan(bad)==False)]
@@ -1172,7 +1172,7 @@ def Nanless(bad):
 
 # Function to add in quadrature all of the (non-NaN) elements of an array:
 # Args: Array to be added in quadrature
-# Output: Quadrature sum of values
+# Returns: Quadrature sum of values
 def AddInQuad(values):
     values = np.array(values)
     values = Nanless(values)
@@ -1185,7 +1185,7 @@ def AddInQuad(values):
 
 # Function to aappend an arbitrarily long list of arrays into 1 array:
 # Args: List of numpy arrays
-# Output: One big appended (1D) numpy array
+# Returns: One big appended (1D) numpy array
 def PanAppend(arr_list):
     n_arr = len(arr_list)
     arr_app = np.array([])
@@ -1197,7 +1197,7 @@ def PanAppend(arr_list):
 
 # Function to add in quadrature all of the (non-NaN) elements of an array:
 # Args: Array to be added in quadrature
-# Output: Quadrature sum of values
+# Returns: Quadrature sum of values
 def NanlessKS(array1,array2):
     output = scipy.stats.ks_2samp(Nanless(array1), Nanless(array2))
     return output[1]
@@ -1206,7 +1206,7 @@ def NanlessKS(array1,array2):
 
 # Function to wget a file from a given URL to a given directory
 # Args: String of target url, string of output filepath, boolean for clobbering, boolean for auto-retrying, boolean for verbosity
-# Output: None
+# Returns: None
 def wgetURL(url, filename, overwrite=True, auto_retry=False):
     if os.path.exists(filename):
         if overwrite:
@@ -1233,7 +1233,7 @@ def wgetURL(url, filename, overwrite=True, auto_retry=False):
 
 # Function to estimate time until a task completes
 # Args: List of time taken by each iteration in units of seconds since Unix epoch, total number of iterations
-# Output: Python time string of estimated time/date of completion
+# Returns: Python time string of estimated time/date of completion
 def TimeEst(time_list, total, plot=False, raw=False):
 
     # Convert times into log space, fit trend, project, and un-log
@@ -1352,7 +1352,7 @@ def ProgressDir(prog_dir, iter_total, raw=False):
 
 # Function to quickly pickle a variable
 # Args: Variable to be pickled, name of picklejar, picklejar path
-# Output: None
+# Returns: None
 def Pickle(var, name, path='E:\\Users\\Chris\\Dropbox\\Work\\Scripts\\Pickle Jars\\'):
     pickle.dump( var, open( path+name+'.pj', 'wb' ) )
 
@@ -1360,7 +1360,7 @@ def Pickle(var, name, path='E:\\Users\\Chris\\Dropbox\\Work\\Scripts\\Pickle Jar
 
 # Function to quickly unpickle a variable
 # Args: Name of picklejar, name to be assigned to unpickled variable, picklejar path
-# Output: Unpickeled variable
+# Returns: Unpickeled variable
 def Unpickle(name, path='E:\\Users\\Chris\\Dropbox\\Work\\Scripts\\Pickle Jars\\'):
     var = pickle.load( open( path+name+'.pj', 'rb' ) )
     return var
@@ -1369,7 +1369,7 @@ def Unpickle(name, path='E:\\Users\\Chris\\Dropbox\\Work\\Scripts\\Pickle Jars\\
 
 # Function from StackOverflow (ideasman42) that recursively reloads all submodules of a package
 # Args: Package to reload submodules of
-# Output: None
+# Returns: None
 def ReloadPackage(package):
     assert(hasattr(package, "__package__"))
     fn = package.__file__

@@ -592,11 +592,11 @@ def TransmissionDict(path=None):
 
 
 # Function to colour correct a flux density, for a given source SED, reference SED, and response curve
-# Args: Wavelength of source flux density, the source spectrum (a Nx2 array of wavelengths and fluxes),
+# Args: Wavelength of source flux density (in metres), the source spectrum (a Nx2 array, of wavelengths in metres, and fluxes in whatever),
     # the band filter (either a string giving name of a filter in Transmissions.dat, or a Nx2 array of wavelenghts in metres, and transmission fractions),
 # Kwargs: Reference spectrum (a Nx2 array of wavelengths in metres, and fluxes; although this can be left to None if this band is in Transmissions.dat),
     # a dictionary containing transmission curves (optional, in case a custom dictionary is desired; must be in same format as yielded by TransmissionDict)
-    # and a boolean for unsafe failing, where a correction factor of 1 will be retunred if band name not recognised
+    # and a boolean for fail-unsafe mode (where a correction factor of 1 will be returned if band name not recognised)
 # Returns: Colour correction factor (yes, FACTOR)
 def ColourCorrect(wavelength, source_spec, band_filter, ref_spec=None, trans_dict=None, fail_unsafe=False):
 

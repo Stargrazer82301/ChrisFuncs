@@ -3,4 +3,3 @@ __all__ = ['ChrisFuncs','Photom','Coadd','Fits','FromGitHub']
 from .ChrisFuncs import *
 #from . import Photom
 #from . import Coadd
-from . import FromGitHub

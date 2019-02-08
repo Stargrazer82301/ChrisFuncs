@@ -264,3 +264,4 @@ def FitsRGB(ra, dec, rad_arcsec, in_paths, out_dir, pmin=False, pmax=False, stre
                          vmax_r=vmax_list[0], vmax_g=vmax_list[1], vmax_b=vmax_list[2])
 
     # Clean up temporary files
+    [os.remove(path_zoomed) for path_zoomed in path_zoomed_list]

@@ -283,3 +283,9 @@ def MsolSqpcToPix(img, hdr, dist, inverse=True):
         return img * pix_area_sqpc
 
 
+
+# Define function to convert data from Msol/pix to Msol/sqpc (this just calls MsolSqpcToPix with the inverse keyword set)
+# Inputs: Numpy array of data in units of Msol/sqpc; the fits header for those data; distance to source in pc
+# Outputs: Numpy array with data in units of Msol/pix
+def MsolPixToSqpc(img, hdr, dist):
+    return MsolSqpcToPix(img, hdr, dist, inverse=True)

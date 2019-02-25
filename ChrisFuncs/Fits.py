@@ -265,3 +265,21 @@ def FitsRGB(ra, dec, rad_arcsec, in_paths, out_dir, pmin=False, pmax=False, stre
 
     # Clean up temporary files
     [os.remove(path_zoomed) for path_zoomed in path_zoomed_list]
+
+
+
+# Define function to convert data from Msol/sqpc to Msol/pix
+# Inputs: Numpy array of data in units of Msol/sqpc; the fits header for those data; distance to source in pc; (a boolean for if to calculate Msol/pix to Msol/sqpc instead)
+# Outputs: Numpy array with data in units of Msol/pix
+def MsolSqpcToPix(img, hdr, dist, inverse=True):
+    wcs = astropy.wcs.WCS(hdr)
+    wcs_pix_matrix = wcs.pixel_scale_matrix
+    pix_width_deg = np.mean(np.abs(wcs_pix_matrix[np.where(wcs_pix_matrix!=0)]))
+    pix_width_pc = dist * 2.0 * np.tan(0.5 * np.deg2rad(pix_width_deg)) # As (O/2) = A tan(theta/2)
+    pix_area_sqpc = pix_width_pc**2.0
+    if not inverse:
+        return img / pix_area_sqpc
+    elif inverse:
+        return img * pix_area_sqpc
+
+

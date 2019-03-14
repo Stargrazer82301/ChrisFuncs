@@ -271,31 +271,31 @@ def FitsRGB(ra, dec, rad_arcsec, in_paths, out_dir, pmin=False, pmax=False, stre
 # Define function to convert data from Msol/sqpc to Msol/pix
 # Inputs: Numpy array (or just a float) of data in units of Msol/sqpc; the fits header for those data; distance to source in pc; (a boolean for if to calculate Msol/pix to Msol/sqpc instead)
 # Outputs: Numpy array (or just a float) with data in units of Msol/pix
-def MsolSqpcToPix(img, hdr, dist, inverse=False):
+def MsolSqpcToMsolPix(img, hdr, dist, inverse=False):
     wcs = astropy.wcs.WCS(hdr)
     wcs_pix_matrix = wcs.pixel_scale_matrix
     pix_width_deg = np.mean(np.abs(wcs_pix_matrix[np.where(wcs_pix_matrix!=0)]))
     pix_width_pc = dist * 2.0 * np.tan(0.5 * np.deg2rad(pix_width_deg)) # As (O/2) = A tan(theta/2)
     pix_area_sqpc = pix_width_pc**2.0
     if not inverse:
-        return img / pix_area_sqpc
-    elif inverse:
         return img * pix_area_sqpc
+    elif inverse:
+        return img / pix_area_sqpc
 
 
 
 # Define function to convert data from Msol/pix to Msol/sqpc (this just calls MsolSqpcToPix with the inverse keyword set)
 # Inputs: Numpy array (or just a float) of data in units of Msol/sqpc; the fits header for those data; distance to source in pc
 # Outputs: Numpy array (or just a float) with data in units of Msol/pix
-def MsolPixToSqpc(img, hdr, dist):
-    return MsolSqpcToPix(img, hdr, dist, inverse=True)
+def MsolPixToMsolSqpc(img, hdr, dist):
+    return MsolSqpcToMsolPix(img, hdr, dist, inverse=True)
 
 
 
 # Define function to convert MJy/sr surface brightness to Jy flux
 # Inputs: Numpy array (or just a float) of data in units of MJy/sr; the fits header for those data; (a boolean for if to calculate Jy to MJy/sr instead)
 # Outputs: Numpy array (or just a float) with data in units of Jy
-def MJySrToJy(img, hdr, inverse=False):
+def MJySrToJyPix(img, hdr, inverse=False):
     wcs = astropy.wcs.WCS(hdr)
     pix_scale_matrix = wcs.pixel_scale_matrix
     pix_width_deg = np.mean(np.abs(pix_scale_matrix[np.where(pix_scale_matrix!=0)]))
@@ -312,5 +312,5 @@ def MJySrToJy(img, hdr, inverse=False):
 # Define function to convert MJy/sr surface brightness to Jy flux
 # Inputs: Numpy array (or just a float) of data in units of MJy/sr; the fits header for those data; (a boolean for if to calculate Jy to MJy/sr instead)
 # Outputs: Numpy array (or just a float) with data in units of Jy
-def JyToMJySr(img, hdr):
-    return MJySrToJy(img, hdr, inverse=True)
+def JyPixToMJySr(img, hdr):
+    return MJySrToJyPix(img, hdr, inverse=True)

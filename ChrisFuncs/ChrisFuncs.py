@@ -559,7 +559,7 @@ def TransmissionDict(path=None):
 
     # If no path given, assume Tramsissions.dat file is in same directory as script
     if path == None:
-        os.path.join(os.path.dirname(os.path.realpath(__file__)),'Transmissions.dat')
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),'Transmissions.dat')
 
     # Read in transmission curves file, and loop over lines
     trans_dict = {'refs':{}}

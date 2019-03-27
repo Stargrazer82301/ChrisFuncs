@@ -1212,7 +1212,7 @@ def wgetURL(url, filename, overwrite=True, auto_retry=False):
         if overwrite:
             os.remove(filename)
         else:
-            raise ValueError('Output file already exists; if you\'re happy to overwrite it, re-run wgetURL with overwrite=True.')
+            raise Exception('Output file already exists; if you\'re happy to overwrite it, re-run wgetURL with overwrite=True.')
     success = False
     while success==False:
         try:
@@ -1227,7 +1227,7 @@ def wgetURL(url, filename, overwrite=True, auto_retry=False):
             time.sleep(0.1)
             success = False
             if not auto_retry:
-                raise ValueError('Unsuccessful wget attempt.')
+                raise Exception('Unsuccessful wget attempt.')
 
 
 

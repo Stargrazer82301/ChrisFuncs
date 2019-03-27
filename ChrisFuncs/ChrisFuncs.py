@@ -693,18 +693,6 @@ def PercentileError(data, value, percentile=68.27, bounds=False):
 
 
 
-# Function to find the chi distribution in the deviation between two sets of values, each of which has an assocatiated uncertainty
-def ChiDist(data_1, err_1, data_2, err_2):
-    if np.array(data_1).shape[0] != np.array(data_2).shape[0]:
-        raise ValueError('Sets of values are different lengths')
-    chi = []
-    for i in range(0, np.array(data_1).shape[0]):
-        err_mutual = np.sqrt( err_1[i]**2.0 + err_2[i]**2.0 )
-        chi.append( (data_1[i]-data_2[i]) / err_mutual )
-    return np.array(chi)
-
-
-
 # Function to trim an array to a given size
 # Args: Array to be trimmed, i & j coordinates of centre of trimmed region, width of trimmed region
 # Returns: Trimmed array
@@ -718,16 +706,6 @@ def Trim(data, i_centre, j_centre, width):
     i_centre = (int(round(float(trimmed.shape[0])/2.0))+1) + ( (i_centre-box_rad) - (int(round(i_cutout_min))) )
     j_centre = (int(round(float(trimmed.shape[1])/2.0))+1) + ( (j_centre-box_rad) - (int(round(j_cutout_min))) )
     return trimmed, [i_centre, j_centre]
-
-
-
-# Function that normalises an array so that its values range from 0 to 1
-# Args: Array to be normalised, optional percentile for max normalisation, optional percentile for min normalisation
-# Returns: Normalised array
-def Normalise(data, percentile_max=100, percentile_min=0):
-    data -= np.percentile(data, percentile_min)
-    data /= np.percentile(data, percentile_max)
-    return data
 
 
 
@@ -747,19 +725,6 @@ def DustMass(S, parsecs, wavelength, T, kappa850=0.077, beta=2.0):
     D = parsecs * 3.26 * 9.5E15
     M = (S*1E-26 * D**2.0) / (kappa * B)
     return M / 2E30
-
-
-
-# Function to calculate normalisation constant Omega of a particular set of greybody attributes
-# Args: Dust mass (Msol), distance (pc), list of [kappa reference wavelength, kappa], beta
-# Returns: Omega (NOT RENDERED IN JANSKYS)
-def OmegaSED(M, D, kappa_list=[850E-6, 0.077], beta=2.0):
-    nu_0 = 3E8 / kappa_list[0]
-    kappa_0 = kappa_list[1]
-    M_kilograms = M * 2E30
-    D_metres = D * 3.26 * 9.5E15
-    Omega = kappa_0 * nu_0**-beta * D_metres**-2.0 * M_kilograms
-    return Omega
 
 
 
@@ -840,31 +805,6 @@ def GaussFitPlot(data, n_bins=50, show=True):
 
 
 
-# Function to quickly save a FITS image to file
-# Args: Array to be saved, path to which to save file
-# Returns: None
-def Cutout(array, path='E:\\Work\\Cutout.fits'):
-    array_hdu = astropy.io.fits.PrimaryHDU(array)
-    try:
-        array_hdu.writeto(path)
-    except:
-        os.remove(path)
-        array_hdu.writeto(path)
-
-
-
-# Function to quickly write a list to a text file
-# Args: List to be written
-# Returns: File to write to
-def QuickWrite(data, outfile, sublists=False):
-    outfile = open('/home/herdata/spx7cjc/Dropbox/Work/Tables/DustPedia/DustPedia_SPIRE_Cutouts_File_List.dat', 'w')
-    if sublists:
-        data = [ ','.join(subdata) for subdata in data ]
-    outfile.write('\n'.join(data))
-    outfile.close()
-
-
-
 # Function to convert an observed brightness into a luminosity
 # Args: Flux (Jy), distance (pc) frequency or boolean for nuSnu luminosity (Hz or False), boolean to switch flux input to AB magnitudes
 # Output; Luminosity in bolometric solar luminosities
@@ -905,17 +845,6 @@ def GAMACountsToMags(GAMA):
 def GAMAMagsToCounts(mag):
     GAMA = 10.0**( (30.0-mag) / 2.5 )
     return GAMA
-
-
-
-# Function to convert an uncertainty in AB pogson magnitudes to an uncertainty in GAMA data units
-# Args: Uncertainty to be converted (mags), and its associated measurement (mags)
-# Returns: Uncertainty in flux density (Jy)
-def ErrGAMAMagsToCounts(err, mag):
-    counts_down = GAMAMagsToCounts(mag) - GAMAMagsToCounts(mag + err)
-    counts_up = GAMAMagsToCounts(mag - err) - GAMAMagsToCounts(mag)
-    counts = ( counts_down + counts_up ) / 2.0
-    return counts
 
 
 
@@ -1056,21 +985,6 @@ def Extrap1D(interpolator):
 
 
 
-# Funtion which takes a (presumably bootstrap) distribution, and a best fit value, and returns the confidence intervals up and down
-# Args: Best fit value, array of distribution, boolean for whether intervals should be in log space, sigma clipping threshold, booleon for whether to sigmap clip with median
-# Returns: List of interval distance from best fit, down and up
-def DisIntervals(best_fit, dis, log_space=False, sigma_thresh=3.0, median=False):
-    dis = np.array(dis)
-    if log_space==False:
-        dis_clip = SigmaClip(dis, sigma_thresh=sigma_thresh, median=median)
-    if log_space==True:
-        dis_clip = SigmaClip(np.log10(dis), sigma_thresh=sigma_thresh, median=median)
-    int_down = np.abs( dis_clip[1] - (dis_clip[1]-dis_clip[0]) )
-    int_up = np.abs( dis_clip[1] - (dis_clip[1]-dis_clip[0]) )
-    return [int_down, int_up]
-
-
-
 # Function to generate appropriate dimensions plot divisions of a figure in along a given direction
 # Args: Index of plot element in question, total number of plot elements, dimension of figure, x or y axis,
 # Returns: Starting position of plot, dimension of plot
@@ -1192,15 +1106,6 @@ def PanAppend(arr_list):
     for i in range(0,n_arr):
         arr_app = np.append( arr_app, np.array( arr_list[i] ) )
     return arr_app
-
-
-
-# Function to add in quadrature all of the (non-NaN) elements of an array:
-# Args: Array to be added in quadrature
-# Returns: Quadrature sum of values
-def NanlessKS(array1,array2):
-    output = scipy.stats.ks_2samp(Nanless(array1), Nanless(array2))
-    return output[1]
 
 
 
@@ -1346,47 +1251,6 @@ def ProgressDir(prog_dir, iter_total, raw=False):
         # Return results
         return iter_complete, time_est
 
-
-
-
-
-# Function to quickly pickle a variable
-# Args: Variable to be pickled, name of picklejar, picklejar path
-# Returns: None
-def Pickle(var, name, path='E:\\Users\\Chris\\Dropbox\\Work\\Scripts\\Pickle Jars\\'):
-    pickle.dump( var, open( path+name+'.pj', 'wb' ) )
-
-
-
-# Function to quickly unpickle a variable
-# Args: Name of picklejar, name to be assigned to unpickled variable, picklejar path
-# Returns: Unpickeled variable
-def Unpickle(name, path='E:\\Users\\Chris\\Dropbox\\Work\\Scripts\\Pickle Jars\\'):
-    var = pickle.load( open( path+name+'.pj', 'rb' ) )
-    return var
-
-
-
-# Function from StackOverflow (ideasman42) that recursively reloads all submodules of a package
-# Args: Package to reload submodules of
-# Returns: None
-def ReloadPackage(package):
-    assert(hasattr(package, "__package__"))
-    fn = package.__file__
-    fn_dir = os.path.dirname(fn) + os.sep
-    module_visit = {fn}
-    del fn
-    def reload_recursive_ex(module):
-        importlib.reload(module)
-        for module_child in vars(module).values():
-            if isinstance(module_child, types.ModuleType):
-                fn_child = getattr(module_child, "__file__", None)
-                if (fn_child is not None) and fn_child.startswith(fn_dir):
-                    if fn_child not in module_visit:
-                        # print("reloading:", fn_child, "from", module)
-                        module_visit.add(fn_child)
-                        reload_recursive_ex(module_child)
-    return reload_recursive_ex(package)
 
 
 

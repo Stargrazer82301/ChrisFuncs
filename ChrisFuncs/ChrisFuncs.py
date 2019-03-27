@@ -615,7 +615,7 @@ def ColourCorrect(wavelength, source_spec, band_filter, ref_spec=None, trans_dic
         if trans_dict == None:
             trans_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),'Transmissions.dat')
             if os.path.exists(trans_path):
-                trans_dict = copy.deepcopy(TransmissionDict(trans_path))
+                trans_dict = TransmissionDict(trans_path)
             else:
                 raise Exception('Dictionary of band transmissions not given, and no Transmissions.dat file found in same directory as script')
 
@@ -626,7 +626,7 @@ def ColourCorrect(wavelength, source_spec, band_filter, ref_spec=None, trans_dic
             else:
                 raise Exception('Reqested filter not in database of common filters; please provide as an array instead')
         else:
-            band_filter = copy.deepcopy(trans_dict[band_filter])
+            band_filter = trans_dict[band_filter].copy()
             band_filter[:,0] /= 1E6
 
     # Check if reference spectrum present in transmission dictionary; if it is, construct spectrum array

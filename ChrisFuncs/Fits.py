@@ -341,6 +341,30 @@ def MontageWrapperWrapper(in_fitsdata, in_hdr, montage_path=None, temp_path=None
 
 
 
+# Function to get the pixel width of some FITS data
+# Input: Etiher a string to a FITS file, or an astropy.io.fits.Header object, or an astropy.wcs.WCS object
+def PixWidthArcsec(in_data):
+
+    # If input is string, read in header from file, and grab WCS
+    if isinstance(in_data, str):
+        in_hdr = astropy.io.fits.getheader(in_data)
+        in_wcs = astropy.wcs.WCS(in_hdr)
+
+    # If input is header, grab WCS
+    if isinstance(in_data, astropy.io.fits.Header):
+        in_hdr = in_data
+        in_wcs = astropy.wcs.WCS(in_hdr)
+
+    # If input is WCS object, note as such
+    if isinstance(in_data, astropy.wcs.WCS):
+        in_wcs = in_data
+
+    # Calculate pixel width, and return
+    pix_width_arcsec = 3600.0 * np.abs( np.max( in_wcs.pixel_scale_matrix ) )
+    return pix_width_arcsec
+
+
+
 # Define function to convert data from Msol/sqpc to Msol/pix
 # Inputs: Numpy array (or just a float) of data in units of Msol/sqpc; the fits header for those data; distance to source in pc; (a boolean for if to calculate Msol/pix to Msol/sqpc instead)
 # Outputs: Numpy array (or just a float) with data in units of Msol/pix

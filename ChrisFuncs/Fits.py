@@ -156,6 +156,7 @@ def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
 
     # Create empty header, and set map dimensions in it
     header = astropy.io.fits.Header()
+    header.set('BITPIX', -64)
     header.set('WCSAXES', 2)
     header.set('NAXIS', 2)
     header.set('NAXIS1', map_width_pix)

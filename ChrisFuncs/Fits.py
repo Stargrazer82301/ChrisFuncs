@@ -274,67 +274,56 @@ def FitsRGB(ra, dec, rad_arcsec, in_paths, out_dir, pmin=False, pmax=False, stre
 
 
 # Define function to run montage_wrapper in a temp file, and tidy up when done (a Montate wrapper wrapper, if you will)
-# Inputs: FITS data to be reprojected, being either an astropy.io.fits.HDU object, or path to FITS file; header to reproject to, being either an astropy.io.fits.Header object, or a string to an mHdr-type text file; (path to directory holding Montage commands, in case this is not already part of the system PATH; path to directory to place temporary files in, in case you have a strong perference in this regard)
+# Inputs: FITS data to be reprojected, being either an astropy.io.fits.HDU object, or path to FITS file; header to reproject to, being either an astropy.io.fits.Header object, or a string to an mHdr-type text file; (path to directory holding Montage commands, in case this is not already part of the system PATH; path to directory to place temporary files in, in case you have a strong perference in this regard; which FITS extension HDU to use)
 # Returns: Array of reprojected data
-def MontageWrapperWrapper(in_fitsdata, in_hdr, montage_path=None, temp_path=None):
+def MontageWrapperWrapper(in_fitsdata, in_hdr, montage_path=None, temp_path=None, exten=None):
 
-    # Define inner function, so we can do everything else inside a process
-    def MontageWrapperWrapperWrapper(in_fitsdata, in_hdr, manager, montage_path=None, temp_path=None):
+    # Handle Montage path, if kwargs provided
+    if montage_path != None:
+        os.environ['PATH'] += ':'+montage_path
+    import montage_wrapper
 
-        # Handle Montage path, if kwargs provided
-        if montage_path != None:
-            os.environ['PATH'] += ':'+montage_path
-        import montage_wrapper
+    # Produce on-the-fly temporary file
+    timestamp = str(time.time()).replace('.','-')
+    if isinstance(temp_path, str):
+        temp_dir = temp_path
+    else:
+        temp_dir = tempfile.mkdtemp()
 
-        # Produce on-the-fly temporary file
-        timestamp = str(time.time()).replace('.','-')
-        if isinstance(temp_path, str):
-            temp_dir = tempfile.mkdtemp(dir=temp_path)
+    # If FITS data provided is path to file, record that path; else if FITS data provided is an astropy HDUList object, write it to the temporary directory
+    if isinstance(in_fitsdata, basestring):
+        if os.path.exists(in_fitsdata):
+            in_fits_path = in_fitsdata
         else:
-            temp_dir = tempfile.mkdtemp()
+            raise Exception('No FITS file at path provided')
+    elif isinstance(in_fitsdata, astropy.io.fits.hdu.image.PrimaryHDU) or isinstance(in_fitsdata, astropy.io.fits.hdu.image.ImageHDU):
+        in_fits_path = os.path.join(temp_dir,'temp_in_'+timestamp+'.fits')
+        in_fitsdata = astropy.io.fits.HDUList([in_fitsdata])
+        in_fitsdata.writeto(in_fits_path)
 
-        # If FITS data provided is path to file, record that path; else if FITS data provided is an astropy HDUList object, write it to the temporary directory
-        if isinstance(in_fitsdata, basestring):
-            if os.path.exists(in_fitsdata):
-                in_fits_path = in_fitsdata
-            else:
-                raise Exception('No FITS file at path provided')
-        elif isinstance(in_fitsdata, astropy.io.fits.hdu.image.PrimaryHDU) or isinstance(in_fitsdata, astropy.io.fits.hdu.image.ImageHDU):
-            in_fits_path = os.path.join(temp_dir,'temp_in_'+timestamp+'.fits')
-            in_fitsdata = astropy.io.fits.HDUList([in_fitsdata])
-            in_fitsdata.writeto(in_fits_path)
+    # If header provided is path to file, record that path; else if header previded is a astropy Header object, write it to the temporary directory
+    if isinstance(in_hdr, basestring):
+        if os.path.exists(in_hdr):
+            hdr_path = in_hdr
+        else:
+            raise Exception('No header file at path provided')
+    elif isinstance(in_hdr, astropy.io.fits.Header):
+        hdr_path = os.path.join(temp_dir,'temp_header_'+timestamp+'.hdr')
+        in_hdr.totextfile(hdr_path)
 
-        # If header provided is path to file, record that path; else if header previded is a astropy Header object, write it to the temporary directory
-        if isinstance(in_hdr, basestring):
-            if os.path.exists(in_hdr):
-                hdr_path = in_hdr
-            else:
-                raise Exception('No header file at path provided')
-        elif isinstance(in_hdr, astropy.io.fits.Header):
-            hdr_path = os.path.join(temp_dir,'temp_header_'+timestamp+'.hdr')
-            in_hdr.totextfile(hdr_path)
+    # Reproject data with montage_wrapper
+    out_fits_path = os.path.join(temp_dir,'temp_out_'+timestamp+'.fits')
+    montage_wrapper.reproject(in_fits_path, out_fits_path, hdr_path, exact_size=True, hdu=exten)
+    out_img = astropy.io.fits.getdata(out_fits_path)
 
-        # Reproject data with montage_wrapper
-        out_fits_path = os.path.join(temp_dir,'temp_out_'+timestamp+'.fits')
-        montage_wrapper.reproject(in_fits_path, out_fits_path, hdr_path, exact_size=True)
-        out_img = astropy.io.fits.getdata(out_fits_path)
+    # If temporary files were placed inside user-supplied temporary directory, delete those files individually
+    if isinstance(temp_path, str):
+        os.remove(hdr_path)
+        os.remove(out_fits_path)
 
-        # Return output image array, and path to temporary directory
-        manager['out_img'] = out_img
-        manager['temp_dir'] = temp_dir
-
-    # Run inner function, as defined above, in a process, with results passed to a manager dictionary
-    manager = mp.Manager().dict()
-    process = mp.Process(target=MontageWrapperWrapperWrapper, args=(in_fitsdata, in_hdr, manager,), kwargs={'montage_path':montage_path,'temp_path':temp_path})
-    process.start()
-    process.join()
-
-    # Grab outputs from manager dictionary
-    out_img = manager['out_img']
-    temp_dir = manager['temp_dir']
-
-    # Delete temporary folder
-    shutil.rmtree(temp_dir)
+    # Else if using temporary directory produced with tempfile, delete it wholesale
+    else:
+        shutil.rmtree(temp_dir)
 
     # Return output array
     return out_img

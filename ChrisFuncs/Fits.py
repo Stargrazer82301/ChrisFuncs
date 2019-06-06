@@ -10,7 +10,6 @@ import astropy.wcs
 import astropy.convolution
 import multiprocessing as mp
 import aplpy
-import reproject
 import tempfile
 import shutil
 import time
@@ -56,6 +55,7 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, re
             pix_width_arcsec = 3600.0*np.mean(np.abs(np.diagonal(in_wcs.pixel_scale_matrix)))
         cutout_header = FitsHeader(ra, dec, width_deg, pix_width_arcsec)
         cutout_shape = ( cutout_header['NAXIS1'],  cutout_header['NAXIS1'] )
+        import reproject
         try:
             if fast==False:
                 cutout_tuple = reproject.reproject_exact(in_fitsdata, cutout_header, shape_out=cutout_shape, hdu_in=exten, parallel=parallel)

@@ -50,12 +50,12 @@ def FitsCutout(pathname, ra, dec, rad_arcsec, pix_width_arcsec=None, exten=0, re
 
     # If reporjection requested, pass input parameters to reprojection function (fast or thorough, as specified)
     if reproj==True:
+        import reproject
         width_deg = ( 2.0 * float(rad_arcsec) ) / 3600.0
         if pix_width_arcsec == None:
             pix_width_arcsec = 3600.0*np.mean(np.abs(np.diagonal(in_wcs.pixel_scale_matrix)))
         cutout_header = FitsHeader(ra, dec, width_deg, pix_width_arcsec)
         cutout_shape = ( cutout_header['NAXIS1'],  cutout_header['NAXIS1'] )
-        import reproject
         try:
             if fast==False:
                 cutout_tuple = reproject.reproject_exact(in_fitsdata, cutout_header, shape_out=cutout_shape, hdu_in=exten, parallel=parallel)
@@ -273,7 +273,7 @@ def FitsRGB(ra, dec, rad_arcsec, in_paths, out_dir, pmin=False, pmax=False, stre
 
 
 
-# Define function to run montage_wrapper in a temp file, and tidy up when done (a Montate wrapper wrapper, if you will)
+# Define function to run montage_wrapper in a temp file, and tidy up when done (a Montage wrapper wrapper, if you will)
 # Inputs: FITS data to be reprojected, being either an astropy.io.fits.HDU object, or path to FITS file; header to reproject to, being either an astropy.io.fits.Header object, or a string to an mHdr-type text file; (path to directory holding Montage commands, in case this is not already part of the system PATH; path to directory to place temporary files in, in case you have a strong perference in this regard; which FITS extension HDU to use)
 # Returns: Array of reprojected data
 def MontageWrapperWrapper(in_fitsdata, in_hdr, montage_path=None, temp_path=None, exten=None):

@@ -1189,7 +1189,7 @@ def TimeEst(time_list, total, plot=False, raw=False):
 
     # Produce human-readable output, if required
     if not raw:
-        time_end = time.ctime(time_end)
+        time_end = time.strftime('%H:%M:%S %a %d %b %Y', time.localtime(time_end))
 
     # Return estimate (and plot, if requested)
     if plot:

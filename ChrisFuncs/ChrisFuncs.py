@@ -1,7 +1,7 @@
 # Import smorgasbord
+import pdb
 import sys
 import os
-import pdb
 #sys.path.append( os.path.split( os.path.realpath(__file__) )[:-1][0] )
 #sys.path.append( os.path.split( os.path.split( os.path.realpath(__file__) )[:-1][0] )[:-1][0] )
 #sys.path.insert(0, '../')
@@ -20,19 +20,15 @@ astropy.log.setLevel('ERROR')
 import astropy.io.fits
 import astropy.wcs
 import astropy.convolution
-#import astropy.nddata.utils
 import astropy.coordinates
 import astropy.units
 import astroquery.irsa_dust
 import shutil
 import wget
-import pickle
+import glob
 import time
 import re
 import copy
-import importlib
-import types
-#sys.path.append(os.path.join(dropbox,'Work','Scripts'))
 
 # A python 2/3 compatability hack for stirng type handling
 try:
@@ -709,25 +705,6 @@ def Trim(data, i_centre, j_centre, width):
 
 
 
-# Function to calculate dust mass
-# Args: Flux (Jy), distance (pc), wavelength (m), temperature (K), kappa at 850um (m^2 kg^-1), dust emissivity index
-# Returns: Dust mass (Msol)
-def DustMass(S, parsecs, wavelength, T, kappa850=0.077, beta=2.0):
-    c = 3E8
-    h = 6.64E-34
-    k = 1.38E-23
-    nu = c / wavelength
-    B_prefactor = (2.0 * h * nu**3.0) / c**2.0
-    B_e = (h * nu) / (k * T)
-    B = B_prefactor * (np.e**B_e - 1.0)**-1.0
-    nu850 = c / 850E-6
-    kappa = kappa850 * (nu / nu850)**beta
-    D = parsecs * 3.26 * 9.5E15
-    M = (S*1E-26 * D**2.0) / (kappa * B)
-    return M / 2E30
-
-
-
 # Function that uses Driver & Robotham (2010) foruma to give percentage cosmic variance
 # Args: Survey volume (in Mpc^3, assuming H0=70 km s^-1 Mpc^-1), number of survey fields, survey field aspect ratio
 # Returns: Percentage cosmic variance
@@ -889,7 +866,7 @@ def ABAbsToLsol(Mag):
 # Function to convert GALEX data units into AB pogson magnitudes
 # Args: Value to be converted (data units), GALEX band (1 or FUV for FUV, 2 or NUV for NUV)
 # Returns: AB pogson magnitudes (mags; duh)
-def GALEXCountsToMags(GALEX,w):
+def GALEXCountsToMags(GALEX, w):
     if w==0 or w=='FUV':
         mag = 18.82 - ( 2.5*np.log10(GALEX) )
     if w==1 or w=='NUV':
@@ -960,28 +937,6 @@ def UnlogError(log_value, log_error, bounds=False):
         error_up = 10.0**(log_value + log_error) - 10.0**log_value
         error_down = 10.0**(log_value - log_error) - 10.0**log_value
         return [error_up, error_down]
-
-
-
-# Function which takes a scipy.interpolate.interp1d interpolator object, and uses it to create a function for linear extrapolation
-# Args: Interpolator object from scipy.interpolate.interp1d
-# Returns: Function to give result of linear extrapolation
-def Extrap1D(interpolator):
-    xs = interpolator.x
-    ys = interpolator.y
-
-    def pointwise(x):
-        if x < xs[0]:
-            return ys[0]+(x-xs[0])*(ys[1]-ys[0])/(xs[1]-xs[0])
-        elif x > xs[-1]:
-            return ys[-1]+(x-xs[-1])*(ys[-1]-ys[-2])/(xs[-1]-xs[-2])
-        else:
-            return interpolator(x)
-
-    def ufunclike(xs):
-        return np.array(map(pointwise, np.array(xs)))
-
-    return ufunclike
 
 
 
@@ -1083,18 +1038,6 @@ def Nanless(bad):
     return good
 
 
-
-# Function to add in quadrature all of the (non-NaN) elements of an array:
-# Args: Array to be added in quadrature
-# Returns: Quadrature sum of values
-def AddInQuad(values):
-    values = np.array(values)
-    values = Nanless(values)
-    value_tot = 0.0
-    for i in range(0, values.shape[0]):
-        value_new = values[i]
-        value_tot = ( value_tot**2.0 + value_new**2.0 )**0.5
-    return value_tot
 
 
 # Function to aappend an arbitrarily long list of arrays into 1 array:

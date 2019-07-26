@@ -1079,6 +1079,22 @@ def wgetURL(url, filename, overwrite=True, auto_retry=False):
 
 
 
+# Function to delete a directory "as best it can"; fully if possible, else by recursievely removing all delete-able files
+# Args: Path of directory to delete
+# Returns: None
+def RemoveCrawl(directory):
+    try:
+        shutil.rmtree(directory)
+    except:
+        for glob_path in glob.glob(os.path.join(directory,'**'), recursive=True):
+            if os.path.isfile(glob_path):
+                try:
+                    os.remove(glob_path)
+                except:
+                    pass
+
+
+
 # Function to estimate time until a task completes
 # Args: List of time taken by each iteration in units of seconds since Unix epoch, total number of iterations
 # Returns: Python time string of estimated time/date of completion

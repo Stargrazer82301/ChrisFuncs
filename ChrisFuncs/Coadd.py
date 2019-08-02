@@ -9,7 +9,9 @@ matplotlib.use('Agg')
 import astropy.io.fits
 import astropy.wcs
 import astropy.convolution
+import multiprocessing as mp
 import time
+import copy
 import lmfit
 import ChrisFuncs
 
@@ -20,12 +22,11 @@ import ChrisFuncs
 # Returns: None
 def LevelFITS(fitsfile_dir, target_suffix, convfile_dir=False):
 
-    # Define sill ysubfunction that fits flat plane to image, to find level
-    def GALEX_Level_Chisq(level_params, image):
+    # Define subfunction that fits flat plane to image, to find level
+    def LevelChi(level_params, image):
         level = level_params['level'].value
-        chi = image - level
-        chisq = chi**2.0
-        return chisq
+        chi = np.abs(image - level)
+        return chi
 
     # See if a specific convfile dir is specified
     if not convfile_dir:
@@ -40,16 +41,24 @@ def LevelFITS(fitsfile_dir, target_suffix, convfile_dir=False):
 
     # Loop over each file
     for i in range(0, len(fitsfile_list)):
-        print('Matching backgorund of map '+fitsfile_list[i])
 
         # Read in corresponding map from directory containing convolved images
         image_conv = astropy.io.fits.getdata(os.path.join(convfile_dir,fitsfile_list[i]))
 
         # Fit to level of image; save if first image, otherwise calculate appropriate offset
+        image_conv_clipped = image_conv[np.where(image_conv < np.percentile(image_conv, 80))]
+        image_conv_clipped = ChrisFuncs.SigmaClip(image_conv_clipped, median=False, sigma_thresh=3.0)[2]
+
+        # Do first round of fitting with a brute force grid search, to get us in the region of the global minimum
+        brute_level_params = lmfit.Parameters()
+        brute_level_params.add('level', value=np.nanmedian(image_conv), vary=True, min=-1.0*np.nanmax(image_conv), max=np.nanmax(image_conv))
+        brute_level_result = lmfit.minimize(LevelChi, brute_level_params, method='brute', args=(image_conv_clipped.flatten(),), Ns=250)#fit_kws={'Ns':20, 'finish':None}
+        brute_level = brute_level_result.params['level'].value
+
+        # Now do standard Levenberg-Marquardt optimisation from the grid minimum
         level_params = lmfit.Parameters()
-        level_params.add('level', value=np.nanmedian(image_conv), vary=True)
-        image_conv_clipped = ChrisFuncs.SigmaClip(image_conv, median=False, sigma_thresh=3.0)[2]
-        level_result = lmfit.minimize(GALEX_Level_Chisq, level_params, args=(image_conv_clipped.flatten(),))
+        level_params.add('level', value=brute_level, vary=True)
+        level_result = lmfit.minimize(LevelChi, level_params, args=(image_conv_clipped.flatten(),))
         level = level_result.params['level'].value
         if i==0:
             level_ref = level

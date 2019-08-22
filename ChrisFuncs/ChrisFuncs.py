@@ -705,6 +705,20 @@ def Trim(data, i_centre, j_centre, width):
 
 
 
+# Wrapper around Scipy grid interpolation function, to inpute NaN pixels in 2D data
+# Args: Image to have NaN pixels imputed over
+# Returns: Image with NaN pixels imputed
+def ImputeImage(img_in):
+    bad_coords = np.where(np.isnan(img_in))
+    good_coords = np.where(np.isnan(img_in) == False)
+    good_values = img_in[good_coords]
+    bad_values_interp = scipy.interpolate.griddata(good_coords, good_values, bad_coords, method='cubic')
+    img_out = img_in.copy()
+    img_out[bad_coords] = bad_values_interp
+    return img_out
+
+
+
 # Function that uses Driver & Robotham (2010) foruma to give percentage cosmic variance
 # Args: Survey volume (in Mpc^3, assuming H0=70 km s^-1 Mpc^-1), number of survey fields, survey field aspect ratio
 # Returns: Percentage cosmic variance

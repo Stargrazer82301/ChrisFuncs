@@ -13,7 +13,7 @@ import aplpy
 import tempfile
 import shutil
 import time
-from ChrisFuncs import SigmaClip, Nanless
+from ChrisFuncs import SigmaClip, Nanless, RemoveCrawl
 
 # Handle the lack of the basestring class in Python 3
 try:
@@ -286,7 +286,8 @@ def MontageWrapperWrapper(in_fitsdata, in_hdr, montage_path=None, temp_path=None
     # Produce on-the-fly temporary file
     timestamp = str(time.time()).replace('.','-')
     if isinstance(temp_path, str):
-        temp_dir = temp_path
+        temp_dir = os.path.join(temp_path, timestamp)
+        os.mkdir(temp_dir)
     else:
         temp_dir = tempfile.mkdtemp()
 
@@ -323,7 +324,7 @@ def MontageWrapperWrapper(in_fitsdata, in_hdr, montage_path=None, temp_path=None
 
     # Else if using temporary directory produced with tempfile, delete it wholesale
     else:
-        shutil.rmtree(temp_dir)
+        RemoveCrawl(temp_dir)
 
     # Return output array
     return out_img

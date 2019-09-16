@@ -5,15 +5,15 @@ import os
 import pdb
 current_module = sys.modules[__name__]
 import numpy as np
+import scipy.ndimage
 import astropy.io.fits
 import astropy.wcs
 import astropy.convolution
-import multiprocessing as mp
+import reproject
 import aplpy
 import tempfile
-import shutil
 import time
-from ChrisFuncs import SigmaClip, Nanless, RemoveCrawl
+from ChrisFuncs import SigmaClip, Nanless, RemoveCrawl, ImputeImage
 
 # Handle the lack of the basestring class in Python 3
 try:
@@ -328,6 +328,74 @@ def MontageWrapperWrapper(in_fitsdata, in_hdr, montage_path=None, temp_path=None
 
     # Return output array
     return out_img
+
+
+
+# Define function for clever fourier combination of images, following the CASA methodology, as implemented by Tom Williams & Matt Smith
+def FourierCombine(lores_hdu, hires_hdu, lores_beam_sigma_deg):
+
+    # Grab high-resolution data, calculate pixel size
+    hires_img = hires_hdu.data.copy()
+    hires_hdr = hires_hdu.header
+    hires_wcs = astropy.wcs.WCS(hires_hdr)
+    hires_pix_width_arcsec = 3600.0 * np.abs(np.max(hires_wcs.pixel_scale_matrix))
+
+    # Impute (temporarily) any NaNs surrounding the coverage region with the clipped average of the data (so that the fourier transformers play nice)
+    hires_img[np.where(np.isnan(hires_img))] = SigmaClip(hires_img, median=True, sigma_thresh=1.0)[1]
+    """hires_img = ImputeImage(hires_img)
+    hires_img = astropy.convolution.interpolate_replace_nans(hires_img, astropy.convolution.Gaussian2DKernel(3.0), astropy.convolution.convolve_fft, allow_huge=True)"""
+
+    # Grab low-resolution data, once again temporarily replace any NaNs in the data with interpolated values, then reproject to high-resolution pixel scale
+    lores_hdu.data = ImputeImage(lores_hdu.data)
+    """lores_img = ChrisFuncs.Fits.MontageWrapperWrapper(lores_hdu, hires_hdr, montage_path=montage_path, temp_path=os.path.join(data_dir,'Temp'))"""
+    lores_img = reproject.reproject_interp(lores_hdu, hires_hdr, order='bicubic')[0] # Ie, following how SWarp supersamples images
+    lores_img = astropy.convolution.interpolate_replace_nans(lores_img, astropy.convolution.Gaussian2DKernel(3.0), astropy.convolution.convolve_fft, allow_huge=True)
+
+    # Compute low-resolution beam shape
+    lores_beam_sigma_pix = (lores_beam_sigma_deg * 3600) / hires_pix_width_arcsec
+    lores_beam_img = astropy.convolution.Gaussian2DKernel(lores_beam_sigma_pix, x_size=hires_img.shape[1], y_size=hires_img.shape[0]).array
+
+    # Fourier transform all the things
+    lores_beam_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(lores_beam_img)))
+    lores_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(lores_img)))
+    hires_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_img)))
+
+    # Calculate and apply low-resolution beam weighting
+    hires_weight = 1.0 - lores_beam_fourier
+    hires_fourier_weighted = hires_fourier * hires_weight
+    lores_weight = 1.0 #lores_beam_fourier
+    lores_fourier_weighted = lores_fourier * lores_weight
+
+    # Combine the images, then convert back out of Fourier space
+    comb_fourier = lores_fourier_weighted + hires_fourier_weighted
+    comb_fourier_shift = np.fft.ifftshift(comb_fourier)
+    comb_img = np.fft.fftshift(np.real(np.fft.ifft2(comb_fourier_shift)))
+
+    # Purely for prettiness sake, identify steppy edge region, and replace with simple interpolation
+    hires_mask = hires_hdu.data.copy()
+    hires_mask = (hires_mask * 0.0) + 1.0
+    hires_mask[np.where(np.isnan(hires_mask))] = 0.0
+    hires_mask_dilated_out = scipy.ndimage.binary_dilation(hires_mask, iterations=int(2.0*round(lores_beam_sigma_pix))).astype(int)
+    hires_mask = -1.0 * (hires_mask - 1.0)
+    hires_mask_dilated_in = scipy.ndimage.binary_dilation(hires_mask, iterations=int(0.25*round(lores_beam_sigma_pix))).astype(int)
+    hires_mask_border = (hires_mask_dilated_out + hires_mask_dilated_in) - 1
+    comb_img[np.where(hires_mask_border)] = np.nan
+    comb_img = astropy.convolution.interpolate_replace_nans(comb_img, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_sigma_pix)), astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
+
+    # Return combined image
+    return comb_img
+
+    # Various tests (included intentionall here after the return, just to save re-typing if need be in future)
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/comb_img.fits', data=comb_img, header=hires_hdr, overwrite=True)
+    hires_weighted_img = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(hires_fourier_weighted))))
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/hires_weighted_img.fits', data=hires_weighted_img, header=hires_hdr, overwrite=True)
+    lores_weighted_img = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(lores_fourier_weighted))))
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/lores_weighted_img.fits', data=lores_weighted_img, header=hires_hdr, overwrite=True)
+    hires_fourier_inv_weighted = hires_fourier * lores_weight
+    hires_inv_weighted_img = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(hires_fourier_inv_weighted))))
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/hires_inv_weighted_img.fits', data=hires_inv_weighted_img, header=hires_hdr, overwrite=True)
+    lores_hires_diff_lofreq = lores_weighted_img - hires_inv_weighted_img
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/lores_hires_diff_lofreq.fits', data=lores_hires_diff_lofreq, header=hires_hdr, overwrite=True)
 
 
 

@@ -10,9 +10,11 @@ import astropy.io.fits
 import astropy.wcs
 import astropy.convolution
 import reproject
+import skimage.transform
 import aplpy
 import tempfile
 import time
+import warnings
 from ChrisFuncs import SigmaClip, Nanless, RemoveCrawl, ImputeImage
 
 # Handle the lack of the basestring class in Python 3
@@ -332,24 +334,34 @@ def MontageWrapperWrapper(in_fitsdata, in_hdr, montage_path=None, temp_path=None
 
 
 # Define function for clever fourier combination of images, following the CASA methodology, as implemented by Tom Williams & Matt Smith
-def FourierCombine(lores_hdu, hires_hdu, lores_beam_sigma_deg):
+# Inputs: HDU containing low-res data; HDU containing high-res data; either the sigma (not FWHM) in degrees of the low-res beam in degrees or else an actual array of low-res beam at pixel scale of hires image; (boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts)
+# Outputs: The combined image
+def FourierCombine(lores_hdu, hires_hdu, lores_beam, subpix_filter=False):
 
-    # Grab high-resolution data, calculate pixel size
+    # Grab high-resolution data, and calculate pixel size
     hires_img = hires_hdu.data.copy()
     hires_hdr = hires_hdu.header
     hires_wcs = astropy.wcs.WCS(hires_hdr)
     hires_pix_width_arcsec = 3600.0 * np.abs(np.max(hires_wcs.pixel_scale_matrix))
 
+    # Grab low-resolution data, and calculate pixel size
+    lores_img = lores_hdu.data.copy()
+    lores_hdr = lores_hdu.header
+    lores_wcs = astropy.wcs.WCS(lores_hdr)
+    lores_pix_width_arcsec = 3600.0 * np.abs(np.max(lores_wcs.pixel_scale_matrix))
+
     # Impute (temporarily) any NaNs surrounding the coverage region with the clipped average of the data (so that the fourier transformers play nice)
     hires_img[np.where(np.isnan(hires_img))] = SigmaClip(hires_img, median=True, sigma_thresh=1.0)[1]
-    """hires_img = ImputeImage(hires_img)
-    hires_img = astropy.convolution.interpolate_replace_nans(hires_img, astropy.convolution.Gaussian2DKernel(3.0), astropy.convolution.convolve_fft, allow_huge=True)"""
+    """hires_img = ImputeImage(hires_img)"""
 
-    # Grab low-resolution data, once again temporarily replace any NaNs in the data with interpolated values, then reproject to high-resolution pixel scale
-    lores_hdu.data = ImputeImage(lores_hdu.data)
-    """lores_img = ChrisFuncs.Fits.MontageWrapperWrapper(lores_hdu, hires_hdr, montage_path=montage_path, temp_path=os.path.join(data_dir,'Temp'))"""
-    lores_img = reproject.reproject_interp(lores_hdu, hires_hdr, order='bicubic')[0] # Ie, following how SWarp supersamples images
-    lores_img = astropy.convolution.interpolate_replace_nans(lores_img, astropy.convolution.Gaussian2DKernel(3.0), astropy.convolution.convolve_fft, allow_huge=True)
+    # Grab low-resolution data, temporarily interpolate over any NaNss, reproject to high-resolution pixel scale, then pix_pixel low-pass filter to remove pixel-edge effects
+    lores_img = ImputeImage(lores_img)
+    """lores_img = reproject.reproject_interp((lores_img, lores_hdr), hires_hdr, order='bicubic')[0]""" # Ie, following how SWarp supersamples images
+    lores_img = reproject.reproject_exact((lores_img, lores_hdr), hires_hdr, parallel=False)[0]
+    if subpix_filter:
+        lores_pix_filter_kernel_sigma = 2.0**-0.5 * (lores_pix_width_arcsec / hires_pix_width_arcsec)
+        lores_pix_filter_kernel = astropy.convolution.Gaussian2DKernel(lores_pix_filter_kernel_sigma).array
+        lores_img = astropy.convolution.convolve_fft(lores_img, lores_pix_filter_kernel, boundary='reflect', allow_huge=True, preserve_nan=True)
 
     # If an actual array for the low-resolution beam is provided, use that; else if the sigma (in degrees) of the
     if isinstance(lores_beam, np.ndarray):

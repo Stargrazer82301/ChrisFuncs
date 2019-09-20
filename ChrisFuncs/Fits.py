@@ -351,9 +351,15 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_sigma_deg):
     lores_img = reproject.reproject_interp(lores_hdu, hires_hdr, order='bicubic')[0] # Ie, following how SWarp supersamples images
     lores_img = astropy.convolution.interpolate_replace_nans(lores_img, astropy.convolution.Gaussian2DKernel(3.0), astropy.convolution.convolve_fft, allow_huge=True)
 
-    # Compute low-resolution beam shape
-    lores_beam_sigma_pix = (lores_beam_sigma_deg * 3600) / hires_pix_width_arcsec
-    lores_beam_img = astropy.convolution.Gaussian2DKernel(lores_beam_sigma_pix, x_size=hires_img.shape[1], y_size=hires_img.shape[0]).array
+    # If an actual array for the low-resolution beam is provided, use that; else if the sigma (in degrees) of the
+    if isinstance(lores_beam, np.ndarray):
+        if lores_beam.shape != hires_img.shape:
+            raise Exception('Dimensions of user-provided low-res beam do not match dimensions of high-res data')
+        lores_beam_img = lores_beam
+    else:
+        lores_beam_sigma_deg = lores_beam
+        lores_beam_sigma_pix = (lores_beam_sigma_deg * 3600) / hires_pix_width_arcsec
+        lores_beam_img = astropy.convolution.Gaussian2DKernel(lores_beam_sigma_pix, x_size=hires_img.shape[1], y_size=hires_img.shape[0]).array
 
     # Fourier transform all the things
     lores_beam_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(lores_beam_img)))

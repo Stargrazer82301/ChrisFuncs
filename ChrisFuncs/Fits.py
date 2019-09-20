@@ -336,7 +336,7 @@ def MontageWrapperWrapper(in_fitsdata, in_hdr, montage_path=None, temp_path=None
 # Define function for clever fourier combination of images, following the CASA methodology, as implemented by Tom Williams & Matt Smith
 # Inputs: HDU containing low-res data; HDU containing high-res data; either the sigma (not FWHM) in degrees of the low-res beam in degrees or else an actual array of low-res beam at pixel scale of hires image; (boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts)
 # Outputs: The combined image
-def FourierCombine(lores_hdu, hires_hdu, lores_beam, subpix_filter=False):
+def FourierCombine(lores_hdu, hires_hdu, lores_beam_sigma_deg, lores_beam_img=False, subpix_filter=False):
 
     # Grab high-resolution data, and calculate pixel size
     hires_img = hires_hdu.data.copy()
@@ -361,15 +361,13 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam, subpix_filter=False):
     if subpix_filter:
         lores_pix_filter_kernel_sigma = 2.0**-0.5 * (lores_pix_width_arcsec / hires_pix_width_arcsec)
         lores_pix_filter_kernel = astropy.convolution.Gaussian2DKernel(lores_pix_filter_kernel_sigma).array
-        lores_img = astropy.convolution.convolve_fft(lores_img, lores_pix_filter_kernel, boundary='reflect', allow_huge=True, preserve_nan=True)
+        lores_img = astropy.convolution.convolve_fft(lores_img, lores_pix_filter_kernel, boundary='reflect', allow_huge=True, preserve_nan=False) # As NaNs already removed
 
     # If an actual array for the low-resolution beam is provided, use that; else if the sigma (in degrees) of the
-    if isinstance(lores_beam, np.ndarray):
-        if lores_beam.shape != hires_img.shape:
+    if isinstance(lores_beam_img, np.ndarray):
+        if lores_beam_img.shape != hires_img.shape:
             raise Exception('Dimensions of user-provided low-res beam do not match dimensions of high-res data')
-        lores_beam_img = lores_beam
     else:
-        lores_beam_sigma_deg = lores_beam
         lores_beam_sigma_pix = (lores_beam_sigma_deg * 3600) / hires_pix_width_arcsec
         lores_beam_img = astropy.convolution.Gaussian2DKernel(lores_beam_sigma_pix, x_size=hires_img.shape[1], y_size=hires_img.shape[0]).array
 

@@ -358,6 +358,8 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_sigma_deg, lores_beam_img=Fa
     lores_img = ImputeImage(lores_img)
     """lores_img = reproject.reproject_interp((lores_img, lores_hdr), hires_hdr, order='bicubic')[0]""" # Ie, following how SWarp supersamples images
     lores_img = reproject.reproject_exact((lores_img, lores_hdr), hires_hdr, parallel=False)[0]
+    where_edge = np.where(np.isnan(lores_img))
+    lores_img[where_edge] = np.nanmedian(lores_img)
     if subpix_filter:
         lores_pix_filter_kernel_sigma = 2.0**-0.5 * (lores_pix_width_arcsec / hires_pix_width_arcsec)
         lores_pix_filter_kernel = astropy.convolution.Gaussian2DKernel(lores_pix_filter_kernel_sigma).array
@@ -396,6 +398,7 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_sigma_deg, lores_beam_img=Fa
     hires_mask_dilated_in = scipy.ndimage.binary_dilation(hires_mask, iterations=int(0.25*round(lores_beam_sigma_pix))).astype(int)
     hires_mask_border = (hires_mask_dilated_out + hires_mask_dilated_in) - 1
     comb_img[np.where(hires_mask_border)] = np.nan
+    comb_img[where_edge] = np.nan
     comb_img = astropy.convolution.interpolate_replace_nans(comb_img, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_sigma_pix)), astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
 
     # Return combined image

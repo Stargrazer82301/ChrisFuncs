@@ -417,6 +417,51 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_sigma_deg, lores_beam_img=Fa
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/hires_inv_weighted_img.fits', data=hires_inv_weighted_img, header=hires_hdr, overwrite=True)
     lores_hires_diff_lofreq = lores_weighted_img - hires_inv_weighted_img
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/lores_hires_diff_lofreq.fits', data=lores_hires_diff_lofreq, header=hires_hdr, overwrite=True)
+# Outputs: Array containing requested filter, with low-frequency passpand and high-frequency stopband
+def FourierTaper(taper_cutoffs_deg, in_wcs):
+
+    # Use provided WCS to construct array to hold the output filter
+    if in_wcs._naxis1 != in_wcs._naxis2:
+        raise Exception('Input data to be combined are not square; this will not end well')
+    out_filter = np.zeros([in_wcs._naxis2, in_wcs._naxis1])
+    out_i_centre = (0.5*out_filter.shape[0])-0.5
+    out_j_centre = (0.5*out_filter.shape[1])-0.5
+
+    # Convert cutoff scales to units of fourier-pixels
+    pix_width_deg = np.abs( np.max( in_wcs.pixel_scale_matrix ) )
+    cutoff_min_deg = min(taper_cutoffs_deg)
+    cutoff_max_deg = max(taper_cutoffs_deg)
+    cutoff_max_frac = (cutoff_max_deg / pix_width_deg) / out_filter.shape[0]
+    cutoff_min_frac = (cutoff_min_deg / pix_width_deg) / out_filter.shape[0]
+    cutoff_max_pix = 1.0 * (1.0 / cutoff_max_frac)
+    cutoff_min_pix = 1.0 * (1.0 / cutoff_min_frac)
+
+    # Use meshgrids to find distance of each pixel from centre of filter array
+    i_linespace = np.linspace(0, out_filter.shape[0]-1, out_filter.shape[0])
+    j_linespace = np.linspace(0, out_filter.shape[1]-1, out_filter.shape[1])
+    i_grid, j_grid = np.meshgrid(i_linespace, j_linespace, indexing='ij')
+    i_grid -= out_i_centre
+    j_grid -= out_j_centre
+    rad_grid = np.sqrt(i_grid**2.0 + j_grid**2.0)
+
+    # Rejigger the distance grid to give distance past inner edge of taper region
+    rad_grid -= cutoff_max_pix
+
+    # Set central region (ie, low-resolution regime) to be entirely passband
+    out_filter[np.where(rad_grid <= 0)] = 1.0
+
+    # Construct well-sampled Hann filter to compute taper for transition region
+    hann_filter = np.hanning(2000)[1000:]
+    hann_pix = np.linspace(0, cutoff_min_pix-cutoff_max_pix, num=1000)
+    hann_interp = scipy.interpolate.interp1d(hann_pix, hann_filter, bounds_error=False, fill_value=np.nan)
+
+    # Identify pixels where Hann filter is to be applied, and compute taper
+    hann_where = np.where((rad_grid > 0) & (rad_grid <= cutoff_min_pix))
+    out_filter[hann_where] = hann_interp(rad_grid[hann_where])
+    out_filter[np.where(np.isnan(out_filter))] = 0.0
+
+    # Return final filter
+    return out_filter
 
 
 

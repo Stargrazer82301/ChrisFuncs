@@ -9,13 +9,16 @@ import scipy.ndimage
 import astropy.io.fits
 import astropy.wcs
 import astropy.convolution
+import photutils
 import reproject
 import skimage.transform
 import aplpy
 import tempfile
 import time
 import warnings
+import image_registration
 from ChrisFuncs import SigmaClip, Nanless, RemoveCrawl, ImputeImage
+import ChrisFuncs.Photom
 
 # Handle the lack of the basestring class in Python 3
 try:
@@ -333,8 +336,40 @@ def MontageWrapperWrapper(in_fitsdata, in_hdr, montage_path=None, temp_path=None
 
 
 
-# Define function for clever fourier combination of images, following the CASA methodology, as implemented by Tom Williams & Matt Smith
-# Inputs: HDU containing low-res data; HDU containing high-res data; either the sigma (not FWHM) in degrees of the low-res beam in degrees; (an actual array of low-res beam gridden to the pixel scale of hires image; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts)
+# Define function to put Montage path into PATH, for use by montage_wrapper
+# Inputs: None
+# Outputs: Montage path
+def MontagePath():
+
+    # Determine location
+    import socket
+    location = socket.gethostname()
+
+    # Declare path to Montage commands to permit import
+    if location in ['replicators.stsci.edu', 'replicators.local.stsci.edu']:
+        montage_path = '/Users/cclark/Soft/Montage/bin/'
+    elif '.stsci.edu' in location:
+        montage_path = '/home/cclark/soft/montage/bin/'
+    elif 'replicators' in location:
+        montage_path = '/Users/cclark/Soft/Montage/bin/'
+    elif location in ['science0.stsci.edu','science3.stsci.edu','science4.stsci.edu','science5.stsci.edu','science6.stsci.edu','science7.stsci.edu']:
+        montage_path = '/grp/software/linux/rhel6/x86_64/montage/6.0/bin/'
+    elif location in ['science1.stsci.edu','science2.stsci.edu','science8.stsci.edu','science9.stsci.edu','science10.stsci.edu']:
+        montage_path = '/grp/software/linux/rhel7/x86_64/montage/6.0/bin/'
+    elif '.stsci.edu' in location:
+        montage_path = '/grp/software/linux/rhel7/x86_64/montage/6.0/bin/'
+
+    # Append montage path to PATH environment variable
+    os.environ['PATH'] += ':'+montage_path
+
+    # Do test import
+    import montage_wrapper
+    montage_wrapper.installed
+
+    # Return path
+    return montage_path
+
+
 # Outputs: The combined image
 def FourierCombine(lores_hdu, hires_hdu, lores_beam_sigma_deg, lores_beam_img=False, subpix_filter=False):
 

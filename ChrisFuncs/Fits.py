@@ -11,11 +11,9 @@ import astropy.wcs
 import astropy.convolution
 import photutils
 import reproject
-import skimage.transform
 import aplpy
 import tempfile
 import time
-import warnings
 import image_registration
 from ChrisFuncs import SigmaClip, Nanless, RemoveCrawl, ImputeImage
 import ChrisFuncs.Photom
@@ -341,23 +339,26 @@ def MontageWrapperWrapper(in_fitsdata, in_hdr, montage_path=None, temp_path=None
 # Outputs: Montage path
 def MontagePath():
 
-    # Determine location
+    # Determine machine
     import socket
     location = socket.gethostname()
 
-    # Declare path to Montage commands to permit import
-    if location in ['replicators.stsci.edu', 'replicators.local.stsci.edu']:
-        montage_path = '/Users/cclark/Soft/Montage/bin/'
-    elif '.stsci.edu' in location:
-        montage_path = '/home/cclark/soft/montage/bin/'
-    elif 'replicators' in location:
-        montage_path = '/Users/cclark/Soft/Montage/bin/'
-    elif location in ['science0.stsci.edu','science3.stsci.edu','science4.stsci.edu','science5.stsci.edu','science6.stsci.edu','science7.stsci.edu']:
-        montage_path = '/grp/software/linux/rhel6/x86_64/montage/6.0/bin/'
-    elif location in ['science1.stsci.edu','science2.stsci.edu','science8.stsci.edu','science9.stsci.edu','science10.stsci.edu']:
-        montage_path = '/grp/software/linux/rhel7/x86_64/montage/6.0/bin/'
-    elif '.stsci.edu' in location:
-        montage_path = '/grp/software/linux/rhel7/x86_64/montage/6.0/bin/'
+    # List all combinations of machines and paths we want to cover; first entry in each row should be location of list of locations, second entry should be corresponding Montage directory path (for single location, the location name can start with a * wildcard)
+    paths_lists = ([['*replicators', '/Users/cclark/Soft/Montage/bin/'],
+                    [['science0.stsci.edu','science3.stsci.edu','science4.stsci.edu','science5.stsci.edu','science6.stsci.edu','science7.stsci.edu'], '/grp/software/linux/rhel6/x86_64/montage/6.0/bin/'],
+                    [['science1.stsci.edu','science2.stsci.edu','science8.stsci.edu','science9.stsci.edu','science10.stsci.edu'], '/grp/software/linux/rhel7/x86_64/montage/6.0/bin/'],
+                    ['*.stsci.edu', '/grp/software/linux/rhel7/x86_64/montage/6.0/bin/']
+                    ])
+    paths_array = np.array(paths_lists)
+
+    # Loop over rows, checking to see if location conditions are met
+    for i in range(paths_array.shape[0]):
+        if isinstance(paths_array[i,0], list) and (location in paths_array[i,0]):
+            montage_path = paths_array[i,1]
+        elif isinstance(paths_array[i,0], str) and ('*' in paths_array[i,0]) and (paths_array[i,0].replace('*','') in location):
+            montage_path = paths_array[i,1]
+        elif isinstance(paths_array[i,0], str) and (paths_array[i,0] == location):
+            montage_path = paths_array[i,1]
 
     # Append montage path to PATH environment variable
     os.environ['PATH'] += ':'+montage_path

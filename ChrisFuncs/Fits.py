@@ -355,10 +355,13 @@ def MontagePath():
     for i in range(paths_array.shape[0]):
         if isinstance(paths_array[i,0], list) and (location in paths_array[i,0]):
             montage_path = paths_array[i,1]
+            break
         elif isinstance(paths_array[i,0], str) and ('*' in paths_array[i,0]) and (paths_array[i,0].replace('*','') in location):
             montage_path = paths_array[i,1]
+            break
         elif isinstance(paths_array[i,0], str) and (paths_array[i,0] == location):
             montage_path = paths_array[i,1]
+            break
 
     # Append montage path to PATH environment variable
     os.environ['PATH'] += ':'+montage_path

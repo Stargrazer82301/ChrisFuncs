@@ -142,7 +142,7 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
 # Define function to generate a generic FITS header for a given projection
 # Args: Central right ascension (deg), central declination (deg), image width (deg), pixel size (arcsec)
 # Returns: FITS header
-def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
+def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec, out_path=False):
 
     # Calculate map dimensions
     map_width_arcsec = float(map_width_deg) * 3600.0
@@ -174,6 +174,10 @@ def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec):
     header.set('CDELT2', wcs.wcs.cdelt[1])
     header.set('CTYPE1', wcs.wcs.ctype[0])
     header.set('CTYPE2', wcs.wcs.ctype[1])
+
+    # If requested, write header to file (a la mHdr)
+    if isinstance(out_path, str):
+        header.totextfile(out_path)
 
     # Return header
     return header

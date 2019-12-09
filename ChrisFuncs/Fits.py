@@ -401,26 +401,18 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
 
     # Impute (temporarily) any NaNs surrounding the coverage region with the clipped average of the data (so that the fourier transformers play nice)
     hires_img[np.where(np.isnan(hires_img))] = SigmaClip(hires_img, median=True, sigma_thresh=1.0)[1]
-    """hires_img = ImputeImage(hires_img)"""
 
     # Grab low-resolution data, temporarily interpolate over any NaNs, reproject to high-resolution pixel scale
     lores_img = ImputeImage(lores_hdu.data.copy())
     lores_img = reproject.reproject_interp((lores_img, lores_hdr), hires_hdr, order='bicubic')[0] # Ie, following how SWarp supersamples images
     where_edge = np.where(np.isnan(lores_img))
     lores_img[where_edge] = np.nanmedian(lores_img)
-
-    # Perform image registration to find any offsets between the observations; if found, re-reproject lores image using adjusted verison of high-resoluiton header
-    """img_reg = image_registration.chi2_shift(hires_img, lores_img, upsample_factor=1000)
-    hires_hdr_reg = hires_hdr.copy()
-    hires_hdr_reg.set('CRPIX2', hires_hdr_reg['CRPIX2'])
-    hires_hdr_reg.set('CRPIX1', hires_hdr_reg['CRPIX1'])
-    lores_img = reproject.reproject_interp((lores_img, hires_hdr), hires_hdr_reg, order='bicubic')[0]"""
     lores_img = astropy.convolution.interpolate_replace_nans(lores_img, astropy.convolution.Gaussian2DKernel(3),
                                                              astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
 
     # If requested, low-pass filter low-resolution data to remove pixel-edge effects
     if apodise:
-        lores_apodisation_kernel_sigma = 0.5 * 2.0**-0.5 * (lores_pix_width_arcsec / hires_pix_width_arcsec) #0.5 * 2.0**-0.5
+        lores_apodisation_kernel_sigma = 0.5 * 2.0**-0.5 * (lores_pix_width_arcsec / hires_pix_width_arcsec) # 0.5 * 2.0**-0.5
         lores_apodisation_kernel = astropy.convolution.Gaussian2DKernel(lores_apodisation_kernel_sigma).array
         lores_img = astropy.convolution.convolve_fft(lores_img, lores_apodisation_kernel,
                                                      boundary='reflect', allow_huge=True, preserve_nan=False) # As NaNs already removed
@@ -470,7 +462,7 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
     lores_beam_demislice = lores_beam_img[int(round(0.5*lores_beam_img.shape[1])):,int(round(0.5*lores_beam_img.shape[1]))]
     lores_beam_width_pix = float(np.argmin(np.abs(lores_beam_demislice - (0.5 * lores_beam_demislice.max()))))
 
-    # Purely for prettiness sake, identify steppy edge region, and replace with simple interpolation
+    # Purely for prettiness sake, identify any steppy edge region, and replace with simple interpolation
     hires_mask = hires_hdu.data.copy()
     hires_mask = (hires_mask * 0.0) + 1.0
     hires_mask[np.where(np.isnan(hires_mask))] = 0.0
@@ -483,8 +475,8 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
     comb_img = astropy.convolution.interpolate_replace_nans(comb_img, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_width_pix)),
                                                             astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
 
-#    # Return combined image
-#    return comb_img
+    # Return combined image
+    return comb_img
 
     # Various tests (included intentionall here after the return, just to save re-typing if need be in future)
     astropy.io.fits.writeto('/Users/cclark/Data/Local_Dust/comb_img.fits', data=comb_img, header=hires_hdr, overwrite=True)

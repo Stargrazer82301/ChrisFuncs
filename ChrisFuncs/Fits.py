@@ -584,6 +584,7 @@ def MsolSqpcToMsolPix(img, hdr, dist, inverse=False):
     pix_width_deg = np.mean(np.abs(wcs_pix_matrix[np.where(wcs_pix_matrix!=0)]))
     pix_width_pc = dist * 2.0 * np.tan(0.5 * np.deg2rad(pix_width_deg)) # As (O/2) = A tan(theta/2)
     pix_area_sqpc = pix_width_pc**2.0
+    img = np.array(img)
     if not inverse:
         return img * pix_area_sqpc
     elif inverse:

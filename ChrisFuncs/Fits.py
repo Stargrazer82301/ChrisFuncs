@@ -8,13 +8,10 @@ import scipy.ndimage
 import astropy.io.fits
 import astropy.wcs
 import astropy.convolution
-import photutils
 import reproject
 import aplpy
 import tempfile
-import warnings
 import time
-import image_registration
 from ChrisFuncs import SigmaClip, Nanless, RemoveCrawl, ImputeImage
 import ChrisFuncs.Photom
 

@@ -173,7 +173,7 @@ def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec, rotation=None, out_path
     header.set('CTYPE2', wcs.wcs.ctype[1])
 
     # If requested, add rotation information
-    if rotation != False:
+    if rotation:
         header.set('CROTA2', rotation)
 
     # If requested, write header to file (a la mHdr)
@@ -486,6 +486,7 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
     astropy.io.fits.writeto('/Users/cclark/Data/Local_Dust/hires_weighted_img.fits', data=hires_weighted_img, header=hires_hdr, overwrite=True)
     lores_weighted_img = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(lores_fourier_weighted))))
     astropy.io.fits.writeto('/Users/cclark/Data/Local_Dust/lores_weighted_img.fits', data=lores_weighted_img, header=hires_hdr, overwrite=True)
+    pdb.set_trace()
 
 
 

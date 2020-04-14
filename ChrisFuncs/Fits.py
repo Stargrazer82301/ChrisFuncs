@@ -13,7 +13,6 @@ import aplpy
 import tempfile
 import time
 from ChrisFuncs import SigmaClip, Nanless, RemoveCrawl, ImputeImage
-import ChrisFuncs.Photom
 
 # Handle the lack of the basestring class in Python 3
 try:
@@ -381,9 +380,9 @@ def MontagePath():
 
 
 # Define function for clever fourier combination of images,
-# Inputs: HDU containing low-res data; HDU containing high-res data; either the sigma (not FWHM) in degrees of the low-res beam in degrees; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts)
+# Inputs: HDU containing low-res data; HDU containing high-res data; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image(); optional boolean/float for giving angular scale in degrees at which to apply a tapering transition; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts; boolean/string for saving combined image to file instead of returning)
 # Outputs: The combined image
-def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_cutoffs_deg=False, apodise=False):
+def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_cutoffs_deg=False, apodise=False, to_file=False):
 
     # Grab high-resolution data, and calculate pixel size
     hires_img = hires_hdu.data.copy()
@@ -465,15 +464,19 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
     hires_mask[np.where(np.isnan(hires_mask))] = 0.0
     hires_mask_dilated_out = scipy.ndimage.binary_dilation(hires_mask, iterations=int(2.0*round(lores_beam_width_pix))).astype(int)
     hires_mask = -1.0 * (hires_mask - 1.0)
-    hires_mask_dilated_in = scipy.ndimage.binary_dilation(hires_mask, iterations=int(0.25*round(lores_beam_width_pix))).astype(int)
+    hires_mask_dilated_in = scipy.ndimage.binary_dilation(hires_mask, iterations=int(0.4*round(lores_beam_width_pix))).astype(int)
     hires_mask_border = (hires_mask_dilated_out + hires_mask_dilated_in) - 1
     comb_img[np.where(hires_mask_border)] = np.nan
     comb_img[where_edge] = np.nan
     comb_img = astropy.convolution.interpolate_replace_nans(comb_img, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_width_pix)),
                                                             astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
 
-    # Return combined image
-    return comb_img
+    # Return combined image (or save to file if that was requested)
+    if not to_file:
+        return comb_img
+    else:
+        astropy.io.fits.writeto(to_file, data=comb_img, header=hires_hdr, overwrite=True)
+        return to_file
 
     # Various tests (included intentionall here after the return, just to save re-typing if need be in future)
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/comb_img.fits', data=comb_img, header=hires_hdr, overwrite=True)

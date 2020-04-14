@@ -37,6 +37,7 @@ except NameError:
   basestring = str
 
 
+
 # Function to sum all elements in an ellipse centred on the middle of a given array
 # Args: Array, semi-major axis (pix), axial ratio, position angle (deg), i & j coords of centre of ellipse
 # Returns: Numpy array containing the sum of the pixel values in the ellipse, total number of pixels counted, and an array containing the pixel values

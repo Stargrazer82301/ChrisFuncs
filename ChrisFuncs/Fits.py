@@ -400,11 +400,11 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
 
     # Grab low-resolution data, temporarily interpolate over any NaNs, reproject to high-resolution pixel scale
     lores_img = ImputeImage(lores_hdu.data.copy())
+    lores_img = astropy.convolution.interpolate_replace_nans(lores_img, astropy.convolution.Gaussian2DKernel(3),
+                                                             astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
     lores_img = reproject.reproject_interp((lores_img, lores_hdr), hires_hdr, order='bicubic')[0] # Ie, following how SWarp supersamples images
     where_edge = np.where(np.isnan(lores_img))
     lores_img[where_edge] = np.nanmedian(lores_img)
-    lores_img = astropy.convolution.interpolate_replace_nans(lores_img, astropy.convolution.Gaussian2DKernel(3),
-                                                             astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
 
     # If requested, low-pass filter low-resolution data to remove pixel-edge effects
     if apodise:

@@ -479,18 +479,18 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
         return to_file
 
     # Various tests (included intentionall here after the return, just to save re-typing if need be in future)
-    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/comb_img.fits', data=comb_img, header=hires_hdr, overwrite=True)
-    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/hires_img.fits', data=hires_img, header=hires_hdr, overwrite=True)
-    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/lores_img.fits', data=lores_img, header=hires_hdr, overwrite=True)
-    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/hires_fourier.fits', data=hires_fourier.real, header=hires_hdr, overwrite=True)
-    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/lores_fourier.fits', data=lores_fourier.real, header=hires_hdr, overwrite=True)
-    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/comb_fourier.fits', data=comb_fourier.real, header=hires_hdr, overwrite=True)
-    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/hires_fourier_weighted.fits', data=hires_fourier_weighted.real, header=hires_hdr, overwrite=True)
-    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/lores_fourier_weighted.fits', data=lores_fourier_weighted.real, header=hires_hdr, overwrite=True)
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/comb_img.fits', data=comb_img, header=hires_hdr, overwrite=True)
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/hires_img.fits', data=hires_img, header=hires_hdr, overwrite=True)
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/lores_img.fits', data=lores_img, header=hires_hdr, overwrite=True)
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/hires_fourier.fits', data=hires_fourier.real, header=hires_hdr, overwrite=True)
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/lores_fourier.fits', data=lores_fourier.real, header=hires_hdr, overwrite=True)
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/comb_fourier.fits', data=comb_fourier.real, header=hires_hdr, overwrite=True)
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/hires_fourier_weighted.fits', data=hires_fourier_weighted.real, header=hires_hdr, overwrite=True)
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/lores_fourier_weighted.fits', data=lores_fourier_weighted.real, header=hires_hdr, overwrite=True)
     hires_weighted_img = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(hires_fourier_weighted))))
-    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/hires_weighted_img.fits', data=hires_weighted_img, header=hires_hdr, overwrite=True)
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/hires_weighted_img.fits', data=hires_weighted_img, header=hires_hdr, overwrite=True)
     lores_weighted_img = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(lores_fourier_weighted))))
-    astropy.io.fits.writeto('/astro/dust_kg/cclark/Local_Dust/lores_weighted_img.fits', data=lores_weighted_img, header=hires_hdr, overwrite=True)
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/lores_weighted_img.fits', data=lores_weighted_img, header=hires_hdr, overwrite=True)
     pdb.set_trace()
 
 

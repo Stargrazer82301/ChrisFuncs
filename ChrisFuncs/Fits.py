@@ -429,7 +429,6 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
     # Add miniscule offset to any zero-value elements to stop inf and nan values from appearing later.
     lores_beam_fourier.real[np.where(lores_beam_fourier.real == 0)] = 1E-50
 
-    pdb.set_trace()
 
     # Divide the low-resolution data by the low-resolution beam (ie, deconvolve it), then multiply by the high-resoluiton beam, to normalise amplitudes
     fourier_norm = 1 / lores_beam_fourier
@@ -577,8 +576,8 @@ def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, pix_width_
     rad_grid = np.sqrt(i_grid**2.0 + j_grid**2.0)
 
     # Convert cutoff scales from degrees to fourier frequencies
-    cutoff_min_deg = 10.0/60.0
-    cutoff_max_deg = 18.0/60.0
+    cutoff_min_deg = min(taper_cutoffs_deg)
+    cutoff_max_deg = max(taper_cutoffs_deg)
     cutoff_min_frac = (cutoff_min_deg / pix_width_deg) / hires_fourier.shape[0]
     cutoff_max_frac = (cutoff_max_deg / pix_width_deg) / hires_fourier.shape[0]
     cutoff_min_pix = 1.0 / cutoff_min_frac
@@ -614,14 +613,18 @@ def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, pix_width_
     # Test plotting
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(8,6))
-    ax.scatter(rad_grid.flatten()[:], power_hires.flatten()[:], s=0.05, c='dodgerblue', alpha=0.85)
-    ax.scatter(rad_grid_cutoff_min, power_lores_cutoff_min, s=0.05, c='orangered', alpha=0.85)
-    ax.scatter(rad_grid_overlap, power_lores_overlap, s=0.05, c='limegreen', alpha=0.85)
-    ax.set_xlim([1,500])
-    ax.set_ylim([10,1E7])
+    ax.scatter(rad_grid, power_hires, s=0.25, c='dodgerblue', alpha=0.85)
+    ax.scatter(rad_grid_cutoff_min, power_lores_cutoff_min, s=0.25, c='orangered', alpha=0.85)
+    #ax.scatter(rad_grid_overlap, power_lores_overlap, s=0.25, c='limegreen', alpha=0.85)
+    power_comb = np.sqrt((comb_fourier.real)**2.0)
+    ax.scatter(rad_grid, power_comb, s=0.25, c='fuchsia', alpha=0.85)
+    ax.plot([cutoff_min_pix,cutoff_min_pix], [1E-50,1E50], ls=':', c='gray')
+    ax.plot([cutoff_max_pix,cutoff_max_pix], [1E-50,1E50], ls=':', c='gray')
+    ax.set_xlim([1,50])
+    ax.set_ylim([1E4,1E7])
     ax.set_xscale('log')
     ax.set_yscale('log')
-    fig.savefig('/astro/dust_kg/cclark/Quest/Feathering/SMC/Combined_Herschel+Planck+IRAS+COBE/fourier.png', dpi=300)
+    fig.savefig('/astro/dust_kg/cclark/Quest/fourier.png', dpi=300)
 
 
 

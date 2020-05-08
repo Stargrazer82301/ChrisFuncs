@@ -384,6 +384,13 @@ def MontagePath():
 # Outputs: The combined image
 def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_cutoffs_deg=False, apodise=False, to_file=False):
 
+    # Make  clean copies of input arrays, to make sure nothing is being overwritten outside the function
+    import copy
+    lores_hdu = copy.deepcopy(lores_hdu)
+    hires_hdu = copy.deepcopy(hires_hdu)
+    lores_beam_img = copy.deepcopy(lores_beam_img)
+    hires_beam_img = copy.deepcopy(hires_beam_img)
+
     # Grab high-resolution data, and calculate pixel size
     hires_img = hires_hdu.data.copy()
     hires_hdr = hires_hdu.header

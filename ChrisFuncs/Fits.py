@@ -492,7 +492,10 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
         astropy.io.fits.writeto(to_file, data=comb_img, header=hires_hdr, overwrite=True)
         return to_file
 
-    # Various tests (included intentionall here after the return, just to save re-typing if need be in future)
+    # Various tests (included intentionally here after return, just to save re-typing if need be in future)
+    hires_offset = hires_img[np.where(np.isnan(hires_img)==False)] - lores_img[np.where(np.isnan(hires_img)==False)]
+    hires_offset = SigmaClip(hires_offset, median=True, sigma_thresh=1.0)[1]
+    hires_img -= hires_offset
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/comb_img.fits', data=comb_img, header=hires_hdr, overwrite=True)
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/hires_img.fits', data=hires_img, header=hires_hdr, overwrite=True)
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/lores_img.fits', data=lores_img, header=hires_hdr, overwrite=True)
@@ -505,6 +508,16 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/hires_weighted_img.fits', data=hires_weighted_img, header=hires_hdr, overwrite=True)
     lores_weighted_img = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(lores_fourier_weighted))))
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/lores_weighted_img.fits', data=lores_weighted_img, header=hires_hdr, overwrite=True)
+
+    comb_hires_ratio = comb_img / hires_img
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/comb_hires_ratio.fits', data=comb_hires_ratio, header=hires_hdr, overwrite=True)
+    comb_hires_diff = comb_img - hires_img
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/comb_hires_diff.fits', data=comb_hires_diff, header=hires_hdr, overwrite=True)
+    comb_lores_ratio = comb_img / lores_img
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/comb_lores_ratio.fits', data=comb_lores_ratio, header=hires_hdr, overwrite=True)
+    comb_lores_diff = comb_img - lores_img
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/comb_lores_diff.fits', data=comb_lores_diff, header=hires_hdr, overwrite=True)
+
     pdb.set_trace()
 
     lores_fourier_unnorm_weighted = lores_fourier * lores_weight

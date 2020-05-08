@@ -436,16 +436,15 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
     # Add miniscule offset to any zero-value elements to stop inf and nan values from appearing later.
     lores_beam_fourier.real[np.where(lores_beam_fourier.real == 0)] = 1E-50
 
-
     # Divide the low-resolution data by the low-resolution beam (ie, deconvolve it), then multiply by the high-resoluiton beam, to normalise amplitudes
-    fourier_norm = 1 / lores_beam_fourier
+    fourier_norm = 1.0 / lores_beam_fourier
     fourier_norm *= hires_beam_fourier
     lores_fourier *= fourier_norm
 
     # If requested, start by cross-calibrating the hires and lores data within the tapering angular window
     if taper_cutoffs_deg != False:
-        hires_fourier_corr = FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, hires_pix_width_deg)
-        hires_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_img * hires_fourier_corr)))
+        hires_fourier_corr = FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, lores_beam_fourier, hires_beam_fourier, hires_pix_width_deg)
+        hires_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_img * hires_fourier_corr[0])))
 
         # Perform tapering between specificed angular scales to weight data in Fourier space, following a Hann filter profile
         taper_filter = FourierTaper(taper_cutoffs_deg, hires_wcs)
@@ -486,7 +485,6 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
     comb_img = astropy.convolution.interpolate_replace_nans(comb_img, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_width_pix)),
                                                             astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
 
-    pdb.set_trace()
     # Return combined image (or save to file if that was requested)
     if not to_file:
         return comb_img
@@ -568,7 +566,7 @@ def FourierTaper(taper_cutoffs_deg, in_wcs):
 # Function to cross-calibrate two data sets' power over a range of angular scales, as a precursor to fourier combination
 # Input: Fourier transform of low-resolution data; fourier transform of high-resolution data; Iterable giving angular scale of high- and low resolution cutoffs (in deg)
 # Output: Correction factor to be applied to high-resolution data; uncertainty on the correction factor
-def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, pix_width_deg):
+def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, hires_pix_width_deg):
 
     # Find centre of fourier arrays (ie, the zeroth order fourier frequency)
     freq_i_centre = (0.5*hires_fourier.shape[0])-0.5
@@ -585,8 +583,8 @@ def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, pix_width_
     # Convert cutoff scales from degrees to fourier frequencies
     cutoff_min_deg = min(taper_cutoffs_deg)
     cutoff_max_deg = max(taper_cutoffs_deg)
-    cutoff_min_frac = (cutoff_min_deg / pix_width_deg) / hires_fourier.shape[0]
-    cutoff_max_frac = (cutoff_max_deg / pix_width_deg) / hires_fourier.shape[0]
+    cutoff_min_frac = (cutoff_min_deg / hires_pix_width_deg) / hires_fourier.shape[0]
+    cutoff_max_frac = (cutoff_max_deg / hires_pix_width_deg) / hires_fourier.shape[0]
     cutoff_min_pix = 1.0 / cutoff_min_frac
     cutoff_max_pix = 1.0 / cutoff_max_frac
 
@@ -614,21 +612,22 @@ def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, pix_width_
         power_hires_corr_bs.append(SigmaClip(np.random.choice(power_dex_overlap, size=len(power_dex_overlap)), median=True, sigma_thresh=1.0)[1])
     power_hires_corr_factor_unc = np.std(1.0 / (10.0**np.array(power_hires_corr_bs)))
 
-    #Return results
+    # Return results
     return (power_hires_corr_factor, power_hires_corr_factor_unc)
 
     # Test plotting
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(8,6))
-    ax.scatter(rad_grid, power_hires, s=0.25, c='dodgerblue', alpha=0.85)
-    ax.scatter(rad_grid_cutoff_min, power_lores_cutoff_min, s=0.25, c='orangered', alpha=0.85)
-    #ax.scatter(rad_grid_overlap, power_lores_overlap, s=0.25, c='limegreen', alpha=0.85)
-    power_comb = np.sqrt((comb_fourier.real)**2.0)
-    ax.scatter(rad_grid, power_comb, s=0.25, c='fuchsia', alpha=0.85)
+    ax.scatter(rad_grid, power_hires, s=0.75, c='dodgerblue', alpha=0.6)
+    #ax.scatter(rad_grid_cutoff_min, power_lores_cutoff_min, s=0.75, c='orangered', alpha=0.6)
+    ax.scatter(rad_grid, power_lores, s=0.75, c='orangered', alpha=0.6)
+    #ax.scatter(rad_grid_overlap, power_lores_overlap, s=0.75, c='limegreen', alpha=0.6)
+    #power_comb = np.sqrt((comb_fourier.real)**2.0)
+    #ax.scatter(rad_grid, power_comb, s=0.45, c='fuchsia', alpha=0.6)
     ax.plot([cutoff_min_pix,cutoff_min_pix], [1E-50,1E50], ls=':', c='gray')
     ax.plot([cutoff_max_pix,cutoff_max_pix], [1E-50,1E50], ls=':', c='gray')
-    ax.set_xlim([1,50])
-    ax.set_ylim([1E4,1E7])
+    ax.set_xlim([1,500])
+    ax.set_ylim([1E3,1E7])
     ax.set_xscale('log')
     ax.set_yscale('log')
     fig.savefig('/astro/dust_kg/cclark/Quest/fourier.png', dpi=300)

@@ -443,7 +443,7 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
 
     # If requested, start by cross-calibrating the hires and lores data within the tapering angular window
     if taper_cutoffs_deg != False:
-        hires_fourier_corr = FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, lores_beam_fourier, hires_beam_fourier, hires_pix_width_deg)
+        hires_fourier_corr = FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, hires_pix_width_deg)
         hires_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_img * hires_fourier_corr[0])))
 
         # Perform tapering between specificed angular scales to weight data in Fourier space, following a Hann filter profile

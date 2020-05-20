@@ -384,6 +384,18 @@ def MontagePath():
 # Outputs: The combined image
 def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_cutoffs_deg=False, apodise=False, to_file=False):
 
+    # If input images are being provided as paths to files, discern this and read them in
+    if isinstance(lores_hdu, str):
+        lores_hdu = astropy.io.fits.PrimaryHDU(data=astropy.io.fits.getdata(lores_hdu),
+                                               header=astropy.io.fits.getheader(lores_hdu))
+    if isinstance(hires_hdu, str):
+        hires_hdu = astropy.io.fits.PrimaryHDU(data=astropy.io.fits.getdata(hires_hdu),
+                                               header=astropy.io.fits.getheader(hires_hdu))
+    if isinstance(lores_beam_img, str):
+        lores_beam_img = astropy.io.fits.getdata(lores_beam_img)
+    if isinstance(hires_beam_img, str):
+        hires_beam_img = astropy.io.fits.getdata(hires_beam_img)
+
     # Make  clean copies of input arrays, to make sure nothing is being overwritten outside the function
     import copy
     lores_hdu = copy.deepcopy(lores_hdu)

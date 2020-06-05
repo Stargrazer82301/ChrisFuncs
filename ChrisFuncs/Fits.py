@@ -380,15 +380,20 @@ def MontagePath():
 
 
 # Define function for clever fourier combination of images,
-# Inputs: HDU containing low-res data; HDU containing high-res data; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image(); optional boolean/float for giving angular scale in degrees at which to apply a tapering transition; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts; boolean/string for saving combined image to file instead of returning)
+# Inputs: HDU containing low-res data; HDU containing high-res data; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image(); (optional boolean/float for giving angular scale in degrees at which to apply a tapering transition; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts; boolean/string for saving combined image to file instead of returning
 # Outputs: The combined image
-def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_cutoffs_deg=False, apodise=False, to_file=False):
+def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
+                   taper_cutoffs_deg=False, apodise=False, to_file=False):
 
     # If input images are being provided as paths to files, discern this and read them in
+    lores_hdu_path = False
     if isinstance(lores_hdu, str):
+        lores_hdu_path = lores_hdu
         lores_hdu = astropy.io.fits.PrimaryHDU(data=astropy.io.fits.getdata(lores_hdu),
                                                header=astropy.io.fits.getheader(lores_hdu))
+    hires_hdu_path = False
     if isinstance(hires_hdu, str):
+        hires_hdu_path = hires_hdu
         hires_hdu = astropy.io.fits.PrimaryHDU(data=astropy.io.fits.getdata(hires_hdu),
                                                header=astropy.io.fits.getheader(hires_hdu))
     if isinstance(lores_beam_img, str):
@@ -496,7 +501,12 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
     comb_img[np.where(lores_edge == 1.0)] = np.nan
     comb_img[np.where(comb_img == 0)] = np.nan
     comb_img = astropy.convolution.interpolate_replace_nans(comb_img, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_width_pix)), astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
-                                                            astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
+
+    # Remove any temp files
+    if lores_hdu_path != False:
+        os.remove(lores_hdu_path)
+    if hires_hdu_path != False:
+        os.remove(hires_hdu_path)
 
     # Return combined image (or save to file if that was requested)
     if not to_file:

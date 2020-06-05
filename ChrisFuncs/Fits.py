@@ -489,12 +489,12 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img, taper_c
     hires_mask[np.where(np.isnan(hires_mask))] = 0.0
     hires_mask_dilated_out = scipy.ndimage.binary_dilation(hires_mask, iterations=int(2.0*round(lores_beam_width_pix))).astype(int)
     hires_mask = -1.0 * (hires_mask - 1.0)
-    hires_mask_dilated_in = scipy.ndimage.binary_dilation(hires_mask, iterations=int(0.4*round(lores_beam_width_pix))).astype(int)
+    hires_mask_dilated_in = scipy.ndimage.binary_dilation(hires_mask, iterations=1).astype(int)
     hires_mask_border = (hires_mask_dilated_out + hires_mask_dilated_in) - 1
     comb_img[np.where(hires_mask_border)] = np.nan
-    comb_img[where_edge] = np.nan
+    comb_img[np.where(lores_edge == 1.0)] = np.nan
     comb_img[np.where(comb_img == 0)] = np.nan
-    comb_img = astropy.convolution.interpolate_replace_nans(comb_img, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_width_pix)),
+    comb_img = astropy.convolution.interpolate_replace_nans(comb_img, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_width_pix)), astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
                                                             astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
 
     # Return combined image (or save to file if that was requested)

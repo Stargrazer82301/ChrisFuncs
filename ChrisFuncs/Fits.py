@@ -136,9 +136,9 @@ def FitsEmbed(pathname, margin, exten=0, variable=False, outfile=False):
 
 
 # Define function to generate a generic FITS header for a given projection
-# Args: Central right ascension (deg), central declination (deg), image width (deg), pixel size (arcsec), rotation (optional, deg), output directory (optional)
+# Args: Central right ascension (deg), central declination (deg), image width (deg), pixel size (arcsec), rotation (optional, deg), output directory (optional), whether to operate in Galactic coords instead of ra & dec (optional, boolean)
 # Returns: FITS header
-def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec, rotation=None, out_path=False):
+def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec, rotation=None, out_path=False, galactic=False):
 
     # Calculate map dimensions
     map_width_arcsec = float(map_width_deg) * 3600.0
@@ -151,7 +151,10 @@ def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec, rotation=None, out_path
     wcs.wcs.crval = [ float(ra), float(dec) ]
     wcs.wcs.crpix = [ map_centre_pix, map_centre_pix ]
     wcs.wcs.cdelt = np.array([ -float(pix_width_deg), float(pix_width_deg) ])
-    wcs.wcs.ctype = [ 'RA---TAN', 'DEC--TAN' ]
+    if not galactic:
+        wcs.wcs.ctype = [ 'RA---TAN', 'DEC--TAN' ]
+    elif galactic:
+        wcs.wcs.ctype = [ 'GLON-TAN', 'GLAT-TAN' ]
 
     # Create empty header, and set map dimensions in it
     header = astropy.io.fits.Header()

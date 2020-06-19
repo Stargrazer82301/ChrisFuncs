@@ -1,8 +1,10 @@
 # Import smorgasbord
 import sys
+current_module = sys.modules[__name__]
 import os
 import pdb
-current_module = sys.modules[__name__]
+from IPython import get_ipython
+get_ipython().run_line_magic('pdb','on')
 import numpy as np
 import scipy.ndimage
 import astropy.io.fits
@@ -19,7 +21,7 @@ try:
   basestring
 except NameError:
   basestring = str
-
+kjlj
 
 
 # Function to create a cutout of a fits file - NOW JUST A WRAPPER OF AN ASTROPY FUNCTION

@@ -3,8 +3,6 @@ import sys
 current_module = sys.modules[__name__]
 import os
 import pdb
-from IPython import get_ipython
-get_ipython().run_line_magic('pdb','on')
 import numpy as np
 import scipy.ndimage
 import astropy.io.fits

@@ -1,8 +1,8 @@
 # Import smorgasbord
 import pdb
 import pdb
-from IPython import get_ipython
-get_ipython().run_line_magic('pdb','on')
+"""from IPython import get_ipython
+get_ipython().run_line_magic('pdb','on')"""
 import sys
 import os
 #sys.path.append( os.path.split( os.path.realpath(__file__) )[:-1][0] )

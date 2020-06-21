@@ -32,6 +32,7 @@ import glob
 import time
 import re
 import copy
+from contextlib import contextmanager
 
 # A python 2/3 compatability hack for stirng type handling
 try:
@@ -1227,6 +1228,39 @@ def ProgressDir(prog_dir, iter_total, raw=False):
 
         # Return results
         return iter_complete, time_est
+
+
+
+# Define a context manager to suppress console output, even from external code (like IDL)
+#
+@contextmanager
+def StdOutRedirect(to=os.devnull):
+    """
+    # Useage thus
+    import os
+    with stdout_redirected(to=filename):
+        print("from Python")
+        os.system("echo non-Python applications are also supported")
+    """
+    try:
+        fd = sys.stdout.fileno()
+    except:
+        raise Exception('StdOutRedirect will not work if run though an IDE or GUI (like Spyrer)')
+    ##### assert that Python and C stdio write using the same file descriptor
+    ####assert libc.fileno(ctypes.c_void_p.in_dll(libc, "stdout")) == fd == 1
+    def _redirect_stdout(to):
+        sys.stdout.close() # + implicit flush()
+        os.dup2(to.fileno(), fd) # fd writes to 'to' file
+        sys.stdout = os.fdopen(fd, 'w') # Python writes to fd
+    with os.fdopen(os.dup(fd), 'w') as old_stdout:
+        with open(to, 'w') as file:
+            _redirect_stdout(to=file)
+        try:
+            yield # allow code to be run with the redirected stdout
+        finally:
+            _redirect_stdout(to=old_stdout) # restore stdout.
+                                            # buffering and flags such as
+                                            # CLOEXEC may be different
 
 
 

@@ -21,7 +21,7 @@ try:
   basestring
 except NameError:
   basestring = str
-kjlj
+
 
 
 # Function to create a cutout of a fits file - NOW JUST A WRAPPER OF AN ASTROPY FUNCTION

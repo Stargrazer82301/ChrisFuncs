@@ -383,10 +383,10 @@ def MontagePath():
 
 
 # Define function for clever fourier combination of images,
-# Inputs: HDU containing low-res data; HDU containing high-res data; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image(); (optional boolean/float for giving angular scale in degrees at which to apply a tapering transition; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts; boolean/string for saving combined image to file instead of returning
+# Inputs: HDU containing low-res data; HDU containing high-res data; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image(); (optional boolean/float for giving angular scale in degrees at which to apply a tapering transition; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts; boolean/string for saving combined image to file instead of returning; boolean for also returning fourier calibration correction factor
 # Outputs: The combined image
 def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
-                   taper_cutoffs_deg=False, apodise=False, to_file=False):
+                   taper_cutoffs_deg=False, apodise=False, to_file=False, return_corr=False):
 
     # If input images are being provided as paths to files, discern this and read them in
     lores_hdu_path = False
@@ -511,12 +511,18 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     if hires_hdu_path != False:
         os.remove(hires_hdu_path)
 
-    # Return combined image (or save to file if that was requested)
+    # Return combined image (or save to file if that was requested, with added possibility of returing calibration correction)
     if not to_file:
-        return comb_img
+        if return_corr:
+            return (comb_img, hires_fourier_corr_factor[0])
+        else:
+            return comb_img
     else:
         astropy.io.fits.writeto(to_file, data=comb_img, header=hires_hdr, overwrite=True)
-        return to_file
+        if return_corr:
+            return (to_file, hires_fourier_corr_factor[0])
+        else:
+            return to_file
 
     # Various tests (included intentionally here after return, just to save re-typing if need be in future)
     hires_offset = hires_img[np.where(np.isnan(hires_img)==False)] - lores_img[np.where(np.isnan(hires_img)==False)]

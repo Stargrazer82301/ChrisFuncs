@@ -514,13 +514,13 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     # Return combined image (or save to file if that was requested, with added possibility of returing calibration correction)
     if not to_file:
         if return_corr:
-            return (comb_img, hires_fourier_corr_factor[0])
+            return (comb_img, hires_fourier_corr_factor[0], hires_fourier_corr_factor[1])
         else:
             return comb_img
     else:
         astropy.io.fits.writeto(to_file, data=comb_img, header=hires_hdr, overwrite=True)
         if return_corr:
-            return (to_file, hires_fourier_corr_factor[0])
+            return (to_file, hires_fourier_corr_factor[0], hires_fourier_corr_factor[1])
         else:
             return to_file
 
@@ -649,12 +649,13 @@ def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, hires_pix_
 
     # Caltulate correction factor (in log space, as distribution in power space is logarithmic)
     power_dex_overlap = np.log10(power_hires_overlap) - np.log10(power_lores_overlap)
-    power_hires_corr_factor = 1.0 / 10.0**SigmaClip(power_dex_overlap, median=True, sigma_thresh=1.0)[1]
+    power_hires_corr_factor = 1.0 / 10.0**np.median(power_dex_overlap)#SigmaClip(power_dex_overlap, median=True, sigma_thresh=1.0)[1]
 
     # Calculate uncertainty on correction factor by bootstrapping
     power_hires_corr_bs = []
     for b in range(100):
-        power_hires_corr_bs.append(SigmaClip(np.random.choice(power_dex_overlap, size=len(power_dex_overlap)), median=True, sigma_thresh=1.0)[1])
+        #power_hires_corr_bs.append(SigmaClip(np.random.choice(power_dex_overlap, size=len(power_dex_overlap)), median=True, sigma_thresh=1.0)[1])
+        power_hires_corr_bs.append(np.median(np.random.choice(power_dex_overlap, size=len(power_dex_overlap))))
     power_hires_corr_factor_unc = np.std(1.0 / (10.0**np.array(power_hires_corr_bs)))
 
     # Return results

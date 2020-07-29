@@ -1231,8 +1231,9 @@ def ProgressDir(prog_dir, iter_total, raw=False):
 
 
 
-# Define a context manager to suppress console output, even from external code (like IDL)
-#
+# A context manager to suppress console output, even from external code (like IDL)
+# Input: Optional choice of where to redirect output to
+# Output: None
 @contextmanager
 def StdOutRedirect(to=os.devnull):
     """

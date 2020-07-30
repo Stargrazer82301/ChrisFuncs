@@ -483,6 +483,11 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
         lores_weight = 1.0 * lores_beam_fourier
         lores_fourier_weighted = lores_fourier * lores_weight
 
+    # Remove edge effects from high-resolution map, where possible
+    hires_weighted_img = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(hires_fourier_weighted))))
+    hires_weighted_img[np.where(np.isnan(hires_hdu.data))] = SigmaClip(hires_weighted_img, median=True, sigma_thresh=1.0)[1]
+    hires_fourier_weighted = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_weighted_img)))
+
     # Combine the images, then convert back out of Fourier space
     comb_fourier = lores_fourier_weighted + hires_fourier_weighted
     comb_fourier_shift = np.fft.ifftshift(comb_fourier)
@@ -498,7 +503,7 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     hires_mask[np.where(np.isnan(hires_mask))] = 0.0
     hires_mask_dilated_out = scipy.ndimage.binary_dilation(hires_mask, iterations=int(2.0*round(lores_beam_width_pix))).astype(int)
     hires_mask = -1.0 * (hires_mask - 1.0)
-    hires_mask_dilated_in = scipy.ndimage.binary_dilation(hires_mask, iterations=1).astype(int)
+    hires_mask_dilated_in = scipy.ndimage.binary_dilation(hires_mask, iterations=30).astype(int)
     hires_mask_border = (hires_mask_dilated_out + hires_mask_dilated_in) - 1
     comb_img[np.where(hires_mask_border)] = np.nan
     comb_img[np.where(comb_img == 0)] = np.nan

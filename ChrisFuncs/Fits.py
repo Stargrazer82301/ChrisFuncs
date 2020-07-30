@@ -383,10 +383,10 @@ def MontagePath():
 
 
 # Define function for clever fourier combination of images,
-# Inputs: HDU containing low-res data; HDU containing high-res data; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image(); (optional boolean/float for giving angular scale in degrees at which to apply a tapering transition; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts; boolean/string for saving combined image to file instead of returning; boolean for also returning fourier calibration correction factor
+# Inputs: HDU containing low-res data; HDU containing high-res data; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image(); (optional boolean/float for giving angular scale in degrees at which to apply a tapering transition; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts; boolean/string for saving combined image to file instead of returning; boolean for also returning additional data
 # Outputs: The combined image
 def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
-                   taper_cutoffs_deg=False, apodise=False, to_file=False, return_corr=False):
+                   taper_cutoffs_deg=False, apodise=False, to_file=False, return_all=False):
 
     # If input images are being provided as paths to files, discern this and read them in
     lores_hdu_path = False
@@ -505,6 +505,10 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     comb_img = astropy.convolution.interpolate_replace_nans(comb_img, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_width_pix)), astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
     comb_img[np.where(lores_edge == 1.0)] = np.nan
 
+    # Create mask describing tegions of the map where the only data is the good high-resolution combined data
+    comb_mask = hires_mask_border.copy()
+    comb_mask[np.where(np.isnan(hires_hdu.data))] = 0
+
     # Remove any temp files
     if lores_hdu_path != False:
         os.remove(lores_hdu_path)
@@ -513,14 +517,14 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
 
     # Return combined image (or save to file if that was requested, with added possibility of returing calibration correction)
     if not to_file:
-        if return_corr:
-            return (comb_img, hires_fourier_corr_factor[0], hires_fourier_corr_factor[1])
+        if return_all:
+            return (comb_img, hires_fourier_corr_factor[0], hires_fourier_corr_factor[1], comb_mask)
         else:
             return comb_img
     else:
         astropy.io.fits.writeto(to_file, data=comb_img, header=hires_hdr, overwrite=True)
-        if return_corr:
-            return (to_file, hires_fourier_corr_factor[0], hires_fourier_corr_factor[1])
+        if return_all:
+            return (to_file, hires_fourier_corr_factor[0], hires_fourier_corr_factor[1], comb_mask)
         else:
             return to_file
 

@@ -478,6 +478,7 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
 
     # Otherwise, in standard operation, use low-resolution beam to weight the tapering from low-resolution to high-resolution data
     else:
+        hires_fourier_corr_factor = [1.0, 0.0]
         hires_weight = 1.0 - lores_beam_fourier
         hires_fourier_weighted = hires_fourier * hires_weight
         lores_weight = 1.0 * lores_beam_fourier

@@ -498,17 +498,24 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     lores_beam_demislice = lores_beam_img[int(round(0.5*lores_beam_img.shape[1])):,int(round(0.5*lores_beam_img.shape[1]))]
     lores_beam_width_pix = float(np.argmin(np.abs(lores_beam_demislice - (0.5 * lores_beam_demislice.max()))))
 
-    # Purely for prettiness sake, identify any steppy edge region, and replace with simple interpolation
+    # Purely for prettiness sake, identify any messy transition region between high- and low-resolution
     hires_mask = hires_hdu.data.copy()
     hires_mask = (hires_mask * 0.0) + 1.0
     hires_mask[np.where(np.isnan(hires_mask))] = 0.0
-    hires_mask_dilated_out = scipy.ndimage.binary_dilation(hires_mask, iterations=int(2.0*round(lores_beam_width_pix))).astype(int)
+    hires_mask_dilated_out = scipy.ndimage.binary_dilation(hires_mask, iterations=int(1.5*round(lores_beam_width_pix))).astype(int)
     hires_mask = -1.0 * (hires_mask - 1.0)
-    hires_mask_dilated_in = scipy.ndimage.binary_dilation(hires_mask, iterations=30).astype(int)
+    hires_mask_dilated_in = scipy.ndimage.binary_dilation(hires_mask, iterations=int(1.5*round(lores_beam_width_pix))).astype(int)
     hires_mask_border = (hires_mask_dilated_out + hires_mask_dilated_in) - 1
     comb_img[np.where(hires_mask_border)] = np.nan
     comb_img[np.where(comb_img == 0)] = np.nan
-    comb_img = astropy.convolution.interpolate_replace_nans(comb_img, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_width_pix)), astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
+
+    # UsUsee an even larger border region for creating the interpolation to make the transition smooth
+    hires_mask_border_expanded = scipy.ndimage.binary_dilation(hires_mask_border, iterations=int(2.0*round(lores_beam_width_pix))).astype(int)
+    comb_fill = comb_img.copy()
+    comb_fill[np.where(hires_mask_border_expanded)] = np.nan
+    comb_fill = astropy.convolution.interpolate_replace_nans(comb_fill, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_width_pix)), astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
+    comb_img[np.where(hires_mask_border==1)] = comb_fill[np.where(hires_mask_border==1)]
+    #comb_img = astropy.convolution.interpolate_replace_nans(comb_img, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_width_pix)), astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
     comb_img[np.where(lores_edge == 1.0)] = np.nan
 
     # Create mask describing tegions of the map where the only data is the good high-resolution combined data

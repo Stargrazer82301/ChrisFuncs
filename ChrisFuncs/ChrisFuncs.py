@@ -1245,23 +1245,25 @@ def StdOutRedirect(to=os.devnull):
     """
     try:
         fd = sys.stdout.fileno()
+        ##### assert that Python and C stdio write using the same file descriptor
+        ##### assert libc.fileno(ctypes.c_void_p.in_dll(libc, "stdout")) == fd == 1
+        def _redirect_stdout(to):
+            sys.stdout.close() # + implicit flush()
+            os.dup2(to.fileno(), fd) # fd writes to 'to' file
+            sys.stdout = os.fdopen(fd, 'w') # Python writes to fd
+        with os.fdopen(os.dup(fd), 'w') as old_stdout:
+            with open(to, 'w') as file:
+                _redirect_stdout(to=file)
+            try:
+                yield # allow code to be run with the redirected stdout
+            finally:
+                _redirect_stdout(to=old_stdout) # restore stdout.
+                                                # buffering and flags such as
+                                                # CLOEXEC may be different
     except:
-        raise Exception('StdOutRedirect will not work if run though an IDE or GUI (like Spyrer)')
-    ##### assert that Python and C stdio write using the same file descriptor
-    ####assert libc.fileno(ctypes.c_void_p.in_dll(libc, "stdout")) == fd == 1
-    def _redirect_stdout(to):
-        sys.stdout.close() # + implicit flush()
-        os.dup2(to.fileno(), fd) # fd writes to 'to' file
-        sys.stdout = os.fdopen(fd, 'w') # Python writes to fd
-    with os.fdopen(os.dup(fd), 'w') as old_stdout:
-        with open(to, 'w') as file:
-            _redirect_stdout(to=file)
-        try:
-            yield # allow code to be run with the redirected stdout
-        finally:
-            _redirect_stdout(to=old_stdout) # restore stdout.
-                                            # buffering and flags such as
-                                            # CLOEXEC may be different
+        yield
+        #raise Exception('StdOutRedirect will not work if run though an IDE or GUI (like Spyrer)')
+
 
 
 

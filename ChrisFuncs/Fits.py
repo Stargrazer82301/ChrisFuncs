@@ -455,6 +455,11 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     hires_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_img)))
     lores_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(lores_img)))
 
+    # Delete un-needed arrays, to save memory
+    del(hires_img)
+    del(lores_img)
+    del(hires_beam_img)
+
     # Add miniscule offset to any zero-value elements to stop inf and nan values from appearing later.
     lores_beam_fourier.real[np.where(lores_beam_fourier.real == 0)] = 1E-50
 
@@ -495,6 +500,17 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     comb_fourier_shift = np.fft.ifftshift(comb_fourier)
     comb_img = np.fft.fftshift(np.real(np.fft.ifft2(comb_fourier_shift)))
 
+    # Delete un-needed arrays, to free up memory
+    del(fourier_norm)
+    del(taper_filter)
+    del(hires_weight)
+    del(lores_weight)
+    del(hires_fourier_weighted)
+    del(lores_fourier_weighted)
+    del(hires_weighted_img)
+    del(comb_fourier)
+    del(comb_fourier_shift)
+
     # Estimate the size of the low-resolution beam
     lores_beam_demislice = lores_beam_img[int(round(0.5*lores_beam_img.shape[1])):,int(round(0.5*lores_beam_img.shape[1]))]
     lores_beam_width_pix = float(np.argmin(np.abs(lores_beam_demislice - (0.5 * lores_beam_demislice.max()))))
@@ -510,11 +526,15 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     comb_img[np.where(hires_mask_border)] = np.nan
     comb_img[np.where(comb_img == 0)] = np.nan
 
-    # Ue an even larger border region for creating the interpolation to make the transition smooth
+    # Create an even larger border region for creating the interpolation to make the transition smooth
     hires_mask_border_expanded = scipy.ndimage.binary_dilation(hires_mask_border, iterations=int(2.0*round(lores_beam_width_pix))).astype(int)
     comb_fill = comb_img.copy()
     comb_fill[np.where(hires_mask_border_expanded)] = np.nan
-    comb_fill = astropy.convolution.interpolate_replace_nans(comb_fill, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_width_pix)), astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
+    comb_fill = astropy.convolution.interpolate_replace_nans(comb_fill,
+                                                             astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_width_pix)),
+                                                             astropy.convolution.convolve_fft,
+                                                             allow_huge=True,
+                                                             boundary='wrap')
     comb_img[np.where(hires_mask_border==1)] = comb_fill[np.where(hires_mask_border==1)]
     #comb_img = astropy.convolution.interpolate_replace_nans(comb_img, astropy.convolution.Gaussian2DKernel(round(2.0*lores_beam_width_pix)), astropy.convolution.convolve_fft, allow_huge=True, boundary='wrap')
     comb_img[np.where(lores_edge == 1.0)] = np.nan
@@ -542,7 +562,7 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
         else:
             return to_file
 
-    # Various tests (included intentionally here after return, just to save re-typing if need be in future)
+    """# Various tests (included intentionally here after return, just to save re-typing if need be in future)
     hires_offset = hires_img[np.where(np.isnan(hires_img)==False)] - lores_img[np.where(np.isnan(hires_img)==False)]
     hires_offset = SigmaClip(hires_offset, median=True, sigma_thresh=1.0)[1]
     hires_img -= hires_offset
@@ -558,7 +578,6 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/hires_weighted_img.fits', data=hires_weighted_img, header=hires_hdr, overwrite=True)
     lores_weighted_img = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(lores_fourier_weighted))))
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/lores_weighted_img.fits', data=lores_weighted_img, header=hires_hdr, overwrite=True)
-
     comb_hires_ratio = comb_img / hires_img
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/comb_hires_ratio.fits', data=comb_hires_ratio, header=hires_hdr, overwrite=True)
     comb_hires_diff = comb_img - hires_img
@@ -567,12 +586,9 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/comb_lores_ratio.fits', data=comb_lores_ratio, header=hires_hdr, overwrite=True)
     comb_lores_diff = comb_img - lores_img
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/comb_lores_diff.fits', data=comb_lores_diff, header=hires_hdr, overwrite=True)
-
-    pdb.set_trace()
-
     lores_fourier_unnorm_weighted = lores_fourier * lores_weight
     lores_norm_ratio = lores_weighted_img / np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(lores_fourier_unnorm_weighted))))
-    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/lores_norm_ratio.fits', data=lores_norm_ratio, header=hires_hdr, overwrite=True)
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/lores_norm_ratio.fits', data=lores_norm_ratio, header=hires_hdr, overwrite=True)"""
 
 
 

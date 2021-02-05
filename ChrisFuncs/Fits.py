@@ -351,7 +351,7 @@ def MontagePath():
     location = socket.gethostname()
 
     # List all combinations of machines and paths we want to cover; first entry in each row should be location of list of locations, second entry should be corresponding Montage directory path (for single location, the location name can start with a * wildcard)
-    paths_lists = ([['*replicators', '/Users/cclark/Soft/Montage/bin/'],
+    paths_lists = ([['*silmaril', '/Users/cclark/Soft/Montage/bin/'],
                     [['science0.stsci.edu','science3.stsci.edu','science4.stsci.edu','science5.stsci.edu','science6.stsci.edu','science7.stsci.edu'], '/grp/software/linux/rhel6/x86_64/montage/6.0/bin/'],
                     [['science1.stsci.edu','science2.stsci.edu','science8.stsci.edu','science9.stsci.edu','science10.stsci.edu'], '/grp/software/linux/rhel7/x86_64/montage/6.0/bin/'],
                     ['*.stsci.edu', '/grp/software/linux/rhel7/x86_64/montage/6.0/bin/']

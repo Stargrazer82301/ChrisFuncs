@@ -407,13 +407,12 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     # Make clean copies of input arrays, then put into float32, and delete HDUs, to save memory
     lores_img = lores_hdu.data.copy().astype(np.float32)
     lores_hdr = lores_hdu.header.copy()
-    del(lores_hdu)
     hires_img = hires_hdu.data.copy().astype(np.float32)
     hires_img_orig = hires_hdu.data.copy().astype(np.float32)
     hires_hdr = hires_hdu.header.copy()
-    del(hires_hdu)
     lores_beam_img = lores_beam_img.copy().astype(np.float32)
     hires_beam_img = hires_beam_img.copy().astype(np.float32)
+    del(lores_hdu, hires_hdu)
 
     # Calculate low -resolution pixel size
     lores_wcs = astropy.wcs.WCS(lores_hdr)
@@ -450,15 +449,13 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
         lores_beam_img /= np.sum(lores_beam_img)
 
     # Fourier transform all the things
-    hires_beam_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_beam_img)))
-    lores_beam_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(lores_beam_img)))
-    hires_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_img)))
-    lores_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(lores_img)))
+    hires_beam_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_beam_img))).astype(np.complex64)
+    lores_beam_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(lores_beam_img))).astype(np.complex64)
+    hires_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_img))).astype(np.complex64)
+    lores_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(lores_img))).astype(np.complex64)
 
     # Delete un-needed arrays, to save memory
-    del(hires_img)
-    del(lores_img)
-    del(hires_beam_img)
+    del(hires_img, lores_img, hires_beam_img)
 
     # Add miniscule offset to any zero-value elements to stop inf and nan values from appearing later.
     lores_beam_fourier.real[np.where(lores_beam_fourier.real == 0)] = 1E-50
@@ -467,6 +464,7 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     fourier_norm = 1.0 / lores_beam_fourier
     fourier_norm *= hires_beam_fourier
     lores_fourier *= fourier_norm
+    del(fourier_norm, hires_beam_fourier)
 
     # If requested, start by cross-calibrating the hires and lores data within the tapering angular window
     if taper_cutoffs_deg != False:
@@ -491,25 +489,16 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
         lores_fourier_weighted = lores_fourier * lores_weight
 
     # Remove edge effects from high-resolution map, where possible
-    hires_weighted_img = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(hires_fourier_weighted))))
+    hires_weighted_img = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(hires_fourier_weighted)))).astype(np.float32)
     hires_weighted_img[np.where(np.isnan(hires_img_orig))] = SigmaClip(hires_weighted_img, median=True, sigma_thresh=1.0)[1]
-    hires_fourier_weighted = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_weighted_img)))
+    hires_fourier_weighted = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_weighted_img))).astype(np.complex64)
 
     # Combine the images, then convert back out of Fourier space
     comb_fourier = lores_fourier_weighted + hires_fourier_weighted
     comb_fourier_shift = np.fft.ifftshift(comb_fourier)
-    comb_img = np.fft.fftshift(np.real(np.fft.ifft2(comb_fourier_shift)))
-
-    # Delete un-needed arrays, to free up memory
-    del(fourier_norm)
-    del(taper_filter)
-    del(hires_weight)
-    del(lores_weight)
-    del(hires_fourier_weighted)
-    del(lores_fourier_weighted)
-    del(hires_weighted_img)
-    del(comb_fourier)
-    del(comb_fourier_shift)
+    comb_img = np.fft.fftshift(np.real(np.fft.ifft2(comb_fourier_shift))).astype(np.float32)
+    del(taper_filter,hires_weight,lores_weight,hires_fourier_weighted,
+        lores_fourier_weighted,hires_weighted_img,comb_fourier,comb_fourier_shift)
 
     # Estimate the size of the low-resolution beam
     lores_beam_demislice = lores_beam_img[int(round(0.5*lores_beam_img.shape[1])):,int(round(0.5*lores_beam_img.shape[1]))]
@@ -548,7 +537,7 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
         os.remove(lores_hdu_path)
     if hires_hdu_path != False:
         os.remove(hires_hdu_path)
-    pdb.set_trace()
+
     # Return combined image (or save to file if that was requested, with added possibility of returing calibration correction)
     if not to_file:
         if return_all:

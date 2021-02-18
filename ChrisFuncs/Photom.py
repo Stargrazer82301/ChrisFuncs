@@ -139,7 +139,7 @@ def AnnulusQuickPrepare(array, angle, i_centre, j_centre):
     j_trans = (j_grid-float(j_centre))*np.cos(angle) + (i_grid-float(i_centre))*np.sin(angle)
 
     # Return results
-    return [i_trans, j_trans]
+    return (i_trans, j_trans)
 
 
 

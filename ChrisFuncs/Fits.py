@@ -461,8 +461,7 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     lores_beam_fourier.real[np.where(lores_beam_fourier.real == 0)] = 1E-50
 
     # Divide the low-resolution data by the low-resolution beam (ie, deconvolve it), then multiply by the high-resoluiton beam, to normalise amplitudes
-    fourier_norm = 1.0 / lores_beam_fourier
-    fourier_norm *= hires_beam_fourier
+    fourier_norm = hires_beam_fourier / lores_beam_fourier
     lores_fourier *= fourier_norm
     del(fourier_norm, hires_beam_fourier)
 

@@ -383,10 +383,10 @@ def MontagePath():
 
 
 # Define function for clever fourier combination of images,
-# Inputs: HDU containing low-res data; HDU containing high-res data; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image(); (optional boolean/float for giving angular scale in degrees at which to apply a tapering transition; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts; boolean/string for saving combined image to file instead of returning; boolean for also returning additional data
+# Inputs: HDU containing low-res data; HDU containing high-res data; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image(); (optional boolean/float for giving angular scale in degrees at which to apply a tapering transition; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts; boolean/string for saving combined image to file instead of returning; boolean for also returning additional data; boolean describing whether to use beam-mediated feather and only use window for cross-calibrating
 # Outputs: The combined image
 def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
-                   taper_cutoffs_deg=False, apodise=False, to_file=False, return_all=False):
+                   taper_cutoffs_deg=False, apodise=False, to_file=False, return_all=False, beam_cross_corr=False):
 
     # If input images are being provided as paths to files, discern this and read them in
     lores_hdu_path = False
@@ -462,6 +462,7 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
 
     # Divide the low-resolution data by the low-resolution beam (ie, deconvolve it), then multiply by the high-resoluiton beam, to normalise amplitudes
     fourier_norm = hires_beam_fourier / lores_beam_fourier
+    fourier_norm[np.where(np.isinf(fourier_norm))] = 1E-50
     lores_fourier *= fourier_norm
     del(fourier_norm, hires_beam_fourier)
 
@@ -471,16 +472,20 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
         hires_fourier_corr = hires_fourier * hires_fourier_corr_factor[0]
 
         # Perform tapering between specificed angular scales to weight data in Fourier space, following a Hann filter profile
-        taper_filter = FourierTaper(taper_cutoffs_deg, hires_wcs)
-        hires_weight = 1.0 - taper_filter
-        hires_fourier_weighted = hires_fourier_corr.copy()
-        hires_fourier_weighted *= hires_weight
-        lores_weight = taper_filter
-        lores_fourier_weighted = lores_fourier.copy()
-        lores_fourier_weighted *= lores_weight
-
+        if not beam_cross_corr:
+            taper_filter = FourierTaper(taper_cutoffs_deg, hires_wcs)
+            hires_weight = 1.0 - taper_filter
+            hires_fourier_weighted = hires_fourier_corr.copy()
+            hires_fourier_weighted *= hires_weight
+            lores_weight = taper_filter
+            lores_fourier_weighted = lores_fourier.copy()
+            lores_fourier_weighted *= lores_weight
+            del(taper_filter)
+    #!!!
+    print('### MAYBE REMOVE THIS NONSENSE IF NOT NEEDED ###')
+    #!!!
     # Otherwise, in standard operation, use low-resolution beam to weight the tapering from low-resolution to high-resolution data
-    else:
+    if (taper_cutoffs_deg == False) or (beam_cross_corr == True):
         hires_fourier_corr_factor = [1.0, 0.0]
         hires_weight = 1.0 - lores_beam_fourier
         hires_fourier_weighted = hires_fourier * hires_weight
@@ -496,7 +501,7 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     comb_fourier = lores_fourier_weighted + hires_fourier_weighted
     comb_fourier_shift = np.fft.ifftshift(comb_fourier)
     comb_img = np.fft.fftshift(np.real(np.fft.ifft2(comb_fourier_shift))).astype(np.float32)
-    del(taper_filter,hires_weight,lores_weight,hires_fourier_weighted,
+    del(hires_weight,lores_weight,hires_fourier_weighted,
         lores_fourier_weighted,hires_weighted_img,comb_fourier,comb_fourier_shift)
 
     # Estimate the size of the low-resolution beam
@@ -576,8 +581,8 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/comb_lores_diff.fits', data=comb_lores_diff, header=hires_hdr, overwrite=True)
     lores_fourier_unnorm_weighted = lores_fourier * lores_weight
     lores_norm_ratio = lores_weighted_img / np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(lores_fourier_unnorm_weighted))))
-    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/lores_norm_ratio.fits', data=lores_norm_ratio, header=hires_hdr, overwrite=True)"""
-
+    astropy.io.fits.writeto('/astro/dust_kg/cclark/Quest/lores_norm_ratio.fits', data=lores_norm_ratio, header=hires_hdr, overwrite=True)
+    pdb.set_trace()"""
 
 
 # Function to create a 2D tapering fourier-space filter, transitioning between two defined angular scales, according to a Hann (ie, cosine bell) filter

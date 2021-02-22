@@ -453,8 +453,6 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     lores_beam_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(lores_beam_img))).astype(np.complex64)
     hires_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_img))).astype(np.complex64)
     lores_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(lores_img))).astype(np.complex64)
-
-    # Delete un-needed arrays, to save memory
     del(hires_img, lores_img, hires_beam_img)
 
     # Add miniscule offset to any zero-value elements to stop inf and nan values from appearing later.
@@ -464,7 +462,6 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     fourier_norm = hires_beam_fourier / lores_beam_fourier
     fourier_norm[np.where(np.isinf(fourier_norm))] = 1E-50
     lores_fourier *= fourier_norm
-    del(fourier_norm, hires_beam_fourier)
 
     # If requested, start by cross-calibrating the hires and lores data within the tapering angular window
     if taper_cutoffs_deg != False:
@@ -472,20 +469,16 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
         hires_fourier_corr = hires_fourier * hires_fourier_corr_factor[0]
 
         # Perform tapering between specificed angular scales to weight data in Fourier space, following a Hann filter profile
-        if not beam_cross_corr:
-            taper_filter = FourierTaper(taper_cutoffs_deg, hires_wcs)
-            hires_weight = 1.0 - taper_filter
-            hires_fourier_weighted = hires_fourier_corr.copy()
-            hires_fourier_weighted *= hires_weight
-            lores_weight = taper_filter
-            lores_fourier_weighted = lores_fourier.copy()
-            lores_fourier_weighted *= lores_weight
-            del(taper_filter)
-    #!!!
-    print('### MAYBE REMOVE THIS NONSENSE IF NOT NEEDED ###')
-    #!!!
+        taper_filter = FourierTaper(taper_cutoffs_deg, hires_wcs)
+        hires_weight = 1.0 - taper_filter
+        hires_fourier_weighted = hires_fourier_corr.copy()
+        hires_fourier_weighted *= hires_weight
+        lores_weight = taper_filter
+        lores_fourier_weighted = lores_fourier.copy()
+        lores_fourier_weighted *= lores_weight
+
     # Otherwise, in standard operation, use low-resolution beam to weight the tapering from low-resolution to high-resolution data
-    if (taper_cutoffs_deg == False) or (beam_cross_corr == True):
+    elif taper_cutoffs_deg == False:
         hires_fourier_corr_factor = [1.0, 0.0]
         hires_weight = 1.0 - lores_beam_fourier
         hires_fourier_weighted = hires_fourier * hires_weight

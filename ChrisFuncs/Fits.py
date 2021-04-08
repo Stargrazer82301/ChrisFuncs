@@ -386,7 +386,7 @@ def MontagePath():
 # Inputs: HDU containing low-res data; HDU containing high-res data; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image(); (optional boolean/float for giving angular scale in degrees at which to apply a tapering transition; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts; boolean/string for saving combined image to file instead of returning; boolean for also returning additional data; boolean describing whether to use beam-mediated feather and only use window for cross-calibrating
 # Outputs: The combined image
 def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
-                   taper_cutoffs_deg=False, apodise=False, to_file=False, return_all=False, beam_cross_corr=False):
+                   taper_cutoffs_deg=False, apodise=False, to_file=False, return_all=False):
 
     # If input images are being provided as paths to files, discern this and read them in
     lores_hdu_path = False
@@ -494,8 +494,8 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     comb_fourier = lores_fourier_weighted + hires_fourier_weighted
     comb_fourier_shift = np.fft.ifftshift(comb_fourier)
     comb_img = np.fft.fftshift(np.real(np.fft.ifft2(comb_fourier_shift))).astype(np.float32)
-    del(hires_weight,lores_weight,hires_fourier_weighted,
-        lores_fourier_weighted,hires_weighted_img,comb_fourier,comb_fourier_shift)
+    del(lores_fourier, hires_fourier, hires_weight, lores_weight, hires_fourier_weighted,
+        lores_fourier_weighted, hires_weighted_img, comb_fourier, comb_fourier_shift)
 
     # Estimate the size of the low-resolution beam
     lores_beam_demislice = lores_beam_img[int(round(0.5*lores_beam_img.shape[1])):,int(round(0.5*lores_beam_img.shape[1]))]
@@ -629,7 +629,7 @@ def FourierTaper(taper_cutoffs_deg, in_wcs):
 
 
 # Function to cross-calibrate two data sets' power over a range of angular scales, as a precursor to fourier combination
-# Input: Fourier transform of low-resolution data; fourier transform of high-resolution data; iterable giving angular scale of high- and low resolution cutoffs (in deg)
+# Input: Fourier transform of low-resolution data; fourier transform of high-resolution data; iterable giving angular scale of high- and low resolution cutoffs (in deg); float giving high-resolutuon pixel width (in deg)
 # Output: Correction factor to be applied to high-resolution data; uncertainty on the correction factor
 def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, hires_pix_width_deg):
 
@@ -684,8 +684,8 @@ def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, hires_pix_
     # Test plotting
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(8,6))
-    ax.scatter(rad_grid, power_hires, s=0.75, c='dodgerblue', alpha=0.6)
-    #ax.scatter(rad_grid, power_hires_corr_factor*power_hires, s=0.75, c='dodgerblue', alpha=0.6)
+    #ax.scatter(rad_grid, power_hires, s=0.75, c='dodgerblue', alpha=0.6)
+    ax.scatter(rad_grid, power_hires_corr_factor*power_hires, s=0.75, c='dodgerblue', alpha=0.6)
     #ax.scatter(rad_grid_cutoff_min, power_lores_cutoff_min, s=0.75, c='orangered', alpha=0.6)
     ax.scatter(rad_grid, power_lores, s=0.75, c='orangered', alpha=0.6)
     #ax.scatter(rad_grid_overlap, power_lores_overlap, s=0.75, c='limegreen', alpha=0.6)
@@ -694,7 +694,7 @@ def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, hires_pix_
     ax.plot([cutoff_min_pix,cutoff_min_pix], [1E-50,1E50], ls=':', c='gray')
     ax.plot([cutoff_max_pix,cutoff_max_pix], [1E-50,1E50], ls=':', c='gray')
     ax.set_xlim([1,500])
-    ax.set_ylim([1E3,1E8])
+    ax.set_ylim([1E4,1E10])
     ax.set_xscale('log')
     ax.set_yscale('log')
     fig.savefig('/astro/dust_kg/cclark/Quest/fourier.png', dpi=300)

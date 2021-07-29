@@ -188,9 +188,9 @@ def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec, rotation=None, out_path
 
 
 # Define function create a three-colour PNG image from some FITS files
-# Args: Central RA for output image, central Dec of output image, radius of output image in arcseconds, list of paths (or list of lists when giving order-of-preference) to red green and blue files, output directory, (pmin threshold or list of 3 threshold values, pmax threshold or list of 3 threshold values, stretch type or list of stretch types)
+# Args: Central RA for output image, central Dec of output image, radius of output image in arcseconds, list of paths (or list of lists when giving order-of-preference) to red green and blue files, output directory, (pmin threshold or list of 3 threshold values, pmax threshold or list of 3 threshold values, stretch type or list of stretch types, bool for whether to keep temp files)
 # Returns: None
-def FitsRGB(ra, dec, rad_arcsec, in_paths, out_dir, pmin=False, pmax=False, stretch='log'):
+def FitsRGB(ra, dec, rad_arcsec, in_paths, out_dir, pmin=False, pmax=False, stretch='log', keep_temp=False):
 
     # Prepare storage list for paths, then loop over bands
     path_list = [''] * 3
@@ -273,13 +273,14 @@ def FitsRGB(ra, dec, rad_arcsec, in_paths, out_dir, pmin=False, pmax=False, stre
 
     # Generate RGB image
     aplpy.make_rgb_image(path_zoomed_list,
-                         os.path.join(out_dir, 'RGB.png'),
+                         os.path.join(out_dir, 'RGB.bmp'),
                          stretch_r=stretch_list[0], stretch_g=stretch_list[1], stretch_b=stretch_list[2],
                          vmin_r=vmin_list[0], vmin_g=vmin_list[1], vmin_b=vmin_list[2],
                          vmax_r=vmax_list[0], vmax_g=vmax_list[1], vmax_b=vmax_list[2])
 
     # Clean up temporary files
-    [os.remove(path_zoomed) for path_zoomed in path_zoomed_list]
+    if not keep_temp:
+        [os.remove(path_zoomed) for path_zoomed in path_zoomed_list]
 
 
 
@@ -386,7 +387,7 @@ def MontagePath():
 # Inputs: HDU containing low-res data; HDU containing high-res data; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image(); (optional boolean/float for giving angular scale in degrees at which to apply a tapering transition; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts; boolean/string for saving combined image to file instead of returning; boolean for also returning additional data; boolean describing whether to use beam-mediated feather and only use window for cross-calibrating
 # Outputs: The combined image
 def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
-                   taper_cutoffs_deg=False, apodise=False, to_file=False, return_all=False):
+                   taper_cutoffs_deg=False, apodise=False, to_file=False, return_all=False, calib_only=False):
 
     # If input images are being provided as paths to files, discern this and read them in
     lores_hdu_path = False
@@ -467,6 +468,8 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     if taper_cutoffs_deg != False:
         hires_fourier_corr_factor = FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, hires_pix_width_deg)
         hires_fourier_corr = hires_fourier * hires_fourier_corr_factor[0]
+        if calib_only:
+            return hires_fourier_corr_factor[0]
 
         # Perform tapering between specificed angular scales to weight data in Fourier space, following a Hann filter profile
         taper_filter = FourierTaper(taper_cutoffs_deg, hires_wcs)
@@ -679,9 +682,10 @@ def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, hires_pix_
     power_hires_corr_factor_unc = np.std(1.0 / (10.0**np.array(power_hires_corr_bs)))
 
     # Return results
+    pdb.set_trace()
     return (power_hires_corr_factor, power_hires_corr_factor_unc)
 
-    # Test plotting
+    """# Test plotting
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(8,6))
     #ax.scatter(rad_grid, power_hires, s=0.75, c='dodgerblue', alpha=0.6)
@@ -698,7 +702,7 @@ def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, hires_pix_
     ax.set_xscale('log')
     ax.set_yscale('log')
     fig.savefig('/astro/dust_kg/cclark/Quest/fourier.png', dpi=300)
-    pdb.set_trace()
+    pdb.set_trace()"""
 
 
 

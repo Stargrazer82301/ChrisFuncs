@@ -693,6 +693,73 @@ def PercentileError(data, value, percentile=68.27, bounds=False):
 
 
 
+# Function to find the uncertainty on a median (or mean) of a dataset by bootstrapping
+# Args: Data in question; (int of number of boostrap resmaples to use; boolean of whether to use mean instead of median; boolean False or quantile to use if using percentile instead of standard deviation)
+# Returns: Computed uncertainty on average
+def AvgUncBootstrap(data, n_samples=100, mean=False, percentile=False):
+
+    # Make sure input data is a flat numpy array
+    data = np.array(data)
+    data = data.flatten()
+
+    # Take average
+    if not mean:
+        avg = np.nanmedian(data)
+    else:
+        avg = np.nanmean(data)
+
+    # Generate boostrap resamples, and take averages of them
+    samples = np.array([np.random.choice(data,size=len(data),replace=True) for i in range(n_samples)])
+    if not mean:
+        samples_avgs = np.nanmedian(samples, axis=1)
+    else:
+        samples_avgs = np.nanmean(samples, axis=1)
+
+    # Find uncertainty on sample averages
+    if percentile == False:
+        avg_unc = np.std(samples_avgs)
+    else:
+        avg_unc = np.nanpercentile(np.abs(samples_avgs-avg), percentile)
+
+    # Return result
+    return avg_unc
+
+
+
+# Function to find the uncertainty on a median (or mean) of a dataset containing a selection of subsets by bootstrapping
+# Args: 2D array of data in question [n_subsets X n_datapoints]; (int of number of boostrap resmaples to use; boolean of whether to use mean instead of median; boolean False or quantile to use if using percentile instead of standard deviation)
+# Returns: Computed uncertainty on average
+def SubsetAvgUncBootstrap(data, n_samples=100, mean=False, percentile=False):
+
+    # Take average
+    if not mean:
+        avg = np.nanmedian(data)
+    else:
+        avg = np.nanmean(data)
+
+    # Generate boostrap resamples, by drawing a random sample of the subsets
+    samples = np.nan * np.zeros([data.shape[0], data.shape[1], n_samples])
+    for b in range(n_samples):
+        indxs = np.random.choice(np.arange(data.shape[0]), size=data.shape[0], replace=True)
+        samples[:,:,b] = data[indxs,:]
+
+    # Take averages of resampled data
+    if not mean:
+        samples_avgs = np.nanmedian(samples, axis=(0,1))
+    else:
+        samples_avgs = np.nanmean(samples, axis=2)
+
+    # Find uncertainty on sample averages
+    if percentile == False:
+        avg_unc = np.std(samples_avgs)
+    else:
+        avg_unc = np.nanpercentile(np.abs(samples_avgs-avg), percentile)
+
+    # Return result
+    return avg_unc
+
+
+
 # Function to trim an array to a given size
 # Args: Array to be trimmed, i & j coordinates of centre of trimmed region, width of trimmed region
 # Returns: Trimmed array

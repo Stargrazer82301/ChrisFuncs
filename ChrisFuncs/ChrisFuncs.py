@@ -954,7 +954,7 @@ def UnlogError(log_value, log_error, bounds=False):
         lin_down = 10**log_down
         rel_up = lin_up / value
         rel_down = lin_down / value
-        frac = np.mean([ rel_up, rel_down**-1 ]) - 1.0
+        frac = (0.5 * (rel_up + (rel_down**-1))) - 1.0
         return frac * value
     elif bounds==True:
         error_up = 10.0**(log_value + log_error) - 10.0**log_value

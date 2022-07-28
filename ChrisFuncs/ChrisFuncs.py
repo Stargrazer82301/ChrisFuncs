@@ -354,10 +354,18 @@ def PolySub(image_in, mask_centre_i, mask_centre_j, mask_semimaj_pix, mask_axial
 
 
 
-# Function that provides Galactic extinction correction, via IRSA dust extinction service (which uses the Schlafly & Finkbeiner 2011 prescription)
+# Function that makes sure old code calling mis-named function "ExtCorrrct" still works
 # Args: RA of target coord (deg), dec of target coord (deg), name of band of interest, (boolean of whether function should be verbose, and meaningless verbose output prefix string)
 # Returns: Extinction correction factor (ie, multiply uncorrected flux by this value to yield corrected flux)
 def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
+    return ExtCorrect(ra, dec, band_name, verbose=verbose, verbose_prefix=verbose_prefix)
+
+
+
+# Function that provides Galactic extinction correction, via IRSA dust extinction service (which uses the Schlafly & Finkbeiner 2011 prescription)
+# Args: RA of target coord (deg), dec of target coord (deg), name of band of interest, (boolean of whether function should be verbose, and meaningless verbose output prefix string)
+# Returns: Extinction correction factor (ie, multiply uncorrected flux by this value to yield corrected flux)
+def ExtCorrect(ra, dec, band_name, verbose=True, verbose_prefix=''):
 
     # Make sure there's a space at the end of the verbose prefix
     if verbose_prefix!='':
@@ -461,8 +469,7 @@ def ExtCorrrct(ra, dec, band_name, verbose=True, verbose_prefix=''):
         irsa_band_exists = True
 
     # Report result and return extinction correction
-    import FromGitHub.randlet
-    if verbose: print(verbose_prefix+'Galactic extinction correction factor is '+str(FromGitHub.randlet.ToPrecision(irsa_band_excorr,4))+' (ie, '+str(FromGitHub.randlet.ToPrecision(irsa_band_excorr_mag,4))+' magnitudes).')
+    if verbose: print(verbose_prefix+'Galactic extinction correction factor is '+str(np.around(irsa_band_excorr, decimals=4))+' (ie, '+str(np.around(irsa_band_excorr_mag,4))+' magnitudes).')
     return irsa_band_excorr
 
 

@@ -682,7 +682,6 @@ def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, hires_pix_
     power_hires_corr_factor_unc = np.std(1.0 / (10.0**np.array(power_hires_corr_bs)))
 
     # Return results
-    pdb.set_trace()
     return (power_hires_corr_factor, power_hires_corr_factor_unc)
 
     """# Test plotting

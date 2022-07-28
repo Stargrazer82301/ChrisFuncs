@@ -793,8 +793,8 @@ def ImputeImage(img_in):
     bad_values_interp = scipy.interpolate.griddata(good_coords, good_values, bad_coords, method='cubic')
     img_out = img_in.copy()
     img_out[bad_coords] = bad_values_interp
-    if np.where(np.isnan(img_out))[0].shape[0] > 0:
-        raise Exception('Imputation failed (SciPy did not do its job')
+    bad_coords = np.where(np.isnan(img_out))
+    img_out[bad_coords] = SigmaClip(img_out, sigma_thresh=1.0, median=True)[1]
     return img_out
 
 

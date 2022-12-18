@@ -1244,11 +1244,32 @@ def ProgressDir(prog_dir, iter_total, raw=False):
 
 
 
-# A context manager to suppress console output, even from external code (like IDL)
-# Input: Optional choice of where to redirect output to
+# A context manager to suppress console output, even from external code (like IDL) from https://devpress.csdn.net/python/63045091c67703293080ae61.html
+# Input: None
 # Output: None
-def StdOutRedirect(to=os.devnull):
-    raise Exception('Just use with contextlib.redirect_stdout(None) instead')
+class StdOutRedirect():
+
+    # Open a pair of null files
+    def __init__(self):
+
+        self.null_fds =  [os.open(os.devnull,os.O_RDWR) for x in range(2)]
+        # Save the actual stdout (1) and stderr (2) file descriptors.
+        self.save_fds = [os.dup(1), os.dup(2)]
+
+    # Assign the null pointers to stdout and stderr.
+    def __enter__(self):
+
+        os.dup2(self.null_fds[0],1)
+        os.dup2(self.null_fds[1],2)
+
+    # Re-assign the real stdout/stderr back to (1) and (2)
+    def __exit__(self, *_):
+        os.dup2(self.save_fds[0],1)
+        os.dup2(self.save_fds[1],2)
+
+        # Close all file descriptors
+        for fd in self.null_fds + self.save_fds:
+            os.close(fd)
 
 
 

@@ -1,6 +1,4 @@
 # Import smorgasbord
-import pdb
-import pdb
 """from IPython import get_ipython
 get_ipython().run_line_magic('pdb','on')"""
 import sys
@@ -32,6 +30,9 @@ import glob
 import time
 import re
 import copy
+import errno
+import signal
+import functools
 
 # A python 2/3 compatability hack for stirng type handling
 try:
@@ -809,6 +810,31 @@ def CosmicVariance(v, n, x):
     cv = first_term * second_term
     return cv
 
+
+
+
+
+# Function to provide a decorator to automatically raise an exception when a function runs too long
+# Args: How many seconds until timeout, (error message to be raised
+# Returns: The decorator to use; ie, put @timeout(10) before function for 10 sec timeout
+def Timeout(seconds, error_message=os.strerror(errno.ETIME)):
+    class TimeoutError(Exception):
+        pass
+    def decorator(func):
+        def _handle_timeout(signum, frame):
+            raise TimeoutError(error_message)
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            signal.signal(signal.SIGALRM, _handle_timeout)
+            signal.alarm(seconds)
+            try:
+                result = func(*args, **kwargs)
+            finally:
+                signal.alarm(0)
+            return result
+        return wrapper
+    return decorator
 
 
 # Function to convert the bin-edge output of np.histogram to be bin-centred (and this of same dimensions as bin totals)

@@ -816,7 +816,7 @@ def CosmicVariance(v, n, x):
 
 # Function to provide a decorator to automatically raise an exception when a function runs too long
 # Args: How many seconds until timeout, (error message to be raised
-# Returns: The decorator to use; ie, put @timeout(10) before function for 10 sec timeout
+# Returns: The decorator to use; ie, put @Timeout(10) before function for 10 sec timeout
 def Timeout(seconds, error_message=os.strerror(errno.ETIME)):
     class TimeoutError(Exception):
         pass

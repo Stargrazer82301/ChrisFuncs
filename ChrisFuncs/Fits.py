@@ -352,23 +352,22 @@ def MontagePath():
     location = socket.gethostname()
 
     # List all combinations of machines and paths we want to cover; first entry in each row should be location of list of locations, second entry should be corresponding Montage directory path (for single location, the location name can start with a * wildcard)
-    paths_lists = ([['*silmaril', '/Users/cclark/Soft/Montage/bin/'],
-                    [['science0.stsci.edu','science3.stsci.edu','science4.stsci.edu','science5.stsci.edu','science6.stsci.edu','science7.stsci.edu'], '/grp/software/linux/rhel6/x86_64/montage/6.0/bin/'],
-                    [['science1.stsci.edu','science2.stsci.edu','science8.stsci.edu','science9.stsci.edu','science10.stsci.edu'], '/grp/software/linux/rhel7/x86_64/montage/6.0/bin/'],
-                    ['*.stsci.edu', '/grp/software/linux/rhel7/x86_64/montage/6.0/bin/']
-                    ])
-    paths_array = np.array(paths_lists)
+    paths_lists = [['*silmaril', '/Users/cclark/Soft/Montage/bin/'],
+                   [['science0.stsci.edu','science3.stsci.edu','science4.stsci.edu','science5.stsci.edu','science6.stsci.edu','science7.stsci.edu'], '/grp/software/linux/rhel6/x86_64/montage/6.0/bin/'],
+                   [['science1.stsci.edu','science2.stsci.edu','science8.stsci.edu','science9.stsci.edu','science10.stsci.edu'], '/grp/software/linux/rhel7/x86_64/montage/6.0/bin/'],
+                   ['*.stsci.edu', '/grp/software/linux/rhel7/x86_64/montage/6.0/bin/']
+                    ]
 
     # Loop over rows, checking to see if location conditions are met
-    for i in range(paths_array.shape[0]):
-        if isinstance(paths_array[i,0], list) and (location in paths_array[i,0]):
-            montage_path = paths_array[i,1]
+    for i in range(len(paths_lists)):
+        if isinstance(paths_lists[i][0], list) and (location in paths_lists[i][0]):
+            montage_path = paths_lists[i][1]
             break
-        elif isinstance(paths_array[i,0], str) and ('*' in paths_array[i,0]) and (paths_array[i,0].replace('*','') in location):
-            montage_path = paths_array[i,1]
+        elif isinstance(paths_lists[i][0], str) and ('*' in paths_lists[i][0]) and (paths_lists[i][0].replace('*','') in location):
+            montage_path = paths_lists[i][1]
             break
-        elif isinstance(paths_array[i,0], str) and (paths_array[i,0] == location):
-            montage_path = paths_array[i,1]
+        elif isinstance(paths_lists[i][0], str) and (paths_lists[i][0] == location):
+            montage_path = paths_lists[i][1]
             break
 
     # Append montage path to PATH environment variable

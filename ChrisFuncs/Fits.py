@@ -383,10 +383,10 @@ def MontagePath():
 
 
 # Define function for clever fourier combination of images,
-# Inputs: HDU containing low-res data; HDU containing high-res data; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image(); (optional boolean/float for giving angular scale in degrees at which to apply a tapering transition; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts; boolean/string for saving combined image to file instead of returning; boolean for also returning additional data; boolean describing whether to use beam-mediated feather and only use window for cross-calibrating
+# Inputs: HDU containing low-res data; HDU containing high-res data; array of low-res beam gridded to the pixel scale of high-res image; array of high-res beam gridded to pixel scale of high-res image(); (optional boolean/float for giving angular scale in degrees at which to apply a tapering transition; boolean of whether to employ subpixel low-pass filter to low-res image to remove pixel edge artefacts; boolean/string for saving combined image to file instead of returning; boolean for also returning additional data; boolean describing whether to use beam-mediated feather and only use window for cross-calibrating; boolean for whether to delete intermediate products when possible to save memory
 # Outputs: The combined image
 def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
-                   taper_cutoffs_deg=False, apodise=False, to_file=False, return_all=False, calib_only=False):
+                   taper_cutoffs_deg=False, apodise=False, to_file=False, return_all=False, calib_only=False, cleanup=True):
 
     # If input images are being provided as paths to files, discern this and read them in
     lores_hdu_path = False
@@ -412,7 +412,8 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     hires_hdr = hires_hdu.header.copy()
     lores_beam_img = lores_beam_img.copy().astype(np.float32)
     hires_beam_img = hires_beam_img.copy().astype(np.float32)
-    del(lores_hdu, hires_hdu)
+    if cleanup:
+        del(lores_hdu, hires_hdu)
 
     # Calculate low -resolution pixel size
     lores_wcs = astropy.wcs.WCS(lores_hdr)
@@ -453,7 +454,8 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     lores_beam_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(lores_beam_img))).astype(np.complex64)
     hires_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(hires_img))).astype(np.complex64)
     lores_fourier = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(lores_img))).astype(np.complex64)
-    del(hires_img, lores_img, hires_beam_img)
+    if cleanup:
+        del(hires_img, lores_img, hires_beam_img)
 
     # Add miniscule offset to any zero-value elements to stop inf and nan values from appearing later.
     lores_beam_fourier.real[np.where(lores_beam_fourier.real == 0)] = 1E-50
@@ -468,7 +470,8 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
         hires_fourier_corr_factor = FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, hires_pix_width_deg)
         hires_fourier_corr = hires_fourier * hires_fourier_corr_factor[0]
         if calib_only:
-            return hires_fourier_corr_factor[0]
+            if cleanup:
+                return hires_fourier_corr_factor[0]
 
         # Perform tapering between specificed angular scales to weight data in Fourier space, following a Hann filter profile
         taper_filter = FourierTaper(taper_cutoffs_deg, hires_wcs)
@@ -496,8 +499,9 @@ def FourierCombine(lores_hdu, hires_hdu, lores_beam_img, hires_beam_img,
     comb_fourier = lores_fourier_weighted + hires_fourier_weighted
     comb_fourier_shift = np.fft.ifftshift(comb_fourier)
     comb_img = np.fft.fftshift(np.real(np.fft.ifft2(comb_fourier_shift))).astype(np.float32)
-    del(lores_fourier, hires_fourier, hires_weight, lores_weight, hires_fourier_weighted,
-        lores_fourier_weighted, hires_weighted_img, comb_fourier, comb_fourier_shift)
+    if cleanup:
+        del(lores_fourier, hires_fourier, hires_weight, lores_weight, hires_fourier_weighted,
+            lores_fourier_weighted, hires_weighted_img, comb_fourier, comb_fourier_shift)
 
     # Estimate the size of the low-resolution beam
     lores_beam_demislice = lores_beam_img[int(round(0.5*lores_beam_img.shape[1])):,int(round(0.5*lores_beam_img.shape[1]))]
@@ -701,6 +705,28 @@ def FourierCalibrate(lores_fourier, hires_fourier, taper_cutoffs_deg, hires_pix_
     ax.set_yscale('log')
     fig.savefig('/astro/dust_kg/cclark/Quest/fourier.png', dpi=300)
     pdb.set_trace()"""
+
+
+
+# Function to turn a multi-dimensional header into a 2-dimensional one
+# Input: The header to be modified
+# Output: The modified header
+def HeaderAxesStrip(in_header):
+
+    # Set the NAXIS to be 2
+    out_header = in_header.copy()
+    out_header['NAXIS'] = 2
+
+    # Loop over other keywords, and remove if found for superflouous axes
+    keywords = ['NAXIS', 'CDELT', 'CTYPE', 'CRPIX', 'CROTA', 'CRVAL']
+    for keyword in keywords:
+        for i in range(3,10):
+            keywordn = keyword+str(i)
+            if keywordn in list(out_header.keys()):
+                out_header.remove(keywordn)
+
+    # Return purified header
+    return out_header
 
 
 

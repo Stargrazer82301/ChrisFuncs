@@ -283,7 +283,7 @@ def Downsample(myarr, factor, estimator=np.nanmean):
 def PolySub(image_in, mask_centre_i, mask_centre_j, mask_semimaj_pix, mask_axial_ratio, mask_angle, poly_order=5, cutoff_sigma=2.0, downsample=1.0, change_check=False):
 
     # If requested, downsample image to improve processing time
-    downsample_factor = np.round(np.int(downsample))
+    downsample_factor = np.round(int(downsample))
     if downsample_factor>=2:
         image_ds = Downsample(image_in, downsample_factor)
     else:
@@ -688,9 +688,9 @@ def ColourCorrect(wavelength, source_spec, band_filter, ref_spec=None, trans_dic
 # Returns: Percentile uncertainty
 def PercentileError(data, value, percentile=68.27, bounds=False):
     data = Nanless(data)
-    percentile = np.float(percentile)
+    percentile = float(percentile)
     if bounds==False:
-        error = ( np.sort( np.abs( data - value ) ) )[ np.int( (percentile/100.0) * data.shape[0] ) ]
+        error = ( np.sort( np.abs( data - value ) ) )[ int( (percentile/100.0) * data.shape[0] ) ]
         return error
     elif bounds==True:
         data_up = data[ np.where( data>=value ) ]

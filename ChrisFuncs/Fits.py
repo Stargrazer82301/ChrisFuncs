@@ -749,8 +749,18 @@ def PixWidthArcsec(in_data):
     if isinstance(in_data, astropy.wcs.WCS):
         in_wcs = in_data
 
-    # Calculate pixel width, and return
-    pix_width_arcsec = 3600.0 * np.abs( np.max( in_wcs.pixel_scale_matrix ) )
+    # Make sure we're only using the first two dimensions of the WCS pixel scale matrx (in case of cubes, etc)
+    pix_scale_matrix = in_wcs.pixel_scale_matrix
+    if max(pix_scale_matrix.shape) >= 3:
+        pix_scale_matrix = pix_scale_matrix[:2,:2]
+        raise Warning('WCS has more than 2 dimensions; trimming extras for pixel width calculation')
+
+    # If pixel scale matrix only has one dimension, throw an error (as something is probably not happening has expected)
+    elif max(pix_scale_matrix.shape) <= 1:
+        raise Exception('WCS has fewer than 2 dimensions; this probably isn\'t expected')
+
+    # Calculate pixel width in arcseconds, and return
+    pix_width_arcsec = 3600.0 * np.abs(np.max(pix_scale_matrix))
     return pix_width_arcsec
 
 

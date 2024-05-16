@@ -1,6 +1,4 @@
 # Import smorgasbord
-"""from IPython import get_ipython
-get_ipython().run_line_magic('pdb','on')"""
 import sys
 import os
 #sys.path.append( os.path.split( os.path.realpath(__file__) )[:-1][0] )
@@ -24,15 +22,13 @@ import astropy.convolution
 import astropy.coordinates
 import astropy.units
 import astroquery.irsa_dust
+import contextlib
 import shutil
 import wget
 import glob
 import time
 import re
 import copy
-import errno
-import signal
-import functools
 
 # A python 2/3 compatability hack for stirng type handling
 try:
@@ -812,31 +808,6 @@ def CosmicVariance(v, n, x):
 
 
 
-
-
-# Function to provide a decorator to automatically raise an exception when a function runs too long
-# Args: How many seconds until timeout, (error message to be raised
-# Returns: The decorator to use; ie, put @Timeout(10) before function for 10 sec timeout
-def Timeout(seconds, error_message=os.strerror(errno.ETIME)):
-    class TimeoutError(Exception):
-        pass
-    def decorator(func):
-        def _handle_timeout(signum, frame):
-            raise TimeoutError(error_message)
-
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            signal.signal(signal.SIGALRM, _handle_timeout)
-            signal.alarm(seconds)
-            try:
-                result = func(*args, **kwargs)
-            finally:
-                signal.alarm(0)
-            return result
-        return wrapper
-    return decorator
-
-
 # Function to convert the bin-edge output of np.histogram to be bin-centred (and this of same dimensions as bin totals)
 # Args: Array of bin edges
 # Returns: Array of bin centres
@@ -1297,6 +1268,30 @@ class StdOutRedirect():
         for fd in self.null_fds + self.save_fds:
             os.close(fd)
 
+
+
+
+# A decorator to suppress console output of a function
+# Input: The function to be quieted
+# Output: Whatever the quieted function normally returns
+def Quiet(func, *args, **kwargs):
+
+    # If we're not running in Spyder, then do things the thorough way (even suppresses output from externall software calls)
+    if not any('SPYDER' in name for name in os.environ):
+        devnull = open('/dev/null', 'w')
+        stdout = os.dup(sys.stdout.fileno())
+        os.dup2(devnull.fileno(), 1)
+        output = func(*args, **kwargs)
+        os.dup2(stdout, 1)
+
+    # Or, if we are running in Spyder, do things the slightly less thorough way
+    else:
+        with open(os.devnull, 'w') as devnull:
+            with contextlib.redirect_stdout(devnull):
+                output = func(*args, **kwargs)
+
+    # Return output either way
+    return output
 
 
 

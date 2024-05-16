@@ -9,7 +9,6 @@ import astropy.io.fits
 import astropy.wcs
 import astropy.convolution
 import reproject
-import aplpy
 import tempfile
 import time
 from ChrisFuncs import SigmaClip, Nanless, RemoveCrawl, ImputeImage
@@ -191,6 +190,10 @@ def FitsHeader(ra, dec, map_width_deg, pix_width_arcsec, rotation=None, out_path
 # Args: Central RA for output image, central Dec of output image, radius of output image in arcseconds, list of paths (or list of lists when giving order-of-preference) to red green and blue files, output directory, (pmin threshold or list of 3 threshold values, pmax threshold or list of 3 threshold values, stretch type or list of stretch types, bool for whether to keep temp files)
 # Returns: None
 def FitsRGB(ra, dec, rad_arcsec, in_paths, out_dir, pmin=False, pmax=False, stretch='log', keep_temp=False):
+
+    # Need to replace APLpy here
+    raise Exception('Need to rewrite this with something other than APLpy')
+    import aplpy
 
     # Prepare storage list for paths, then loop over bands
     path_list = [''] * 3

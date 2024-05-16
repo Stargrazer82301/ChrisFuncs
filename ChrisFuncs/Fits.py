@@ -11,6 +11,7 @@ import astropy.convolution
 import reproject
 import tempfile
 import time
+import warnings
 from ChrisFuncs import SigmaClip, Nanless, RemoveCrawl, ImputeImage
 
 # Handle the lack of the basestring class in Python 3
@@ -756,7 +757,7 @@ def PixWidthArcsec(in_data):
     pix_scale_matrix = in_wcs.pixel_scale_matrix
     if max(pix_scale_matrix.shape) >= 3:
         pix_scale_matrix = pix_scale_matrix[:2,:2]
-        raise Warning('WCS has more than 2 dimensions; trimming extras for pixel width calculation')
+        warnings.warn('WCS has more than 2 dimensions; trimming extras for pixel width calculation', UserWarning)
 
     # If pixel scale matrix only has one dimension, throw an error (as something is probably not happening has expected)
     elif max(pix_scale_matrix.shape) <= 1:

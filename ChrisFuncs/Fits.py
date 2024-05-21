@@ -798,9 +798,8 @@ def MsolPixToMsolSqpc(img, hdr, dist):
 # Inputs: Numpy array (or just a float) of data in units of MJy/sr; the fits header for those data; (a boolean for if to calculate Jy to MJy/sr instead)
 # Outputs: Numpy array (or just a float) with data in units of Jy
 def MJySrToJyPix(img, hdr, inverse=False):
-    wcs = astropy.wcs.WCS(hdr)
-    pix_scale_matrix = wcs.pixel_scale_matrix
-    pix_width_deg = np.mean(np.abs(pix_scale_matrix[np.where(pix_scale_matrix!=0)]))
+    pix_width_arcsec = PixWidthArcsec(hdr)
+    pix_width_deg = pix_width_arcsec / 3600.0
     pix_area_sqdeg = pix_width_deg**2.0
     pix_area_sr = pix_area_sqdeg * (np.pi / 180.0)**2.0
     conversion = pix_area_sr * 1E6

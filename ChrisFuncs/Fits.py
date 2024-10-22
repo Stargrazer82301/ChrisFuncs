@@ -767,7 +767,7 @@ def PixWidthArcsec(in_data, distort_hdulist=False):
     else:
         raise Exception('Provided in_data was not of right class')
     if distort_hdulist != False:
-        if isinstance(in_data, astropy.io.fits.ImageHDU) or isinstance(in_data, astropy.io.fits.PrimaryHDU):
+        if not(isinstance(in_data, astropy.io.fits.ImageHDU) or isinstance(in_data, astropy.io.fits.PrimaryHDU)):
             raise Exception('Can only use distort_hdulist kwarg if in_data is an HDU object')
 
     # Make sure we're only using the first two dimensions of the WCS pixel scale matrx (in case of cubes, etc)
@@ -783,8 +783,12 @@ def PixWidthArcsec(in_data, distort_hdulist=False):
     # Calculate pixel widths for each axis (from hypotenuses of matrix rows)
     pix_scale_hypot = [(np.sum(pix_scale_matrix[i,:]**2.0))**0.5 for i in range(pix_scale_matrix.shape[0])]
 
+    # Warn if pixels significantly deviate from square
+    if max(pix_scale_hypot) / min(pix_scale_hypot) > 1.01:
+        warnings.warn('[WARNING] Pixels appears to be >1% deviant from square; using first dimension')
+
     # Calculate pixel width in arcseconds, and return
-    pix_width_arcsec = 3600.0 * np.mean(pix_scale_hypot)
+    pix_width_arcsec = 3600.0 * pix_scale_hypot[0]
     return pix_width_arcsec
 
 

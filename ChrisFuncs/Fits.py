@@ -780,8 +780,11 @@ def PixWidthArcsec(in_data, distort_hdulist=False):
     elif max(pix_scale_matrix.shape) <= 1:
         raise Exception('WCS has fewer than 2 dimensions; this probably isn\'t expected')
 
+    # Calculate pixel widths for each axis (from hypotenuses of matrix rows)
+    pix_scale_hypot = [(np.sum(pix_scale_matrix[i,:]**2.0))**0.5 for i in range(pix_scale_matrix.shape[0])]
+
     # Calculate pixel width in arcseconds, and return
-    pix_width_arcsec = 3600.0 * np.abs(np.max(pix_scale_matrix))
+    pix_width_arcsec = 3600.0 * np.mean(pix_scale_hypot)
     return pix_width_arcsec
 
 

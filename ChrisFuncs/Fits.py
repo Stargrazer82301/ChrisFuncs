@@ -735,9 +735,9 @@ def HeaderAxesStrip(in_header):
 
 
 # Function to get the pixel width of some FITS data
-# Input: Etiher a string to a FITS file, or an astropy.io.fits.Header object, or an astropy.wcs.WCS object
+# Input: Etiher a string to a FITS file, or an astropy.io.fits.Header object, or an astropy.wcs.WCS object, or an astropy HDU object; (an astropy HDUList from which the in_data HDU was taken)
 # Output: Pixel width in arcseconds
-def PixWidthArcsec(in_data):
+def PixWidthArcsec(in_data, distort_hdulist=False):
 
     # If input is string, read in header from file, and grab WCS
     if isinstance(in_data, str):
@@ -745,13 +745,30 @@ def PixWidthArcsec(in_data):
         in_wcs = astropy.wcs.WCS(in_hdr)
 
     # If input is header, grab WCS
-    if isinstance(in_data, astropy.io.fits.Header):
+    elif isinstance(in_data, astropy.io.fits.Header):
         in_hdr = in_data
         in_wcs = astropy.wcs.WCS(in_hdr)
 
     # If input is WCS object, note as such
-    if isinstance(in_data, astropy.wcs.WCS):
+    elif isinstance(in_data, astropy.wcs.WCS):
         in_wcs = in_data
+
+    # If input is an HDU, get WCS
+    elif isinstance(in_data, astropy.io.fits.ImageHDU) or isinstance(in_data, astropy.io.fits.PrimaryHDU):
+        in_hdr = in_data.header
+        if not distort_hdulist:
+            in_wcs = astropy.wcs.WCS(in_hdr)
+
+        # If we need full HDUList for distortion table handling, do that here
+        elif distort_hdulist != False:
+            in_wcs = astropy.wcs.WCS(in_hdr, fobj=distort_hdulist)
+
+    # Raise error if incorrect classes provided
+    else:
+        raise Exception('Provided in_data was not of right class')
+    if distort_hdulist != False:
+        if isinstance(in_data, astropy.io.fits.ImageHDU) or isinstance(in_data, astropy.io.fits.PrimaryHDU):
+            raise Exception('Can only use distort_hdulist kwarg if in_data is an HDU object')
 
     # Make sure we're only using the first two dimensions of the WCS pixel scale matrx (in case of cubes, etc)
     pix_scale_matrix = in_wcs.pixel_scale_matrix
